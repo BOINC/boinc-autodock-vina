@@ -6,10 +6,26 @@ find_package(autodock-vina REQUIRED)
 find_package(boinc REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem log math_tr1 program_options random serialization thread timer)
+find_package(magic_enum CONFIG REQUIRED)
 
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+set(CMAKE_CXX_STANDARD 17)
 
-add_executable(boinc-autodock-vina src/main.cpp)
+add_executable(boinc-autodock-vina
+     src/boinc-autodock-vina.cpp
+     src/config.h
+     src/config.cpp
+     src/config-loader.h
+     src/config-loader.cpp
+)
+
+add_executable(config-validator
+    src/config-validator.cpp
+    src/config.h
+    src/config.cpp
+    src/config-loader.h
+    src/config-loader.cpp
+)
 
 target_link_libraries(boinc-autodock-vina
     PRIVATE
@@ -28,4 +44,10 @@ target_link_libraries(boinc-autodock-vina
         Boost::serialization
         Boost::thread
         Boost::timer
-    )
+        magic_enum::magic_enum
+)
+
+target_link_libraries(config-validator
+    PRIVATE
+        magic_enum::magic_enum
+)

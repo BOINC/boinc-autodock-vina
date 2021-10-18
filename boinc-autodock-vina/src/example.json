@@ -1,0 +1,15 @@
+{
+	"Input": {
+        "receptor": "receptor",
+        "flex": "flex",
+        "ligand": [
+            "ligand",
+            "ligand2"
+        ],
+        "batch": [
+            "batch1",
+            "batch2"
+        ],
+        "scoring": "vina"
+    }
+}

@@ -4,6 +4,7 @@
     "dependencies":
     [
         "autodock-vina",
-        "boinc"
+        "boinc",
+        "magic-enum"
     ]
 }
