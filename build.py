@@ -114,3 +114,11 @@ for a in apps_to_build:
             a=a,
             vcpkg_overlay_triplet=vcpkg_overlay_triplet
             ))
+    unittest_path = (os.getcwd() +
+        "/build/{a}/{vcpkg_overlay_triplet}/Release/unit-tests.exe"
+         ).format(
+            a=a,
+            vcpkg_overlay_triplet=vcpkg_overlay_triplet
+            )
+    if os.path.isfile(unittest_path):
+        os.system(unittest_path)

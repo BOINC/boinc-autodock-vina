@@ -3,9 +3,9 @@
 #include "config.h"
 
 int main(int argc, char **argv) {
-    Config config;
+    config config;
 
-    if (!ValidateConfig(config)) {
+    if (!config.validate()) {
         std::cout << "Validation failed" << std::endl;
         return 1;
     }

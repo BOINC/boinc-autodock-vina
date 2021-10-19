@@ -5,6 +5,8 @@
     [
         "autodock-vina",
         "boinc",
+        "gtest",
+        "jsoncons",
         "magic-enum"
     ]
 }

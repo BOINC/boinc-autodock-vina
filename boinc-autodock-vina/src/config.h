@@ -9,7 +9,7 @@ enum class scoring {
     vinardo
 };
 
-struct Input {
+struct input {
     std::string receptor;
     std::string flex;
     std::vector<std::string> ligands;
@@ -17,7 +17,7 @@ struct Input {
     scoring scoring = scoring::vina;
 };
 
-struct SearchArea {
+struct search_area {
     std::string maps;
     double center_x;
     double center_y;
@@ -28,13 +28,13 @@ struct SearchArea {
     bool autobox = false;
 };
 
-struct Output {
+struct output {
     std::string out;
     std::string dir;
     std::string write_maps;
 };
 
-struct Advanced {
+struct advanced {
     bool score_only = false;
     bool local_only = false;
     bool no_refine = false;
@@ -59,7 +59,7 @@ struct Advanced {
     double weight_glue = 50.000000;
 };
 
-struct Misc {
+struct misc {
     int cpu = 0;
     int seed = 0;
     int exhaustiveness = 8;
@@ -71,12 +71,12 @@ struct Misc {
     int verbosity = 1;
 };
 
-struct Config {
-    Input input;
-    SearchArea search_area;
-    Output output;
-    Advanced advanced;
-    Misc misc;
-};
+struct config {
+    input input;
+    search_area search_area;
+    output output;
+    advanced advanced;
+    misc misc;
 
-bool ValidateConfig(const Config& config);
+    [[nodiscard]] bool validate() const;
+};
