@@ -3,7 +3,7 @@
 #include <autodock-vina/vina.h>
 #include <magic_enum.hpp>
 
-#include "config.h"
+#include "common/config.h"
 
 int main(int argc, char** argv) {
     try {

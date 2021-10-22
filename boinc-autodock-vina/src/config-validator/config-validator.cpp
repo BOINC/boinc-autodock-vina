@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "config.h"
+#include "common/config.h"
 
 int main(int argc, char **argv) {
     config config;

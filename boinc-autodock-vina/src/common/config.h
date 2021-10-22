@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <filesystem>
 
 enum class scoring {
     ad4,
@@ -79,4 +80,5 @@ struct config {
     misc misc;
 
     [[nodiscard]] bool validate() const;
+    [[nodiscard]] bool load(const std::filesystem::path& config_file_path);
 };

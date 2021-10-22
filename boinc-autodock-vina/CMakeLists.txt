@@ -14,25 +14,36 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 set(CMAKE_CXX_STANDARD 17)
 
 add_executable(boinc-autodock-vina
-     src/boinc-autodock-vina.cpp
-     src/config.h
-     src/config.cpp
-     src/config-loader.h
-     src/config-loader.cpp
+     src/boinc-autodock-vina/boinc-autodock-vina.cpp
+     src/common/config.h
+     src/common/config.cpp
 )
 
 add_executable(config-validator
-    src/config-validator.cpp
-    src/config.h
-    src/config.cpp
-    src/config-loader.h
-    src/config-loader.cpp
+    src/config-validator/config-validator.cpp
+    src/common/config.h
+    src/common/config.cpp
 )
 
 add_executable(unit-tests
-    src/config.h
-    src/config.cpp
-    src/unit-tests.cpp
+    src/common/config.h
+    src/common/config.cpp
+    src/unit-tests/unit-tests.cpp
+)
+
+target_include_directories(boinc-autodock-vina
+    PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/src
+)
+
+target_include_directories(config-validator
+    PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/src
+)
+
+target_include_directories(unit-tests
+    PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/src
 )
 
 target_link_libraries(boinc-autodock-vina
