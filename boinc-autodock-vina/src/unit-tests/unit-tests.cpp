@@ -13,7 +13,7 @@ TEST_F(Config_UnitTests, FailOnConfigDefaults) {
     EXPECT_FALSE(config.validate());
 }
 
-TEST_F(Config_UnitTests, LoaderValidator) {
+TEST_F(Config_UnitTests, LoadValidator) {
     const auto dummy_json_file_path = std::filesystem::current_path() /= "dummy.json";
     std::ofstream json(dummy_json_file_path.c_str());
 
@@ -62,7 +62,7 @@ TEST_F(Config_UnitTests, LoaderValidator) {
     json << "\t\t\"weight_vinardo_repulsion\": 0.642531," << std::endl;
     json << "\t\t\"weight_vinardo_hydrophobic\": -0.010011," << std::endl;
     json << "\t\t\"weight_vinardo_hydrogen\": 0.010011," << std::endl;
-    json << "\t\t\"weight_vinardo_rot\": -1.023456," << std::endl;    
+    json << "\t\t\"weight_vinardo_rot\": -1.023456," << std::endl;
     json << "\t\t\"weight_ad4_vdw\": 1.023456," << std::endl;
     json << "\t\t\"weight_ad4_hb\": -1.654320," << std::endl;
     json << "\t\t\"weight_ad4_elec\": 1.065432," << std::endl;
@@ -142,4 +142,12 @@ TEST_F(Config_UnitTests, LoaderValidator) {
     EXPECT_EQ(6, config.misc.verbosity);
 
     std::filesystem::remove(dummy_json_file_path);
+}
+
+TEST_F(Config_UnitTests, TestSimpleAD4Scenario) {
+    
+}
+
+TEST_F(Config_UnitTests, TestSimpleVinaScenario) {
+
 }
