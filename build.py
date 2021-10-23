@@ -88,7 +88,7 @@ if result != 0:
 if os.name == 'nt':
     result = subprocess.call('vcpkg\\'+vcpkg_bootstrap_file, shell=True)
 else:
-    result = subprocess.call('.vcpkg/'+vcpkg_bootstrap_file, shell=True)
+    result = subprocess.call('./vcpkg/'+vcpkg_bootstrap_file, shell=True)
 if result != 0:
     print('Failed to bootstrap vcpkg')
     sys.exit(1)
