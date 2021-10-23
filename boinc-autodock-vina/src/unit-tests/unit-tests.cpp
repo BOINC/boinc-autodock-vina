@@ -393,13 +393,6 @@ TEST_F(Config_UnitTests, LoadValidator) {
     std::filesystem::remove(dummy_json_file_path);
 }
 
-TEST_F(Config_UnitTests, TestSimpleAD4Scenario) {
-    const auto json_file = std::filesystem::current_path() /= "boinc-autodock-vina/samples/basic_docking/1iep_ad4.json";
-    const auto res = calculate(json_file);
-    EXPECT_TRUE(res);
-    std::filesystem::remove(std::filesystem::current_path() /= "boinc-autodock-vina/samples/basic_docking/1iep_ligand_ad4_out.pdbqt");
-}
-
 TEST_F(Config_UnitTests, TestSimpleVinaScenario) {
     const auto json_file = std::filesystem::current_path() /= "boinc-autodock-vina/samples/basic_docking/1iep_vina.json";
     const auto res = calculate(json_file);
