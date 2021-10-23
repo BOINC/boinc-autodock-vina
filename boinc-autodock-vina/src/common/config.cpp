@@ -70,11 +70,13 @@ bool config::validate() const {
 
 bool config::load(const std::filesystem::path& config_file_path) {
     if (!is_regular_file(config_file_path)) {
-        std::cerr << "Error happened while opening <" << config_file_path.c_str() << "> file" << std::endl;
+        std::cerr << "Error happened while opening <" << config_file_path.string() << "> file" << std::endl;
         return false;
     }
 
     try {
+        const auto& working_directory = config_file_path.has_parent_path() ? config_file_path.parent_path() : std::filesystem::current_path();
+
         const std::ifstream config_file(config_file_path.c_str());
         std::stringstream buffer;
         buffer << config_file.rdbuf();
@@ -85,19 +87,39 @@ bool config::load(const std::filesystem::path& config_file_path) {
             const auto& json_input = json["input"];
 
             if (json_input.contains("receptor")) {
-                input.receptor = json_input["receptor"].as<std::string>();
+                const auto& receptor = std::filesystem::path(json_input["receptor"].as<std::string>());
+                if (receptor.is_absolute()) {
+                    std::cerr << "Config should not contain absolute paths" << std::endl;
+                    return false;
+                }
+                input.receptor = std::filesystem::path(working_directory / receptor).string();
             }
             if (json_input.contains("flex")) {
-                input.flex = json_input["flex"].as<std::string>();
+                const auto& flex = std::filesystem::path(json_input["flex"].as<std::string>());
+                if (flex.is_absolute()) {
+                    std::cerr << "Config should not contain absolute paths" << std::endl;
+                    return false;
+                }
+                input.flex = std::filesystem::path(working_directory / flex).string();
             }
             if (json_input.contains("ligands")) {
                 for (const auto& l : json_input["ligands"].array_range()) {
-                    input.ligands.push_back(l.as<std::string>());
+                    const auto& ligand = std::filesystem::path(l.as<std::string>());
+                    if (ligand.is_absolute()) {
+                        std::cerr << "Config should not contain absolute paths" << std::endl;
+                        return false;
+                    }
+                    input.ligands.push_back(std::filesystem::path(working_directory / ligand).string());
                 }
             }
             if (json_input.contains("batch")) {
                 for (const auto& b : json_input["batch"].array_range()) {
-                    input.batch.push_back(b.as<std::string>());
+                    const auto& batch = std::filesystem::path(b.as<std::string>());
+                    if (batch.is_absolute()) {
+                        std::cerr << "Config should not contain absolute paths" << std::endl;
+                        return false;
+                    }
+                    input.batch.push_back(std::filesystem::path(working_directory / batch).string());
                 }
             }
             if (json_input.contains("scoring")) {
@@ -120,7 +142,12 @@ bool config::load(const std::filesystem::path& config_file_path) {
             const auto& json_search_area = json["search_area"];
 
             if (json_search_area.contains("maps")) {
-                search_area.maps = json_search_area["maps"].as<std::string>();
+                const auto& maps = std::filesystem::path(json_search_area["maps"].as<std::string>());
+                if (maps.is_absolute()) {
+                    std::cerr << "Config should not contain absolute paths" << std::endl;
+                    return false;
+                }
+                search_area.maps = std::filesystem::path(working_directory / maps).string();
             }
             if (json_search_area.contains("center_x")) {
                 search_area.center_x = json_search_area["center_x"].as<double>();
@@ -149,13 +176,28 @@ bool config::load(const std::filesystem::path& config_file_path) {
             const auto& json_output = json["output"];
 
             if (json_output.contains("out")) {
-                output.out = json_output["out"].as<std::string>();
+                const auto& out = std::filesystem::path(json_output["out"].as<std::string>());
+                if (out.is_absolute()) {
+                    std::cerr << "Config should not contain absolute paths" << std::endl;
+                    return false;
+                }
+                output.out = std::filesystem::path(working_directory / out).string();
             }
             if (json_output.contains("dir")) {
-                output.dir = json_output["dir"].as<std::string>();
+                const auto& dir = std::filesystem::path(json_output["dir"].as<std::string>());
+                if (dir.is_absolute()) {
+                    std::cerr << "Config should not contain absolute paths" << std::endl;
+                    return false;
+                }
+                output.dir = std::filesystem::path(working_directory / dir).string();
             }
             if (json_output.contains("write_maps")) {
-                output.write_maps = json_output["write_maps"].as<std::string>();
+                const auto& write_maps = std::filesystem::path(json_output["write_maps"].as<std::string>());
+                if (write_maps.is_absolute()) {
+                    std::cerr << "Config should not contain absolute paths" << std::endl;
+                    return false;
+                }
+                output.write_maps = std::filesystem::path(working_directory / write_maps).string();
             }
         }
 
@@ -262,7 +304,7 @@ bool config::load(const std::filesystem::path& config_file_path) {
             }
         }
     } catch (const std::exception& ex) {
-        std::cerr << "Error happened while processing <" << config_file_path.c_str() << "> file: " << ex.what() << std::endl;
+        std::cerr << "Error happened while processing <" << config_file_path.string() << "> file: " << ex.what() << std::endl;
         return false;
     }
 

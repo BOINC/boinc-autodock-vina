@@ -15,6 +15,8 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_executable(boinc-autodock-vina
      src/boinc-autodock-vina/boinc-autodock-vina.cpp
+     src/boinc-autodock-vina/calculate.h
+     src/boinc-autodock-vina/calculate.cpp
      src/common/config.h
      src/common/config.cpp
 )
@@ -28,6 +30,8 @@ add_executable(config-validator
 add_executable(unit-tests
     src/common/config.h
     src/common/config.cpp
+    src/boinc-autodock-vina/calculate.h
+    src/boinc-autodock-vina/calculate.cpp
     src/unit-tests/unit-tests.cpp
 )
 
@@ -77,4 +81,19 @@ target_link_libraries(unit-tests
     PRIVATE
         GTest::gtest
         GTest::gtest_main
+        autodock-vina::autodock-vina::vina
+        autodock-vina::autodock-vina::vina_split
+        OpenSSL::SSL
+        OpenSSL::Crypto
+        Boost::boost
+        Boost::filesystem
+        Boost::log
+        Boost::math_tr1
+        Boost::program_options
+        Boost::random
+        Boost::serialization
+        Boost::thread
+        Boost::timer
+        magic_enum::magic_enum
+        jsoncons
 )
