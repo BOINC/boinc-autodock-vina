@@ -12,10 +12,12 @@ find_package(GTest CONFIG REQUIRED)
 
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-if (UNIX)
-    set(CMAKE_CXX_COMPILER gcc)
-endif()
+# if (UNIX)
+#     set(CMAKE_CXX_COMPILER gcc)
+# endif()
 
 add_executable(boinc-autodock-vina
      src/boinc-autodock-vina/boinc-autodock-vina.cpp
