@@ -94,6 +94,7 @@ if result != 0:
     sys.exit(1)
 
 arch = getArchFromTriplet(vcpkg_overlay_triplet)
+arch_param = ('-A {arch}').format(arch=arch) if os.name == 'nt' else ''
 
 vcpkg_cmake = os.getcwd() + '/vcpkg/scripts/buildsystems/vcpkg.cmake'
 vcpkg_overlay_triplets = os.getcwd() + '/vcpkg_triplets/' + vcpkg_overlay_triplets
@@ -105,7 +106,7 @@ for a in apps_to_build:
     result = subprocess.call((
         'cmake -B build/{a}/{vcpkg_overlay_triplet} '
         '-S {a} '
-        '-A {arch} '
+        '{arch_param} '
         '-DCMAKE_TOOLCHAIN_FILE={vcpkg_cmake} '
         '-DVCPKG_OVERLAY_PORTS={vcpkg_overlay_ports} '
         '-DVCPKG_OVERLAY_TRIPLETS={vcpkg_overlay_triplets} '
@@ -117,7 +118,7 @@ for a in apps_to_build:
             vcpkg_overlay_ports=vcpkg_overlay_ports,
             vcpkg_overlay_triplets=vcpkg_overlay_triplets,
             vcpkg_overlay_triplet=vcpkg_overlay_triplet,
-            arch=arch
+            arch_param=arch_param
             ), shell=True)
     if result != 0:
         print('Failed to build ' + a)
