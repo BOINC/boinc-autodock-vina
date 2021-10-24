@@ -30,14 +30,9 @@ jobs:
       - name: Build and Test
         run: python build.py -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
 
-      - name: Prepare artifacts for deploy
-        if: ${{ success() }}
-        shell: cmd
-        run: |
-          7z a ${{ matrix.app }}-${{ matrix.configuration }}.7z -t7z -mx=9 build/${{ matrix.app }}/${{ matrix.configuration }}/Release/*.exe
-
       - name: Upload artifacts
+        if: ${{ success()}}
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.app }}-${{ matrix.configuration }}-${{ github.event.pull_request.head.sha }}
-          path: ${{ matrix.app }}-${{ matrix.configuration }}.7z
+          path: build/${{ matrix.app }}/${{ matrix.configuration }}/Release/*.exe
