@@ -228,6 +228,10 @@ target_link_libraries(boinc PRIVATE
                         OpenSSL::Crypto
 )
 
+target_link_libraries(boincapi PRIVATE
+                        boinc
+)
+
 install(TARGETS boinc boincapi EXPORT boinc-config
             RUNTIME DESTINATION bin
             ARCHIVE DESTINATION lib
