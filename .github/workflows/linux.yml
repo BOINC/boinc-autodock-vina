@@ -28,7 +28,7 @@ jobs:
         if: ${{ success() }}
         shell: cmd
         run: |
-          7z a ${{ matrix.app }}-${{ matrix.configuration }}.7z -t7z -mx=9 build/${{ matrix.app }}/${{ matrix.configuration }}/Release/*
+          7z a ${{ matrix.app }}-${{ matrix.configuration }}.7z -t7z -mx=9 build/${{ matrix.app }}/${{ matrix.configuration }}/*
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2

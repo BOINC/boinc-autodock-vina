@@ -134,12 +134,20 @@ for a in apps_to_build:
         print('Failed to build ' + a)
         sys.exit(1)
 
-    unittest_path = (os.getcwd() +
-        "/build/{a}/{vcpkg_overlay_triplet}/Release/unit-tests.exe"
-         ).format(
-            a=a,
-            vcpkg_overlay_triplet=vcpkg_overlay_triplet
-            )
+    if os.name == 'nt':
+        unittest_path = (os.getcwd() +
+            "/build/{a}/{vcpkg_overlay_triplet}/Release/unit-tests.exe"
+            ).format(
+                a=a,
+                vcpkg_overlay_triplet=vcpkg_overlay_triplet
+                )
+    else:
+        unittest_path = (os.getcwd() +
+            "/build/{a}/{vcpkg_overlay_triplet}/unit-tests"
+            ).format(
+                a=a,
+                vcpkg_overlay_triplet=vcpkg_overlay_triplet
+                )
     if os.path.isfile(unittest_path):
         result = subprocess.call(unittest_path, shell=True)
     if result != 0:
