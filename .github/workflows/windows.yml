@@ -1,0 +1,38 @@
+name: Windows
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  schedule:
+    - cron:  '0 12 * * 0'
+
+jobs:
+  build:
+    name: ${{ matrix.app }}-${{ matrix.configuration }}-build
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        app: [boinc-autodock-vina]
+        configuration: [x64-windows-static, x86-windows-static]
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+
+      - name: Setup msbuild
+        uses: microsoft/setup-msbuild@v1
+
+      - name: Fix vcpkg
+        run: vcpkg.exe integrate remove
+
+      - name: Build and Test
+        run: python build.py -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
+
+      - name: Upload artifacts
+        if: ${{ success()}}
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.app }}-${{ matrix.configuration }}-${{ github.event.pull_request.head.sha }}
+          path: build/${{ matrix.app }}/${{ matrix.configuration }}/Release/*.exe
