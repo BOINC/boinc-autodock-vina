@@ -16,6 +16,8 @@ jobs:
         app: [boinc-autodock-vina]
         configuration: [x64-windows-static, x86-windows-static]
       fail-fast: false
+    env:
+      VCPKG_BINARY_SOURCES: 'clear;files,${{ github.workspace }}\vcpkgcache\,readwrite'
     steps:
       - uses: actions/checkout@v2
         with:
@@ -27,6 +29,18 @@ jobs:
       - name: Fix vcpkg
         run: vcpkg.exe integrate remove
 
+      - name: Configure Python
+        if: ${{ success() }}
+        shell: cmd
+        run: |
+          pip install boto3
+
+      - name: Download vcpkg binary cache
+        if: ${{ success() }}
+        shell: cmd
+        run: |
+          python deploy\manage_vcpkg_archive_cache.py download ${{ github.workspace }}\vcpkgcache windows_${{ matrix.configuration }} "vcpkg.cache.boinc-apps.${{ matrix.app }}"
+
       - name: Build and Test
         run: python build.py -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
 
@@ -36,3 +50,12 @@ jobs:
         with:
           name: ${{ matrix.app }}-${{ matrix.configuration }}-${{ github.event.pull_request.head.sha }}
           path: build/${{ matrix.app }}/${{ matrix.configuration }}/Release/*.exe
+
+      - name: Upload vcpkg binary cache
+        if: ${{ success() }}
+        shell: cmd
+        env:
+          ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
+          SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
+        run: |
+          python deploy\manage_vcpkg_archive_cache.py upload ${{ github.workspace }}\vcpkgcache windows_${{ matrix.configuration }} "vcpkg.cache.boinc-apps.${{ matrix.app }}" "%ACCESS_KEY%" "%SECRET_KEY%"
