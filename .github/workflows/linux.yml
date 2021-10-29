@@ -22,7 +22,7 @@ jobs:
           fetch-depth: 2
 
       - name: Configure Python
-        if: ${{ success() && contains(matrix.type, 'vcpkg') }}
+        if: ${{ success() }}
         run: |
           pip install boto3
 
@@ -32,9 +32,9 @@ jobs:
           export XDG_CACHE_HOME=${{ github.workspace }}/vcpkgcache
 
       - name: Download vcpkg binary cache
-        if: ${{ success() && contains(matrix.type, 'vcpkg') }}
+        if: ${{ success() }}
         run: |
-          python ./deploy/manage_vcpkg_archive_cache.py download vcpkgcache linux_${{ matrix.configuration }} "vcpkg.cache.boinc-apps.${{ matrix.app }}"
+          python ./deploy/manage_vcpkg_archive_cache.py download vcpkgcache ${{ matrix.configuration }} "vcpkg.cache.boinc-apps.${{ matrix.app }}"
 
       - name: Build and Test
         run: python build.py -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}

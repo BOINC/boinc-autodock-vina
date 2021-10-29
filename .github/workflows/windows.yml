@@ -39,7 +39,7 @@ jobs:
         if: ${{ success() }}
         shell: cmd
         run: |
-          python deploy\manage_vcpkg_archive_cache.py download ${{ github.workspace }}\vcpkgcache windows_${{ matrix.configuration }} "vcpkg.cache.boinc-apps.${{ matrix.app }}"
+          python deploy\manage_vcpkg_archive_cache.py download ${{ github.workspace }}\vcpkgcache ${{ matrix.configuration }} "vcpkg.cache.boinc-apps.${{ matrix.app }}"
 
       - name: Build and Test
         run: python build.py -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
