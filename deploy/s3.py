@@ -48,7 +48,7 @@ def upload(os_name, dir, bucket, access_key, secret_key):
             found = False
             file_path = os.path.join(path, name)
             dir_name = os.path.basename(path)
-            file_name = os_name + '-' + dir_name + '-' + name
+            file_name = os_name + '_' + dir_name + '_' + name
             if objects:
                 for object in objects:
                     key = object['Key']
@@ -77,7 +77,7 @@ def download(os_name, dir, bucket):
     if objects:
         for object in objects:
             key = object['Key']
-            args = key.split('-')
+            args = key.split('_')
             if (len(args) == 3 and args[0] == os_name):
                 os.makedirs(os.path.join(dir, args[1]), exist_ok=True)
                 local_file = os.path.join(dir, args[1], args[2])
