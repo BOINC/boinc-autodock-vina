@@ -26,18 +26,15 @@ jobs:
         run: |
           pip install boto3
 
-      - name: Configure vcpkg bnary cache
-        if: ${{ success() }}
-        run: |
-          export XDG_CACHE_HOME=${{ github.workspace }}/vcpkgcache
-
       - name: Download vcpkg binary cache
         if: ${{ success() }}
         run: |
           python ./deploy/manage_vcpkg_archive_cache.py download ${{ github.workspace }}/vcpkgcache/ ${{ matrix.configuration }} "vcpkg.cache.boinc-apps.${{ matrix.app }}"
 
       - name: Build and Test
-        run: python build.py -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
+        run: |
+          export XDG_CACHE_HOME=${{ github.workspace }}/vcpkgcache
+          python build.py -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
 
       - name: Upload boinc-autodock-vina artifacts
         if: ${{ success() && matrix.app == 'boinc-autodock-vina' }}
