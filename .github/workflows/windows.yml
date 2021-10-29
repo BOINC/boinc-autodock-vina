@@ -42,9 +42,11 @@ jobs:
           python deploy\manage_vcpkg_archive_cache.py download ${{ github.workspace }}\vcpkgcache ${{ matrix.configuration }} "vcpkg.cache.boinc-apps.${{ matrix.app }}"
 
       - name: Build
+        if: ${{ success() }}
         run: python build.py -nt -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
 
       - name: Test
+        if: ${{ success() }}
         run: python build.py -nb -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
 
       - name: Upload artifacts
