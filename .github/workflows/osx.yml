@@ -1,25 +1,26 @@
-name: Linux
+name: OSX
 on:
   push:
     branches: [ master ]
   pull_request:
     branches: [ master ]
   schedule:
-    - cron:  '5 12 * * 0'
+    - cron:  '10 12 * * 0'
 
 jobs:
   build:
     name: ${{ matrix.app }}-${{ matrix.configuration }}-build
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     strategy:
       matrix:
         app: [boinc-autodock-vina]
-        configuration: [x64-linux-static]
+        configuration: [x64-osx-static]
       fail-fast: false
     steps:
-      - uses: actions/checkout@v2
+      - uses: maxim-lobanov/setup-xcode@v1
         with:
-          fetch-depth: 2
+          xcode-version: '12.2'
+      - uses: actions/checkout@v2
 
       - name: Configure Python
         if: ${{ success() }}

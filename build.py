@@ -34,23 +34,31 @@ apps_to_build = []
 vcpkg_overlay_triplets = None
 vcpkg_overlay_triplet = None
 
+run_build = True
+run_tests = True
+
 for a in sys.argv[1:]:
     if a in apps:
         apps_to_build.append(a)
     elif a.startswith('-'):
-        p = a.split('=')
-        if (len(p) < 2):
-            print('Invalid option: ' + a)
-            help()
-            sys.exit(1)
-        if (p[0] == '-ts' and vcpkg_overlay_triplets is None):
-            vcpkg_overlay_triplets = p[1]
-        elif (p[0] == '-t' and vcpkg_overlay_triplet is None):
-            vcpkg_overlay_triplet = p[1]
+        if (a == '-nb'):
+            run_build = False
+        elif (a == '-nt'):
+            run_tests = False
         else:
-            print('Invalid option: ' + a)
-            help()
-            sys.exit(1)
+            p = a.split('=')
+            if (len(p) < 2):
+                print('Invalid option: ' + a)
+                help()
+                sys.exit(1)
+            if (p[0] == '-ts' and vcpkg_overlay_triplets is None):
+                vcpkg_overlay_triplets = p[1]
+            elif (p[0] == '-t' and vcpkg_overlay_triplet is None):
+                vcpkg_overlay_triplet = p[1]
+            else:
+                print('Invalid option: ' + a)
+                help()
+                sys.exit(1)
     else:
         print('Invalid app: ' + a)
         help()
@@ -74,24 +82,25 @@ if vcpkg_overlay_triplet is None:
 
 vcpkg_bootstrap_file = 'bootstrap-vcpkg.bat' if os.name == 'nt' else 'bootstrap-vcpkg.sh'
 
-if not os.path.isfile('vcpkg/'+vcpkg_bootstrap_file):
-    result = subprocess.call('git clone https://github.com/microsoft/vcpkg.git', shell=True)
+if run_build:
+    if not os.path.isfile('vcpkg/'+vcpkg_bootstrap_file):
+        result = subprocess.call('git clone https://github.com/microsoft/vcpkg.git', shell=True)
+        if result != 0:
+            print('Failed to clone vcpkg')
+            sys.exit(1)
+
+    result = subprocess.call('git -C vcpkg pull', shell=True)
     if result != 0:
-        print('Failed to clone vcpkg')
+        print('Failed to pull vcpkg')
         sys.exit(1)
 
-result = subprocess.call('git -C vcpkg pull', shell=True)
-if result != 0:
-    print('Failed to pull vcpkg')
-    sys.exit(1)
-
-if os.name == 'nt':
-    result = subprocess.call('vcpkg\\'+vcpkg_bootstrap_file, shell=True)
-else:
-    result = subprocess.call('./vcpkg/'+vcpkg_bootstrap_file, shell=True)
-if result != 0:
-    print('Failed to bootstrap vcpkg')
-    sys.exit(1)
+    if os.name == 'nt':
+        result = subprocess.call('vcpkg\\'+vcpkg_bootstrap_file, shell=True)
+    else:
+        result = subprocess.call('./vcpkg/'+vcpkg_bootstrap_file, shell=True)
+    if result != 0:
+        print('Failed to bootstrap vcpkg')
+        sys.exit(1)
 
 arch = getArchFromTriplet(vcpkg_overlay_triplet)
 arch_param = ('-A {arch}').format(arch=arch) if os.name == 'nt' else ''
@@ -101,55 +110,57 @@ vcpkg_overlay_triplets = os.getcwd() + '/vcpkg_triplets/' + vcpkg_overlay_triple
 vcpkg_overlay_ports = os.getcwd() + '/vcpkg_custom_ports/'
 
 for a in apps_to_build:
-    print('Building ' + a)
+    if run_build:
+        print('Building ' + a)
 
-    result = subprocess.call((
-        'cmake -B build/{a}/{vcpkg_overlay_triplet} '
-        '-S {a} '
-        '{arch_param} '
-        '-DCMAKE_TOOLCHAIN_FILE={vcpkg_cmake} '
-        '-DVCPKG_OVERLAY_PORTS={vcpkg_overlay_ports} '
-        '-DVCPKG_OVERLAY_TRIPLETS={vcpkg_overlay_triplets} '
-        '-DVCPKG_TARGET_TRIPLET={vcpkg_overlay_triplet} '
-        '-DVCPKG_INSTALL_OPTIONS=--clean-after-build'
-        ).format(
-            a=a,
-            vcpkg_cmake=vcpkg_cmake,
-            vcpkg_overlay_ports=vcpkg_overlay_ports,
-            vcpkg_overlay_triplets=vcpkg_overlay_triplets,
-            vcpkg_overlay_triplet=vcpkg_overlay_triplet,
-            arch_param=arch_param
-            ), shell=True)
-    if result != 0:
-        print('Failed to build ' + a)
-        sys.exit(1)
+        result = subprocess.call((
+            'cmake -B build/{a}/{vcpkg_overlay_triplet} '
+            '-S {a} '
+            '{arch_param} '
+            '-DCMAKE_TOOLCHAIN_FILE={vcpkg_cmake} '
+            '-DVCPKG_OVERLAY_PORTS={vcpkg_overlay_ports} '
+            '-DVCPKG_OVERLAY_TRIPLETS={vcpkg_overlay_triplets} '
+            '-DVCPKG_TARGET_TRIPLET={vcpkg_overlay_triplet} '
+            '-DVCPKG_INSTALL_OPTIONS=--clean-after-build'
+            ).format(
+                a=a,
+                vcpkg_cmake=vcpkg_cmake,
+                vcpkg_overlay_ports=vcpkg_overlay_ports,
+                vcpkg_overlay_triplets=vcpkg_overlay_triplets,
+                vcpkg_overlay_triplet=vcpkg_overlay_triplet,
+                arch_param=arch_param
+                ), shell=True)
+        if result != 0:
+            print('Failed to build ' + a)
+            sys.exit(1)
 
-    result = subprocess.call((
-        'cmake --build build/{a}/{vcpkg_overlay_triplet} --config Release'
-        ).format(
-            a=a,
-            vcpkg_overlay_triplet=vcpkg_overlay_triplet
-            ), shell=True)
-    if result != 0:
-        print('Failed to build ' + a)
-        sys.exit(1)
-
-    if os.name == 'nt':
-        unittest_path = (os.getcwd() +
-            "/build/{a}/{vcpkg_overlay_triplet}/Release/unit-tests.exe"
+        result = subprocess.call((
+            'cmake --build build/{a}/{vcpkg_overlay_triplet} --config Release'
             ).format(
                 a=a,
                 vcpkg_overlay_triplet=vcpkg_overlay_triplet
-                )
-    else:
-        unittest_path = (os.getcwd() +
-            "/build/{a}/{vcpkg_overlay_triplet}/unit-tests"
-            ).format(
-                a=a,
-                vcpkg_overlay_triplet=vcpkg_overlay_triplet
-                )
-    if os.path.isfile(unittest_path):
-        result = subprocess.call(unittest_path, shell=True)
-    if result != 0:
-        print('Failed to run unit tests for ' + a)
-        sys.exit(1)
+                ), shell=True)
+        if result != 0:
+            print('Failed to build ' + a)
+            sys.exit(1)
+    if run_tests:
+        print('Testing ' + a)
+        if os.name == 'nt':
+            unittest_path = (os.getcwd() +
+                "/build/{a}/{vcpkg_overlay_triplet}/Release/unit-tests.exe"
+                ).format(
+                    a=a,
+                    vcpkg_overlay_triplet=vcpkg_overlay_triplet
+                    )
+        else:
+            unittest_path = (os.getcwd() +
+                "/build/{a}/{vcpkg_overlay_triplet}/unit-tests"
+                ).format(
+                    a=a,
+                    vcpkg_overlay_triplet=vcpkg_overlay_triplet
+                    )
+        if os.path.isfile(unittest_path):
+            result = subprocess.call(unittest_path, shell=True)
+        if result != 0:
+            print('Failed to run unit tests for ' + a)
+            sys.exit(1)
