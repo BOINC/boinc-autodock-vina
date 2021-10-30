@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    name: ${{ matrix.type }}-build
+    name: ${{ matrix.app }}-${{ matrix.configuration }}-build
     runs-on: macos-latest
     strategy:
       matrix:
