@@ -25,23 +25,23 @@ jobs:
       - name: Configure Python
         if: ${{ success() }}
         run: |
-          pip install boto3
+          pip3 install boto3
 
       - name: Download vcpkg binary cache
         if: ${{ success() }}
         run: |
-          python ./deploy/manage_vcpkg_archive_cache.py download ${{ github.workspace }}/vcpkgcache/vcpkg/archives ${{ matrix.configuration }} "vcpkg.cache.boinc-apps.${{ matrix.app }}"
+          python3 ./deploy/manage_vcpkg_archive_cache.py download ${{ github.workspace }}/vcpkgcache/vcpkg/archives ${{ matrix.configuration }} "vcpkg.cache.boinc-apps.${{ matrix.app }}"
 
       - name: Build
         if: ${{ success() }}
         run: |
           export XDG_CACHE_HOME=${{ github.workspace }}/vcpkgcache
-          python build.py -nt -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
+          python3 build.py -nt -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
 
       - name: Test
         if: ${{ success() }}
         run: |
-          python build.py -nb -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
+          python3 build.py -nb -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
 
       - name: Upload boinc-autodock-vina artifacts
         if: ${{ success() && matrix.app == 'boinc-autodock-vina' }}
@@ -59,4 +59,4 @@ jobs:
           ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
           SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
         run: |
-          python ./deploy/manage_vcpkg_archive_cache.py upload ${{ github.workspace }}/vcpkgcache/vcpkg/archives ${{ matrix.configuration }} "vcpkg.cache.boinc-apps.${{ matrix.app }}" "$ACCESS_KEY" "$SECRET_KEY"
+          python3 ./deploy/manage_vcpkg_archive_cache.py upload ${{ github.workspace }}/vcpkgcache/vcpkg/archives ${{ matrix.configuration }} "vcpkg.cache.boinc-apps.${{ matrix.app }}" "$ACCESS_KEY" "$SECRET_KEY"
