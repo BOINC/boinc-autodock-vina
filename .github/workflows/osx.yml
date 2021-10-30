@@ -1,0 +1,62 @@
+name: OSX
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  schedule:
+    - cron:  '10 12 * * 0'
+
+jobs:
+  build:
+    name: ${{ matrix.type }}-build
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        app: [boinc-autodock-vina]
+        configuration: [x64-osx-static]
+      fail-fast: false
+    steps:
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '12.2'
+      - uses: actions/checkout@v2
+
+      - name: Configure Python
+        if: ${{ success() }}
+        run: |
+          pip install boto3
+
+      - name: Download vcpkg binary cache
+        if: ${{ success() }}
+        run: |
+          python ./deploy/manage_vcpkg_archive_cache.py download ${{ github.workspace }}/vcpkgcache/vcpkg/archives ${{ matrix.configuration }} "vcpkg.cache.boinc-apps.${{ matrix.app }}"
+
+      - name: Build
+        if: ${{ success() }}
+        run: |
+          export XDG_CACHE_HOME=${{ github.workspace }}/vcpkgcache
+          python build.py -nt -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
+
+      - name: Test
+        if: ${{ success() }}
+        run: |
+          python build.py -nb -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
+
+      - name: Upload boinc-autodock-vina artifacts
+        if: ${{ success() && matrix.app == 'boinc-autodock-vina' }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.app }}-${{ matrix.configuration }}-${{ github.event.pull_request.head.sha }}
+          path: |
+            build/${{ matrix.app }}/${{ matrix.configuration }}/boinc-autodock-vina
+            build/${{ matrix.app }}/${{ matrix.configuration }}/config-validator
+            build/${{ matrix.app }}/${{ matrix.configuration }}/unit-tests
+
+      - name: Upload vcpkg binary cache
+        if: ${{ success() }}
+        env:
+          ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
+          SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
+        run: |
+          python ./deploy/manage_vcpkg_archive_cache.py upload ${{ github.workspace }}/vcpkgcache/vcpkg/archives ${{ matrix.configuration }} "vcpkg.cache.boinc-apps.${{ matrix.app }}" "$ACCESS_KEY" "$SECRET_KEY"
