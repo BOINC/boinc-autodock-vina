@@ -7,16 +7,16 @@
 
 #include "common/config.h"
 
-bool calculate(const std::filesystem::path& json) {
+bool calculate(const std::filesystem::path& json, const std::function<void(double)>& progress_callback) {
     config config;
 
     if (!config.load(json)) {
-        std::cout << "Config load failed, cannot proceed further" << std::endl;
+        std::cerr << "Config load failed, cannot proceed further" << std::endl;
         return false;
     }
 
     if (!config.validate()) {
-        std::cout << "Config validation failed, cannot proceed further" << std::endl;
+        std::cerr << "Config validation failed, cannot proceed further" << std::endl;
         return false;
     }
 
@@ -25,7 +25,8 @@ bool calculate(const std::filesystem::path& json) {
     }
 
     Vina vina(std::string(magic_enum::enum_name(config.input.scoring)), config.misc.cpu,
-        config.misc.seed, config.misc.verbosity, config.advanced.no_refine);
+        config.misc.seed, config.misc.verbosity, config.advanced.no_refine, 
+        const_cast<std::function<void(double)>*>(&progress_callback));
 
     if (!config.input.receptor.empty() || !config.input.flex.empty()) {
         vina.set_receptor(config.input.receptor, config.input.flex);

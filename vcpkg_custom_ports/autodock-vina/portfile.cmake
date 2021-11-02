@@ -9,6 +9,7 @@ vcpkg_from_github(
     PATCHES
         01-windows.patch
         02-windows.patch
+        03-add-progress-callback.patch
 )
 
 file(COPY "${CMAKE_CURRENT_LIST_DIR}/CMakeLists.txt" DESTINATION "${SOURCE_PATH}")
