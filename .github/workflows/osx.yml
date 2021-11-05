@@ -43,8 +43,8 @@ jobs:
         run: |
           export LLVM_PROFILE_FILE=${{ github.workspace }}/${{ matrix.app }}.profraw
           python3 build.py -nb -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
-          llvm-profdata merge -sparse ${{ github.workspace }}/${{ matrix.app }}.profraw -o ${{ github.workspace }}/${{ matrix.app }}.profdata
-          llvm-cov show ${{ github.workspace }}/build/${{ matrix.app }}/${{ matrix.configuration }}/unit-tests -instr-profile=${{ github.workspace }}/${{ matrix.app }}.profdata > ${{ github.workspace }}/coverage.txt
+          xcrun llvm-profdata merge -sparse ${{ github.workspace }}/${{ matrix.app }}.profraw -o ${{ github.workspace }}/${{ matrix.app }}.profdata
+          xcrun llvm-cov show ${{ github.workspace }}/build/${{ matrix.app }}/${{ matrix.configuration }}/unit-tests -instr-profile=${{ github.workspace }}/${{ matrix.app }}.profdata > ${{ github.workspace }}/coverage.txt
 
       - name: Upload boinc-autodock-vina artifacts
         if: ${{ success() && matrix.app == 'boinc-autodock-vina' }}
