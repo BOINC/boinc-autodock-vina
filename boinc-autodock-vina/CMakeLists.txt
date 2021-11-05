@@ -41,7 +41,7 @@ add_executable(unit-tests
     src/unit-tests/unit-tests.cpp
 )
 
-if (UNIX)
+if (UNIX AND CMAKE_CXX_COMPILER_ID MATCHES "GCC")
     target_compile_options(unit-tests PRIVATE -g -O0 --coverage -fprofile-abs-path)
     target_link_options(unit-tests PRIVATE --coverage)
 endif()
