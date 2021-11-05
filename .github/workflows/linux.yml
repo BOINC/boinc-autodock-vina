@@ -53,12 +53,12 @@ jobs:
             build/${{ matrix.app }}/${{ matrix.configuration }}/unit-tests
 
       - name: Run GCov
-        if: success()
+        if: ${{ success() }}
         run: bash -c "find . -type f -name '*.gcno' -exec gcov -pb {} +" || true
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v2
-        if: success()
+        if: ${{ success() }}
         with:
           fail_ci_if_error: true
           verbose: false

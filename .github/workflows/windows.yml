@@ -23,6 +23,21 @@ jobs:
         with:
           fetch-depth: 2
 
+      - name: Download OpenCppCoverage
+        uses: suisei-cn/actions-download-file@v1
+        if: success()
+        id: DownloadOpenCppCoverage
+        with:
+          url: "https://opencppcoverage.gallerycdn.vsassets.io/extensions/opencppcoverage/opencppcoverageplugin/0.9.7.1/1581265346391/OpenCppCoverage-0.9.7.1.vsix"
+          target: ${{ github.workspace }}\temp\
+
+      - name: Unzip OpenCppCoverage
+        if: success()
+        uses: DuckSoft/extract-7z-action@v1.0
+        with:
+          pathSource: ${{ github.workspace }}\temp\OpenCppCoverage-0.9.7.1.vsix
+          pathTarget: ${{ github.workspace }}\temp\OpenCppCoverage
+
       - name: Setup msbuild
         uses: microsoft/setup-msbuild@v1
 
@@ -55,6 +70,13 @@ jobs:
         with:
           name: ${{ matrix.app }}-${{ matrix.configuration }}-${{ github.event.pull_request.head.sha }}
           path: build/${{ matrix.app }}/${{ matrix.configuration }}/Release/*.exe
+
+      - name: Upload coverage report
+        if: ${{ success() }}
+        uses: codecov/codecov-action@v2
+        with:
+          fail_ci_if_error: true
+          verbose: false
 
       - name: Upload vcpkg binary cache
         if: ${{ success() }}

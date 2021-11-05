@@ -33,6 +33,7 @@ if (len(sys.argv) < 2):
 apps_to_build = []
 vcpkg_overlay_triplets = None
 vcpkg_overlay_triplet = None
+opencppcoverage_path = None
 
 run_build = True
 run_tests = True
@@ -55,6 +56,8 @@ for a in sys.argv[1:]:
                 vcpkg_overlay_triplets = p[1]
             elif (p[0] == '-t' and vcpkg_overlay_triplet is None):
                 vcpkg_overlay_triplet = p[1]
+            elif (p[0] == '-occ' and opencppcoverage_path is None):
+                opencppcoverage_path = p[1]
             else:
                 print('Invalid option: ' + a)
                 help()
@@ -160,7 +163,26 @@ for a in apps_to_build:
                     vcpkg_overlay_triplet=vcpkg_overlay_triplet
                     )
         if os.path.isfile(unittest_path):
-            result = subprocess.call(unittest_path, shell=True)
+            if os.name == 'nt':
+                if opencppcoverage_path is None:
+                    result = subprocess.call(unittest_path, shell=True)
+                else:
+                    result = subprocess.call((
+                        '{opencppcoverage_path} '
+                        '--cover_children '
+                        '--optimized_build '
+                        '--sources {sources} '
+                        '--export_type=cobertura:cobertura.xml '
+                        '-- '
+                        '{unittest_path} '
+                        '--gtest_output=xml:gtest.xml'
+                        ).format(
+                            opencppcoverage_path=opencppcoverage_path,
+                            sources=os.getcwd(),
+                            unittest_path=unittest_path
+                            ), shell=True)
+            else:
+                result = subprocess.call(unittest_path, shell=True)
         if result != 0:
             print('Failed to run unit tests for ' + a)
             sys.exit(1)
