@@ -42,7 +42,8 @@ add_executable(unit-tests
 )
 
 if (UNIX)
-    target_compile_options(unit-tests PRIVATE "-g")
+    target_compile_options(unit-tests PRIVATE "-g --coverage -fprofile-abs-path")
+    target_link_options(unit-tests PRIVATE "--coverage")
 endif()
 
 target_include_directories(boinc-autodock-vina
