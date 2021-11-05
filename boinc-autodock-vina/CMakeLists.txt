@@ -47,8 +47,8 @@ if (UNIX AND CMAKE_CXX_COMPILER_ID MATCHES "GCC")
 endif()
 
 if (APPLE AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    target_compile_options(unit-tests PRIVATE -g -O0 -fcoverage-mapping)
-    target_link_options(unit-tests PRIVATE -fprofile-instr-generate)
+    target_compile_options(unit-tests PRIVATE -g -O0 -fcoverage-mapping -fprofile-instr-generate)
+    target_link_options(unit-tests PRIVATE -fcoverage-mapping -fprofile-instr-generate)
 endif()
 
 target_include_directories(boinc-autodock-vina
