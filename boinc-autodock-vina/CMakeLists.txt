@@ -17,6 +17,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 if (UNIX)
     set(CMAKE_CXX_FLAGS "-fpermissive")
+    target_compile_options(unit-tests PRIVATE "-g -O0")
 endif()
 
 add_executable(boinc-autodock-vina
