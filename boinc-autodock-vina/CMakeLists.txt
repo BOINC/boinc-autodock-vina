@@ -42,11 +42,8 @@ add_executable(unit-tests
 )
 
 if (UNIX)
-    set (BUILD_FLAGS "-g -O0 --coverage -fprofile-abs-path")
-    target_compile_options(unit-tests PRIVATE
-        $<$<COMPILE_LANGUAGE:CXX>:${BUILD_FLAGS}>
-        $<$<COMPILE_LANGUAGE:C>:${BUILD_FLAGS}>)
-    target_link_options(unit-tests PRIVATE "--coverage")
+    target_compile_options(unit-tests PRIVATE -g -O0 --coverage -fprofile-abs-path)
+    target_link_options(unit-tests PRIVATE --coverage)
 endif()
 
 target_include_directories(boinc-autodock-vina
