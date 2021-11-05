@@ -52,6 +52,17 @@ jobs:
             build/${{ matrix.app }}/${{ matrix.configuration }}/config-validator
             build/${{ matrix.app }}/${{ matrix.configuration }}/unit-tests
 
+      - name: Run GCov
+        if: ${{ success() }}
+        run: bash -c "find . -type f -name '*.gcno' -exec gcov -pb {} +" || true
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v2
+        if: ${{ success() }}
+        with:
+          fail_ci_if_error: true
+          verbose: false
+
       - name: Upload vcpkg binary cache
         if: ${{ success() }}
         env:

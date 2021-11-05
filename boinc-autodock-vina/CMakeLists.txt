@@ -41,6 +41,16 @@ add_executable(unit-tests
     src/unit-tests/unit-tests.cpp
 )
 
+if (UNIX AND CMAKE_CXX_COMPILER_ID MATCHES "GCC")
+    target_compile_options(unit-tests PRIVATE -g -O0 --coverage -fprofile-abs-path)
+    target_link_options(unit-tests PRIVATE --coverage)
+endif()
+
+if (APPLE AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    target_compile_options(unit-tests PRIVATE -g -O0 -fcoverage-mapping -fprofile-instr-generate)
+    target_link_options(unit-tests PRIVATE -fcoverage-mapping -fprofile-instr-generate)
+endif()
+
 target_include_directories(boinc-autodock-vina
     PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/src
