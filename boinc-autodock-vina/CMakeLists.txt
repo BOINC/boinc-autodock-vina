@@ -42,7 +42,7 @@ add_executable(unit-tests
 )
 
 if (UNIX)
-    target_compile_options(unit-tests PRIVATE "-g -O0")
+    target_compile_options(unit-tests PRIVATE "-g")
 endif()
 
 target_include_directories(boinc-autodock-vina
