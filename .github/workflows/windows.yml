@@ -62,7 +62,7 @@ jobs:
 
       - name: Test
         if: ${{ success() }}
-        run: python3 build.py -nb -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
+        run: python3 build.py -nb -occ=${{ github.workspace }}\temp\OpenCppCoverage\OpenCppCoverage-x64\OpenCppCoverage.exe -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
 
       - name: Upload artifacts
         if: ${{ success()}}
