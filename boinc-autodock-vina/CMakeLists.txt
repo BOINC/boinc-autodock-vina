@@ -42,11 +42,10 @@ add_executable(unit-tests
 )
 
 if (UNIX)
-    set (BUILD_FLAGS_FOR_CXX "-g -O0 --coverage -fprofile-abs-path")
-    set (BUILD_FLAGS_FOR_C "-g -O0 --coverage -fprofile-abs-path")
+    set (BUILD_FLAGS "-g -O0 --coverage -fprofile-abs-path")
     target_compile_options(unit-tests PRIVATE
-        $<$<COMPILE_LANGUAGE:CXX>:${BUILD_FLAGS_FOR_CXX}>
-        $<$<COMPILE_LANGUAGE:C>:${BUILD_FLAGS_FOR_C}>)"")
+        $<$<COMPILE_LANGUAGE:CXX>:${BUILD_FLAGS}>
+        $<$<COMPILE_LANGUAGE:C>:${BUILD_FLAGS}>)
     target_link_options(unit-tests PRIVATE "--coverage")
 endif()
 
