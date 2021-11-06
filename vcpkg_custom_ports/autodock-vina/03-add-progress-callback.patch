@@ -1,0 +1,110 @@
+diff --git a/src/lib/parallel_mc.cpp b/src/lib/parallel_mc.cpp
+index 145b04d..ceaf3e8 100755
+--- a/src/lib/parallel_mc.cpp
++++ b/src/lib/parallel_mc.cpp
+@@ -60,8 +60,8 @@ void merge_output_containers(const parallel_mc_task_container& many, output_cont
+ 	out.sort();
+ }
+ 
+-void parallel_mc::operator()(const model& m, output_container& out, const precalculate_byatom& p, const igrid& ig, const vec& corner1, const vec& corner2, rng& generator) const {
+-	parallel_progress pp;
++void parallel_mc::operator()(const model& m, output_container& out, const precalculate_byatom& p, const igrid& ig, const vec& corner1, const vec& corner2, rng& generator, std::function<void(double)>* progress_callback) const {
++	parallel_progress pp (progress_callback);
+ 	parallel_mc_aux parallel_mc_aux_instance(&mc, &p, &ig, &corner1, &corner2, (display_progress ? (&pp) : NULL));
+ 	parallel_mc_task_container task_container;
+ 	VINA_FOR(i, num_tasks)
+diff --git a/src/lib/parallel_mc.h b/src/lib/parallel_mc.h
+index 51c8eab..8ddc2c0 100755
+--- a/src/lib/parallel_mc.h
++++ b/src/lib/parallel_mc.h
+@@ -31,7 +31,7 @@ struct parallel_mc {
+ 	sz num_threads;
+ 	bool display_progress;
+ 	parallel_mc() : num_tasks(8), num_threads(1), display_progress(true) {}
+-	void operator()(const model& m, output_container& out, const precalculate_byatom& p, const igrid& ig, const vec& corner1, const vec& corner2, rng& generator) const;
++	void operator()(const model& m, output_container& out, const precalculate_byatom& p, const igrid& ig, const vec& corner1, const vec& corner2, rng& generator, std::function<void(double)>* progress_callback) const;
+ };
+ 
+ #endif
+diff --git a/src/lib/parallel_progress.h b/src/lib/parallel_progress.h
+index 4a9fc80..958b170 100755
+--- a/src/lib/parallel_progress.h
++++ b/src/lib/parallel_progress.h
+@@ -26,21 +26,30 @@
+ #include <boost/progress.hpp>
+ #include <boost/thread/mutex.hpp>
+ 
++#include <functional>
++
+ #include "incrementable.h"
+ 
+ struct parallel_progress : public incrementable {
+-	parallel_progress() : p(NULL) {}
+-	void init(unsigned long n) { p = new boost::progress_display(n); }
++	parallel_progress(std::function<void(double)>* c = NULL) : p(NULL), callback(c) {}
++	void init(unsigned long n) {
++        count = n;
++        p = new boost::progress_display(count);
++    }
+ 	void operator++() {
+ 		if(p) {
+ 			boost::mutex::scoped_lock self_lk(self);
+-			++(*p);
++			const unsigned long value = ++(*p);
++            if(callback)
++                (*callback)(static_cast<double>(value) / count);
+ 		}
+ 	}
+ 	virtual ~parallel_progress() { delete p; }
+ private:
+ 	boost::mutex self;
+ 	boost::progress_display* p;
++    std::function<void(double)>* callback;
++    unsigned long count;
+ };
+ 
+ #endif
+diff --git a/src/lib/vina.cpp b/src/lib/vina.cpp
+index d296380..05dfd70 100644
+--- a/src/lib/vina.cpp
++++ b/src/lib/vina.cpp
+@@ -912,9 +912,9 @@ void Vina::global_search(const int exhaustiveness, const int n_poses, const doub
+ 	sstm << "Performing docking (random seed: " << m_seed << ")";
+ 	doing(sstm.str(), m_verbosity, 0);
+ 	if (m_sf_choice == SF_VINA || m_sf_choice == SF_VINARDO) {
+-		parallelmc(m_model, poses, m_precalculated_byatom,    m_grid, m_corner1, m_corner2, generator);
++		parallelmc(m_model, poses, m_precalculated_byatom,    m_grid, m_corner1, m_corner2, generator, m_progress_callback);
+ 	} else {
+-		parallelmc(m_model, poses, m_precalculated_byatom, m_ad4grid, m_corner1, m_corner2, generator);
++		parallelmc(m_model, poses, m_precalculated_byatom, m_ad4grid, m_corner1, m_corner2, generator, m_progress_callback);
+ 	}
+ 	done(m_verbosity, 1);
+ 
+diff --git a/src/lib/vina.h b/src/lib/vina.h
+index 163269e..a9af287 100644
+--- a/src/lib/vina.h
++++ b/src/lib/vina.h
+@@ -58,13 +58,14 @@
+ class Vina {
+ public:
+ 	// Constructor
+-	Vina(const std::string &sf_name="vina", int cpu=0, int seed=0, int verbosity=1, bool no_refine=false) {
++	Vina(const std::string &sf_name="vina", int cpu=0, int seed=0, int verbosity=1, bool no_refine=false, std::function<void(double)>* progress_callback = NULL) {
+ 		m_verbosity = verbosity;
+ 		m_receptor_initialized = false;
+ 		m_ligand_initialized = false;
+ 		m_map_initialized = false;
+ 		m_seed = generate_seed(seed);
+ 		m_no_refine = no_refine;
++		m_progress_callback = progress_callback;
+ 
+ 		// Look for the number of cpu
+ 		if (cpu <= 0) {
+@@ -161,6 +162,7 @@ private:
+ 	// others
+ 	int m_verbosity;
+ 	bool m_no_refine;
++	std::function<void(double)>* m_progress_callback;
+ 
+ 	std::string vina_remarks(output_type& pose, fl lb, fl ub);
+ 	output_container remove_redundant(const output_container& in, fl min_rmsd);
