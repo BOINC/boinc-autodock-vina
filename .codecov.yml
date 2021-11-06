@@ -1,0 +1,32 @@
+codecov:
+  require_ci_to_pass: yes
+  notify:
+    after_n_builds: 4
+    wait_for_ci: yes
+
+coverage:
+  status:
+    project: off
+    patch:
+      default:
+        threshold: 0.01
+
+comment:
+  layout: "diff, files"
+  behavior: default
+  require_changes: yes    # if true: only post the comment if coverage changes
+  require_base: no        # [yes :: must have a base report to post]
+  require_head: yes       # [yes :: must have a head report to post]
+  branches:
+    - master
+  after_n_builds: 4
+
+flags:
+  # filter the folder(s) you wish to measure by that flag
+  boinc-autodock-vina:
+    paths:
+      - boinc-autodock-vina/src/
+
+# don't gather statistics for test and external libraries
+ignore:
+  - "**/src/unit-tests/*"

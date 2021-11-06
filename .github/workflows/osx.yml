@@ -41,7 +41,10 @@ jobs:
       - name: Test
         if: ${{ success() }}
         run: |
+          export LLVM_PROFILE_FILE=${{ github.workspace }}/${{ matrix.app }}.profraw
           python3 build.py -nb -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
+          xcrun llvm-profdata merge -sparse ${{ github.workspace }}/${{ matrix.app }}.profraw -o ${{ github.workspace }}/${{ matrix.app }}.profdata
+          xcrun llvm-cov show ${{ github.workspace }}/build/${{ matrix.app }}/${{ matrix.configuration }}/unit-tests -instr-profile=${{ github.workspace }}/${{ matrix.app }}.profdata > ${{ github.workspace }}/coverage.txt
 
       - name: Upload boinc-autodock-vina artifacts
         if: ${{ success() && matrix.app == 'boinc-autodock-vina' }}
@@ -52,6 +55,13 @@ jobs:
             build/${{ matrix.app }}/${{ matrix.configuration }}/boinc-autodock-vina
             build/${{ matrix.app }}/${{ matrix.configuration }}/config-validator
             build/${{ matrix.app }}/${{ matrix.configuration }}/unit-tests
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v2
+        if: ${{ success() }}
+        with:
+          fail_ci_if_error: true
+          verbose: false
 
       - name: Upload vcpkg binary cache
         if: ${{ success() }}

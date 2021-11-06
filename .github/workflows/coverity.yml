@@ -1,0 +1,25 @@
+name: Coverity
+on:
+  schedule:
+    - cron:  '15 12 * * 0'
+
+jobs:
+  coverity:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: [boinc-autodock-vina]
+        configuration: [x64-linux-static]
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+
+      - name: Coverity Scan
+        uses: vapier/coverity-scan-action@v0
+        with:
+          project: 'BOINC/boinc-apps'
+          token: ${{ secrets.COVERITY_SCAN_TOKEN }}
+          email: 'lestat.de.lionkur@gmail.com'
+          command: python3 build.py -nt -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
