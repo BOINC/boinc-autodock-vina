@@ -1,6 +1,24 @@
+// This file is part of BOINC.
+// https://boinc.berkeley.edu
+// Copyright (C) 2021 University of California
+//
+// BOINC is free software; you can redistribute it and/or modify it
+// under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+//
+// BOINC is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with BOINC.  If not, see <http://www.gnu.org/licenses/>.
+
 #include <iostream>
 #include <thread>
 #include <atomic>
+#include <cmath>
 
 #include <boinc/boinc_api.h>
 
@@ -30,19 +48,28 @@ int main(int argc, char** argv) {
     char buf[256];
 
     try {
+        BOINC_OPTIONS options;
+        boinc_options_defaults(options);
+        options.multi_thread = true;
 
-        if (const auto res = boinc_init()) {
+        if (const auto res = boinc_init_options(&options)) {
             std::cerr << boinc_msg_prefix(buf, sizeof(buf)) << " boinc_init failed with error code " << res << std::endl;
             return res;
         }
+
+        APP_INIT_DATA app_data;
+        boinc_get_init_data(app_data);
+        const int ncpus = static_cast<int>(ceil(app_data.ncpus));
 
         std::atomic result(false);
 
         std::string json(argv[1]);
 
-        std::thread worker([&result, &json] {
+        boinc_fraction_done(0.);
+
+        std::thread worker([&result, &json, &ncpus] {
             try {
-                result = calculate(json, [](auto value)
+                result = calculate(json, ncpus, [](auto value)
                 {
                     report_progress(value);
                 });

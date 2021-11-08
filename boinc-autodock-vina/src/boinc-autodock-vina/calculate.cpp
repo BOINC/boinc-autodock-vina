@@ -1,3 +1,20 @@
+// This file is part of BOINC.
+// https://boinc.berkeley.edu
+// Copyright (C) 2021 University of California
+//
+// BOINC is free software; you can redistribute it and/or modify it
+// under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+//
+// BOINC is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with BOINC.  If not, see <http://www.gnu.org/licenses/>.
+
 #include "calculate.h"
 
 #include <iostream>
@@ -7,7 +24,7 @@
 
 #include "common/config.h"
 
-bool calculate(const std::filesystem::path& json, const std::function<void(double)>& progress_callback) {
+bool calculate(const std::filesystem::path& json, const int& ncpus, const std::function<void(double)>& progress_callback) {
     config config;
 
     if (!config.load(json)) {
@@ -24,8 +41,10 @@ bool calculate(const std::filesystem::path& json, const std::function<void(doubl
         config.output.out = config.input.ligands[0];
     }
 
-    Vina vina(std::string(magic_enum::enum_name(config.input.scoring)), config.misc.cpu,
-        config.misc.seed, config.misc.verbosity, config.advanced.no_refine, 
+    constexpr int vina_verbosity = 1;
+
+    Vina vina(std::string(magic_enum::enum_name(config.input.scoring)), ncpus,
+        config.misc.seed, vina_verbosity, config.advanced.no_refine, 
         const_cast<std::function<void(double)>*>(&progress_callback));
 
     if (!config.input.receptor.empty() || !config.input.flex.empty()) {
