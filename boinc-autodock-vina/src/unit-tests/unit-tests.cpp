@@ -1,3 +1,20 @@
+// This file is part of BOINC.
+// https://boinc.berkeley.edu
+// Copyright (C) 2021 University of California
+//
+// BOINC is free software; you can redistribute it and/or modify it
+// under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation,
+// either version 3 of the License, or (at your option) any later version.
+//
+// BOINC is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with BOINC.  If not, see <http://www.gnu.org/licenses/>.
+
 #include <fstream>
 
 #include <gtest/gtest.h>
@@ -310,15 +327,13 @@ TEST_F(Config_UnitTests, LoadValidator) {
     json << "\t\t\"weight_glue\": 1.024653" << std::endl;
     json << "\t}," << std::endl;
     json << "\t\"misc\": {" << std::endl;
-    json << "\t\t\"cpu\": 1," << std::endl;
     json << "\t\t\"seed\": 2," << std::endl;
     json << "\t\t\"exhaustiveness\": 3," << std::endl;
     json << "\t\t\"max_evals\": 4," << std::endl;
     json << "\t\t\"num_modes\": 5," << std::endl;
     json << "\t\t\"min_rmsd\": 2.0," << std::endl;
     json << "\t\t\"energy_range\": -2.0," << std::endl;
-    json << "\t\t\"spacing\": -0.123," << std::endl;
-    json << "\t\t\"verbosity\": 6" << std::endl;
+    json << "\t\t\"spacing\": -0.123" << std::endl;
     json << "\t}" << std::endl;
     json << "}" << std::endl;
     json.close();
@@ -380,7 +395,6 @@ TEST_F(Config_UnitTests, LoadValidator) {
     EXPECT_DOUBLE_EQ(-1.064235, config.advanced.weight_ad4_dsolv);
     EXPECT_DOUBLE_EQ(1.064235, config.advanced.weight_ad4_rot);
     EXPECT_DOUBLE_EQ(1.024653, config.advanced.weight_glue);
-    EXPECT_EQ(1, config.misc.cpu);
     EXPECT_EQ(2, config.misc.seed);
     EXPECT_EQ(3, config.misc.exhaustiveness);
     EXPECT_EQ(4, config.misc.max_evals);
@@ -388,14 +402,13 @@ TEST_F(Config_UnitTests, LoadValidator) {
     EXPECT_DOUBLE_EQ(2.0, config.misc.min_rmsd);
     EXPECT_DOUBLE_EQ(-2.0, config.misc.energy_range);
     EXPECT_DOUBLE_EQ(-0.123, config.misc.spacing);
-    EXPECT_EQ(6, config.misc.verbosity);
 
     std::filesystem::remove(dummy_json_file_path);
 }
 
 TEST_F(Config_UnitTests, TestSimpleVinaScenario) {
     const auto json_file = std::filesystem::current_path() /= "boinc-autodock-vina/samples/basic_docking/1iep_vina.json";
-    const auto res = calculate(json_file, [](double) { });
+    const auto res = calculate(json_file, 0, [](double) { });
     EXPECT_TRUE(res);
     std::filesystem::remove(std::filesystem::current_path() /= "boinc-autodock-vina/samples/basic_docking/1iep_ligand_vina_out.pdbqt");
 }
