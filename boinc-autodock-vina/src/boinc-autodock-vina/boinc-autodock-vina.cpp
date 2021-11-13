@@ -24,9 +24,22 @@
 
 #include "calculate.h"
 
+#ifndef BOINC_AUTODOCK_VINA_VERSION
+#define BOINC_AUTODOCK_VINA_VERSION "unknown"
+#endif
+
+#ifndef BOINC_APPS_GIT_REVISION
+#define BOINC_APPS_GIT_REVISION "unknown"
+#endif
+
 inline void help() {
     std::cerr << "Usage:" << std::endl;
     std::cerr << "boinc-autodock-vina config.json" << std::endl;
+}
+
+inline void header() {
+    std::cout << "Starting BOINC Autodock Vina v" << BOINC_AUTODOCK_VINA_VERSION;
+    std::cout << " (" << BOINC_APPS_GIT_REVISION << ")" << std::endl;
 }
 
 auto prev_value = 0.;
@@ -40,6 +53,8 @@ inline void report_progress(double value) {
 }
 
 int main(int argc, char** argv) {
+    header();
+
     if (argc != 2) {
         help();
         return 1;

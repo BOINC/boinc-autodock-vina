@@ -129,6 +129,8 @@ vcpkg_cmake = os.getcwd() + '/vcpkg/scripts/buildsystems/vcpkg.cmake'
 vcpkg_overlay_triplets = os.getcwd() + '/vcpkg_triplets/' + vcpkg_overlay_triplets
 vcpkg_overlay_ports = os.getcwd() + '/vcpkg_custom_ports/'
 
+boinc_apps_git_revision = subprocess.check_output('git rev-parse --short HEAD', shell=True).decode('utf-8').strip()
+
 for a in apps_to_build:
     if run_build:
         print('Building ' + a)
@@ -141,21 +143,24 @@ for a in apps_to_build:
             '-DVCPKG_OVERLAY_PORTS={vcpkg_overlay_ports} '
             '-DVCPKG_OVERLAY_TRIPLETS={vcpkg_overlay_triplets} '
             '-DVCPKG_TARGET_TRIPLET={vcpkg_overlay_triplet} '
-            '-DVCPKG_INSTALL_OPTIONS=--clean-after-build'
+            '-DVCPKG_INSTALL_OPTIONS=--clean-after-build '
+            '-DBOINC_APPS_GIT_REVISION={boinc_apps_git_revision}'
             ).format(
                 a=a,
                 vcpkg_cmake=vcpkg_cmake,
                 vcpkg_overlay_ports=vcpkg_overlay_ports,
                 vcpkg_overlay_triplets=vcpkg_overlay_triplets,
                 vcpkg_overlay_triplet=vcpkg_overlay_triplet,
-                arch_param=arch_param
+                arch_param=arch_param,
+                boinc_apps_git_revision=boinc_apps_git_revision
                 ), shell=True)
         if result != 0:
             print('Failed to build ' + a)
             sys.exit(1)
 
         result = subprocess.call((
-            'cmake --build build/{a}/{vcpkg_overlay_triplet} --config Release'
+            'cmake --build build/{a}/{vcpkg_overlay_triplet} '
+            '--config Release'
             ).format(
                 a=a,
                 vcpkg_overlay_triplet=vcpkg_overlay_triplet

@@ -68,6 +68,29 @@ if (APPLE AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     target_link_options(unit-tests PRIVATE -fcoverage-mapping -fprofile-instr-generate)
 endif()
 
+set(BOINC_AUTODOCK_VINA_VERSION "0.1.0")
+if (NOT DEFINED BOINC_APPS_GIT_REVISION)
+    set(BOINC_APPS_GIT_REVISION "unknown")
+endif()
+
+target_compile_definitions(boinc-autodock-vina
+    PRIVATE
+    -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
+    -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
+)
+
+target_compile_definitions(config-validator
+    PRIVATE
+    -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
+    -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
+)
+
+target_compile_definitions(unit-tests
+    PRIVATE
+    -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
+    -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
+)
+
 target_include_directories(boinc-autodock-vina
     PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/src
