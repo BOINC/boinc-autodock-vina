@@ -8,6 +8,12 @@
 | [![OSX](https://github.com/BOINC/boinc-apps/actions/workflows/osx.yml/badge.svg?branch=master)](https://github.com/BOINC/boinc-apps/actions/workflows/osx.yml) | [![Coverity Scan Build Status](https://scan.coverity.com/projects/24043/badge.svg)](https://scan.coverity.com/projects/boinc-boinc-apps) |
 | [![Windows](https://github.com/BOINC/boinc-apps/actions/workflows/windows.yml/badge.svg?branch=master)](https://github.com/BOINC/boinc-apps/actions/workflows/windows.yml) | |
 
+## OS support
+
+| Application | Linux x64 | OSX x64 | Windows x64 | Windows x86 |
+| --- | --- | --- | --- | --- |
+| boinc-autodock-vina | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+
 ## Building
 
 Currently supported platforms are:
@@ -29,7 +35,7 @@ List of available parameters:
 - `-t` - triplet of the target platform. Available values: `x64-linux-static`, `x64-osx-static`, `x64-windows-static`, `x86-windows-static`. Default on linux is `x64-linux-static`, on windows is `x64-windows-static`. There is no default value for OSX.
 - `-nb` - perform no build (only unit-tests will be executed). If no unit-tests were build, script will fail with an error.
 - `-nt` - run no tests after build.
-- `-occ` - path to the OpenCppCoverage tool. If not specified, script will run unit-tests with no coverage report. This is windows specific option nad will be ignored on any other OS.
+- `-occ` - path to the OpenCppCoverage tool. If not specified, script will run unit-tests with no coverage report. This is windows specific option and will be ignored on any other OS.
 
 ### Examples:
 

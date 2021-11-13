@@ -19,12 +19,27 @@
 
 #include "common/config.h"
 
+#ifndef BOINC_AUTODOCK_VINA_VERSION
+#define BOINC_AUTODOCK_VINA_VERSION "unknown"
+#endif
+
+#ifndef BOINC_APPS_GIT_REVISION
+#define BOINC_APPS_GIT_REVISION "unknown"
+#endif
+
 void help() {
     std::cout << "Usage:" << std::endl;
     std::cout << "config-validator config_to_validate.json" << std::endl;
 }
 
+inline void header() {
+    std::cout << "Starting BOINC Autodock Vina config validator v" << BOINC_AUTODOCK_VINA_VERSION;
+    std::cout << " (" << BOINC_APPS_GIT_REVISION << ")" << std::endl;
+}
+
 int main(int argc, char **argv) {
+    header();
+
     if (argc != 2) {
         help();
         return 1;
