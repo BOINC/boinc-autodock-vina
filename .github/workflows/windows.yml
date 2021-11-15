@@ -77,9 +77,13 @@ jobs:
         if: ${{ success() }}
         run: python3 build.py -nt -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
 
-      - name: Test
-        if: ${{ success() }}
+      - name: Test x64
+        if: ${{ success() && matrix.configuration == 'x64-windows-static' }}
         run: python3 build.py -nb -occ=${{ github.workspace }}\temp\OpenCppCoverage\OpenCppCoverage-x64\OpenCppCoverage.exe -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
+
+      - name: Test x86
+        if: ${{ success()  && matrix.configuration == 'x86-windows-static' }}
+        run: python3 build.py -nb -occ=${{ github.workspace }}\temp\OpenCppCoverage\OpenCppCoverage-x86\OpenCppCoverage.exe -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
 
       - name: Upload artifacts
         if: ${{ success()}}
