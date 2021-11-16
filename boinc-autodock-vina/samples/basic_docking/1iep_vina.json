@@ -14,7 +14,7 @@
         "size_z": 20.0
     },
     "misc": {
-        "exhaustiveness": 32
+        "exhaustiveness": 4
     },
     "output": {
         "out": "1iep_ligand_vina_out.pdbqt"
