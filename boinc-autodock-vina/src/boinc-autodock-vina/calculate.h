@@ -20,4 +20,6 @@
 #include <filesystem>
 #include <functional>
 
-[[nodiscard]] bool calculate(const std::filesystem::path& json, const int& ncpus, const std::function<void(double)>& progress_callback);
+#include "common/config.h"
+
+[[nodiscard]] bool calculate(const config& config, const int& ncpus, const std::function<void(double)>& progress_callback);

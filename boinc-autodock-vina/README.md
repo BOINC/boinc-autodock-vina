@@ -39,8 +39,8 @@ This group supports next parameters:
 
 This group supports next parameters:
 
-- `out` - output model files (PDBQT), the default is chosen based on the ligand file name. This file should not have absolute path. This is an **required** `string` parameter when: (1) `input.batch` parameter is specified, (2) `input.ligands` contains more than 1 file and `advanced.score_only` is not specified, otherwise it is **optional**.
-- `dir` - output directory for batch mode.  This directory should not have absolute path. This is an **optional** `string` parameter.
+- `out` - output model files (PDBQT). This file should not have absolute path. This is an **required** `string` parameter when: (1) `input.batch` parameter is specified, (2) `input.ligands` parameter is specified and contains only 1 file and `advanced.score_only` is not specified, otherwise it is **optional**.
+- `dir` - output directory when: (1) in batch mode, (2) `input.ligands` parameter is specified and contains more than 1 file and `advanced.score_only` is not specified. This directory should not have absolute path. This is an **optional** `string` parameter.
 - `write_maps` - output filename (directory + prefix name) for maps. Parameter `advanced.force_even_voxels` may be needed to comply with map format. This is an **optional** `string` parameter. E.g. for the folder with maps `.\maps\1iep_receptor.A.map` and `.\maps\1iep_receptor.C.map` should be provided as `maps\1iep_receptor`.
 
 ### **advanced** parameters group

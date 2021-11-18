@@ -406,9 +406,77 @@ TEST_F(Config_UnitTests, LoadValidator) {
     std::filesystem::remove(dummy_json_file_path);
 }
 
+TEST_F(Config_UnitTests, FailOn_output_out_NotSpecifiedForSingleLigandMode) {
+    const auto dummy_json_file_path = std::filesystem::current_path() /= "dummy.json";
+    std::ofstream json(dummy_json_file_path.c_str());
+
+    json << "{" << std::endl;
+    json << "\t\"input\": {" << std::endl;
+    json << "\t\t\"receptor\": \"receptor_sample\"," << std::endl;
+    json << "\t\t\"ligands\": [" << std::endl;
+    json << "\t\t\t\"ligand_sample1\"" << std::endl;
+    json << "\t\t]" << std::endl;
+    json << "\t}," << std::endl;
+    json << "\t\"search_area\": {" << std::endl;
+    json << "\t\t\"center_x\": 0.123456," << std::endl;
+    json << "\t\t\"center_y\": 0.654321," << std::endl;
+    json << "\t\t\"center_z\": -0.123456," << std::endl;
+    json << "\t\t\"size_x\": -0.654321," << std::endl;
+    json << "\t\t\"size_y\": 0.0," << std::endl;
+    json << "\t\t\"size_z\": -0.000135" << std::endl;
+    json << "\t}" << std::endl;
+    json << "}" << std::endl;
+    json.close();
+
+    config config;
+
+    auto res = config.load(dummy_json_file_path);
+    ASSERT_TRUE(res);
+    res = config.validate();
+    ASSERT_FALSE(res);
+
+    std::filesystem::remove(dummy_json_file_path);
+}
+
+TEST_F(Config_UnitTests, FailOn_output_dir_NotSpecifiedForMultipleLigandsMode) {
+    const auto dummy_json_file_path = std::filesystem::current_path() /= "dummy.json";
+    std::ofstream json(dummy_json_file_path.c_str());
+
+    json << "{" << std::endl;
+    json << "\t\"input\": {" << std::endl;
+    json << "\t\t\"receptor\": \"receptor_sample\"," << std::endl;
+    json << "\t\t\"ligands\": [" << std::endl;
+    json << "\t\t\t\"ligand_sample1\"," << std::endl;
+    json << "\t\t\t\"ligand_sample2\"" << std::endl;
+    json << "\t\t]" << std::endl;
+    json << "\t}," << std::endl;
+    json << "\t\"search_area\": {" << std::endl;
+    json << "\t\t\"center_x\": 0.123456," << std::endl;
+    json << "\t\t\"center_y\": 0.654321," << std::endl;
+    json << "\t\t\"center_z\": -0.123456," << std::endl;
+    json << "\t\t\"size_x\": -0.654321," << std::endl;
+    json << "\t\t\"size_y\": 0.0," << std::endl;
+    json << "\t\t\"size_z\": -0.000135" << std::endl;
+    json << "\t}" << std::endl;
+    json << "}" << std::endl;
+    json.close();
+
+    config config;
+
+    auto res = config.load(dummy_json_file_path);
+    ASSERT_TRUE(res);
+    res = config.validate();
+    ASSERT_FALSE(res);
+
+    std::filesystem::remove(dummy_json_file_path);
+}
+
 TEST_F(Config_UnitTests, TestSimpleVinaScenario) {
     const auto json_file = std::filesystem::current_path() /= "boinc-autodock-vina/samples/basic_docking/1iep_vina.json";
-    const auto res = calculate(json_file, 0, [](double) { });
+    config config;
+    ASSERT_TRUE(config.load(json_file));
+    ASSERT_TRUE(config.validate());
+    const auto res = calculate(config, 0, [](double) { });
     EXPECT_TRUE(res);
     std::filesystem::remove(std::filesystem::current_path() /= "boinc-autodock-vina/samples/basic_docking/1iep_ligand_vina_out.pdbqt");
 }

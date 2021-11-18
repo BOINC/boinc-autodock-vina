@@ -31,12 +31,30 @@ jobs:
     strategy:
       matrix:
         app: [boinc-autodock-vina]
-        configuration: [x64-linux-static]
+        configuration: [x64-linux-static, x86-linux-static, arm-linux-static, armneon-linux-static, arm64-linux-static]
       fail-fast: false
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 2
+
+      - name: Install x86 dependencies
+        if: ${{ success() && matrix.configuration == 'x86-linux-static' }}
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get install -y gcc-multilib g++-multilib
+
+      - name: Install arm dependencies
+        if: ${{ success() && (matrix.configuration == 'arm-linux-static' || matrix.configuration == 'armneon-linux-static') }}
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf binutils-arm-linux-gnueabihf qemu-user-static
+
+      - name: Install arm64 dependencies
+        if: ${{ success() && matrix.configuration == 'arm64-linux-static' }}
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu qemu-user-static
 
       - name: Configure Python
         if: ${{ success() }}
@@ -54,10 +72,20 @@ jobs:
           export XDG_CACHE_HOME=${{ github.workspace }}/vcpkgcache
           python3 build.py -nt -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
 
-      - name: Test
-        if: ${{ success() }}
+      - name: Test x86 and x64
+        if: ${{ success() && (matrix.configuration == 'x86-linux-static' || matrix.configuration == 'x64-linux-static') }}
         run: |
           python3 build.py -nb -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
+
+      - name: Test arm and armneon
+        if: ${{ success() && (matrix.configuration == 'arm-linux-static' || matrix.configuration == 'armneon-linux-static') }}
+        run: |
+          python3 build.py -nb -ts=ci -t=${{ matrix.configuration }} -qemu=qemu-arm-static ${{ matrix.app }}
+
+      - name: Test arm64
+        if: ${{ success() && matrix.configuration == 'arm64-linux-static' }}
+        run: |
+          python3 build.py -nb -ts=ci -t=${{ matrix.configuration }} -qemu=qemu-aarch64-static ${{ matrix.app }}
 
       - name: Upload boinc-autodock-vina artifacts
         if: ${{ success() && matrix.app == 'boinc-autodock-vina' }}

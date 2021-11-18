@@ -1,48 +1,30 @@
-# This file is part of BOINC.
-# https://boinc.berkeley.edu
-# Copyright (C) 2021 University of California
-#
-# BOINC is free software; you can redistribute it and/or modify it
-# under the terms of the GNU Lesser General Public License
-# as published by the Free Software Foundation,
-# either version 3 of the License, or (at your option) any later version.
-#
-# BOINC is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-# See the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with BOINC.  If not, see <http://www.gnu.org/licenses/>.
-
-name: OSX
+name: Android
 on:
   push:
     branches: [ master ]
   pull_request:
     branches: [ master ]
   schedule:
-    - cron:  '10 12 * * 0'
+    - cron:  '5 12 * * 0'
 
 jobs:
   build:
     name: ${{ matrix.app }}-${{ matrix.configuration }}-build
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         app: [boinc-autodock-vina]
-        configuration: [x64-osx-static, arm64-osx-static]
+        configuration: [arm64-android-static, arm-neon-android-static, arm-android-static, x64-android-static, x86-android-static]
       fail-fast: false
     steps:
-      - uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: '12.2'
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
 
       - name: Configure Python
         if: ${{ success() }}
         run: |
-          pip3 install boto3
+          pip install boto3
 
       - name: Download vcpkg binary cache
         if: ${{ success() }}
@@ -55,14 +37,6 @@ jobs:
           export XDG_CACHE_HOME=${{ github.workspace }}/vcpkgcache
           python3 build.py -nt -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
 
-      - name: Test x64
-        if: ${{ success() && matrix.configuration == 'x64-osx-static' }}
-        run: |
-          export LLVM_PROFILE_FILE=${{ github.workspace }}/${{ matrix.app }}.profraw
-          python3 build.py -nb -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
-          xcrun llvm-profdata merge -sparse ${{ github.workspace }}/${{ matrix.app }}.profraw -o ${{ github.workspace }}/${{ matrix.app }}.profdata
-          xcrun llvm-cov show ${{ github.workspace }}/build/${{ matrix.app }}/${{ matrix.configuration }}/unit-tests -instr-profile=${{ github.workspace }}/${{ matrix.app }}.profdata > ${{ github.workspace }}/coverage.txt
-
       - name: Upload boinc-autodock-vina artifacts
         if: ${{ success() && matrix.app == 'boinc-autodock-vina' }}
         uses: actions/upload-artifact@v2
@@ -72,13 +46,6 @@ jobs:
             build/${{ matrix.app }}/${{ matrix.configuration }}/boinc-autodock-vina
             build/${{ matrix.app }}/${{ matrix.configuration }}/config-validator
             build/${{ matrix.app }}/${{ matrix.configuration }}/unit-tests
-
-      - name: Upload coverage report
-        uses: codecov/codecov-action@v2
-        if: ${{ success() }}
-        with:
-          fail_ci_if_error: true
-          verbose: false
 
       - name: Upload vcpkg binary cache
         if: ${{ success() }}
