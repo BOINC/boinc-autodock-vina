@@ -75,8 +75,13 @@ bool config::validate() const {
     }
 
     if (!advanced.score_only) {
-        if (output.out.empty() && input.ligands.size() > 1) {
-            std::cerr << "Output.out must be defined when docking simultaneously multiple ligands.";
+        if (input.ligands.size() == 1 && output.out.empty()) {
+            std::cerr << "Need to specify an output.out parameter for a single ligand mode";
+            std::cerr << std::endl;
+            return false;
+        }
+        if (input.ligands.size() > 1 && output.dir.empty()) {
+            std::cerr << "Need to specify an output.dir parameter for a multiple ligand mode";
             std::cerr << std::endl;
             return false;
         }
