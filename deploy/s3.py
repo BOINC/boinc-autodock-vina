@@ -53,7 +53,13 @@ def s3_list(bucket):
     s3 = boto3.client('s3', config=Config(signature_version=UNSIGNED))
 
     try:
-        return s3.list_objects(Bucket=bucket)['Contents']
+        responce = s3.list_objects(Bucket=bucket)
+        objects = responce['Contents']
+        while (responce['IsTruncated']):
+            next_marker = objects[-1]['Key']
+            responce = s3.list_objects(Bucket=bucket, Marker=next_marker)
+            objects = objects + responce['Contents']
+        return objects
     except Exception:
         print("Failed to retrieve list of files in bucket")
         return None
