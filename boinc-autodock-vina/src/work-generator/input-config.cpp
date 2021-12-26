@@ -135,7 +135,7 @@ bool generator::create_zip(const std::filesystem::path& path) {
 
     for (const auto& file : std::filesystem::directory_iterator(path)) {
         if (file.is_regular_file()) {
-            const std::unique_ptr<zip_source_t> source(zip_source_file(zip.get(), file.path().string().data(), 0, 0));
+            const deleted_unique_ptr<zip_source_t> source(zip_source_file(zip.get(), file.path().string().data(), 0, 0), [](auto*) {});
             if (!source) {
                 std::cerr << "Failed to open file <" << file.path().string().data() << ">: " << zip_strerror(zip.get()) << std::endl;
             }

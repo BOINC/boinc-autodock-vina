@@ -948,6 +948,10 @@ TEST_F(InputConfig_UnitTests, TestThatWorkGeneratorIsAbleToProcessAlreadyPrepare
     ASSERT_TRUE(res);
     res = generator.validate();
     ASSERT_TRUE(res);
+
+    if (exists(std::filesystem::current_path() / "wu_1.zip")) {
+        std::filesystem::remove(std::filesystem::current_path() / "wu_1.zip");
+    }
 }
 
 TEST_F(InputConfig_UnitTests, TestThatGetTempFolderNameAlwaysReturnsDifferentNames) {
