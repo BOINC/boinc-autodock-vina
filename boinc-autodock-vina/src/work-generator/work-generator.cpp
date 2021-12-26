@@ -17,7 +17,7 @@
 
 #include <iostream>
 
-#include "common/config.h"
+#include <work-generator/input-config.h>
 
 #ifndef BOINC_AUTODOCK_VINA_VERSION
 #define BOINC_AUTODOCK_VINA_VERSION "unknown"
@@ -29,40 +29,19 @@
 
 void help() {
     std::cout << "Usage:" << std::endl;
-    std::cout << "config-validator config_to_validate.json" << std::endl;
+    std::cout << "work-generator DIR" << std::endl;
 }
 
 inline void header() {
-    std::cout << "Starting BOINC Autodock Vina config validator v" << BOINC_AUTODOCK_VINA_VERSION;
+    std::cout << "Starting BOINC Autodock Vina work generator v" << BOINC_AUTODOCK_VINA_VERSION;
     std::cout << " (" << BOINC_APPS_GIT_REVISION << ")" << std::endl;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     header();
 
     if (argc != 2) {
         help();
-        return 1;
-    }
-
-    try {
-        const auto& json_path = std::filesystem::path(argv[1]);
-        const auto& working_directory = json_path.has_parent_path() ? json_path.parent_path() : std::filesystem::current_path();
-        config config;
-
-        if (!config.load(json_path)) {
-            std::cout << "Failed to load '" << argv[1] << "' file";
-            return 1;
-        }
-
-        if (!config.validate()) {
-            std::cout << "Validation failed" << std::endl;
-            return 1;
-        }
-
-        std::cout << "Validation passed" << std::endl;
-    } catch(const std::exception& ex) {
-        std::cout << "Failed to validate '" << argv[1] << "' file: " << ex.what() << std::endl;
         return 1;
     }
 

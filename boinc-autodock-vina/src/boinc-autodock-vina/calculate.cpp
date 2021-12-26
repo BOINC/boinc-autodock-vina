@@ -22,11 +22,11 @@
 #include <autodock-vina/vina.h>
 #include <magic_enum.hpp>
 
-bool calculate(const config& config, const int& ncpus, const std::function<void(double)>& progress_callback) {
+bool calculator::calculate(const config& config, const int& ncpus, const std::function<void(double)>& progress_callback) {
     constexpr int vina_verbosity = 1;
 
     Vina vina(std::string(magic_enum::enum_name(config.input.scoring)), ncpus,
-        config.misc.seed, vina_verbosity, config.advanced.no_refine, 
+        config.misc.seed, vina_verbosity, config.advanced.no_refine,
         const_cast<std::function<void(double)>*>(&progress_callback));
 
     if (!config.input.receptor.empty() || !config.input.flex.empty()) {

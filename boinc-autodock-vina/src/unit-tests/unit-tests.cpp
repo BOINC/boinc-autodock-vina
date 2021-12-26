@@ -18,12 +18,70 @@
 #include <fstream>
 
 #include <gtest/gtest.h>
+#include <magic_enum.hpp>
 
 #include "common/config.h"
+#include "jsoncons_helper/jsoncons_helper.h"
+#include "work-generator/input-config.h"
 #include "boinc-autodock-vina/calculate.h"
 
-class Config_UnitTests : public ::testing::Test
-{
+class dummy_ofstream final {
+public:
+    ~dummy_ofstream() {
+        if (stream_open) {
+            stream.close();
+            stream_open = false;
+        }
+
+        for (const auto& file : open_files) {
+            if (exists(file)) {
+                std::filesystem::remove(file);
+            }
+        }
+    }
+
+    std::ofstream& operator()() {
+        return stream;
+    }
+
+    void open(const std::filesystem::path& file) {
+        if (!stream_open) {
+            stream.open(file);
+            stream_open = true;
+            file_path = file;
+            open_files.push_back(file);
+        }
+        else {
+            if (file != file_path) {
+                close();
+                open(file);
+            }
+        }
+    }
+
+    void close() {
+        if (stream_open) {
+            stream.close();
+            stream_open = false;
+        }
+    }
+private:
+    std::ofstream stream;
+    std::filesystem::path file_path;
+    bool stream_open = false;
+    std::vector<std::filesystem::path> open_files;
+};
+
+void create_dummy_file(dummy_ofstream& stream, const std::filesystem::path& file) {
+    stream.open(std::filesystem::current_path() / file);
+    stream() << "Dummy" << std::endl;
+    stream.close();
+}
+
+class Config_UnitTests : public ::testing::Test {
+};
+
+class InputConfig_UnitTests : public ::testing::Test {
 };
 
 TEST_F(Config_UnitTests, FailOnConfigDefaults) {
@@ -31,311 +89,401 @@ TEST_F(Config_UnitTests, FailOnConfigDefaults) {
     EXPECT_FALSE(config.validate());
 }
 
-TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig) {
-    const auto dummy_json_file_path = std::filesystem::current_path() /= "dummy.json";
+TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_Receptor) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
     config config;
-    std::ofstream json;
 
-    json.open(dummy_json_file_path.c_str());
-    json << "{" << std::endl;
-    json << "\t\"input\": {" << std::endl;
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("input");
 #ifdef WIN32
-    json << "\t\t\"receptor\": \"C:\\\\test\\\\receptor_sample\"," << std::endl;
+    json_encoder.value("receptor", "C:\\test\\receptor_sample");
 #else
-    json << "\t\t\"receptor\": \"/home/test/receptor_sample\"," << std::endl;
+    json_encoder.value("receptor", "/home/test/receptor_sample");
 #endif
-    json << "\t\t\"flex\": \"flex_sample\"," << std::endl;
-    json << "\t\t\"ligands\": [" << std::endl;
-    json << "\t\t\t\"ligand_sample2\"" << std::endl;
-    json << "\t\t]," << std::endl;
-    json << "\t\t\"batch\": [" << std::endl;
-    json << "\t\t\t\"batch_sample2\"" << std::endl;
-    json << "\t\t]" << std::endl;
-    json << "\t}," << std::endl;
-    json << "\t\"search_area\": {" << std::endl;
-    json << "\t\t\"maps\": \"maps_sample\"" << std::endl;
-    json << "\t}," << std::endl;
-    json << "\t\"output\": {" << std::endl;
-    json << "\t\t\"out\": \"out_sample\"," << std::endl;
-    json << "\t\t\"dir\": \"dir_sample\"," << std::endl;
-    json << "\t\t\"write_maps\": \"write_maps_sample\"" << std::endl;
-    json << "\t}" << std::endl;
-    json << "}" << std::endl;
+    json_encoder.value("flex", "flex_sample");
+    json_encoder.begin_array("ligands");
+    json_encoder.value("ligand_sample2");
+    json_encoder.end_array();
+    json_encoder.begin_array("batch");
+    json_encoder.value("batch_sample2");
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.begin_object("search_area");
+    json_encoder.value("maps", "maps_sample");
+    json_encoder.end_object();
+    json_encoder.begin_object("output");
+    json_encoder.value("out", "out_sample");
+    json_encoder.value("dir", "dir_sample");
+    json_encoder.value("write_maps", "write_maps_sample");
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
     json.close();
     EXPECT_FALSE(config.load(dummy_json_file_path));
-    std::filesystem::remove(dummy_json_file_path);
+}
 
-    json.open(dummy_json_file_path.c_str());
-    json << "{" << std::endl;
-    json << "\t\"input\": {" << std::endl;
-    json << "\t\t\"receptor\": \"receptor_sample\"," << std::endl;
+TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_Flex) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+    config config;
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("input");
+    json_encoder.value("receptor", "receptor_sample");
 #ifdef WIN32
-    json << "\t\t\"flex\": \"C:\\\\test\\\\flex_sample\"," << std::endl;
+    json_encoder.value("flex", "C:\\test\\flex_sample");
 #else
-    json << "\t\t\"flex\": \"/home/test/flex_sample\"," << std::endl;
+    json_encoder.value("flex", "/home/test/flex_sample");
 #endif
-    json << "\t\t\"ligands\": [" << std::endl;
-    json << "\t\t\t\"ligand_sample2\"" << std::endl;
-    json << "\t\t]," << std::endl;
-    json << "\t\t\"batch\": [" << std::endl;
-    json << "\t\t\t\"batch_sample2\"" << std::endl;
-    json << "\t\t]" << std::endl;
-    json << "\t}," << std::endl;
-    json << "\t\"search_area\": {" << std::endl;
-    json << "\t\t\"maps\": \"maps_sample\"" << std::endl;
-    json << "\t}," << std::endl;
-    json << "\t\"output\": {" << std::endl;
-    json << "\t\t\"out\": \"out_sample\"," << std::endl;
-    json << "\t\t\"dir\": \"dir_sample\"," << std::endl;
-    json << "\t\t\"write_maps\": \"write_maps_sample\"" << std::endl;
-    json << "\t}" << std::endl;
-    json << "}" << std::endl;
+    json_encoder.begin_array("ligands");
+    json_encoder.value("ligand_sample2");
+    json_encoder.end_array();
+    json_encoder.begin_array("batch");
+    json_encoder.value("batch_sample2");
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.begin_object("search_area");
+    json_encoder.value("maps", "maps_sample");
+    json_encoder.end_object();
+    json_encoder.begin_object("output");
+    json_encoder.value("out", "out_sample");
+    json_encoder.value("dir", "dir_sample");
+    json_encoder.value("write_maps", "write_maps_sample");
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
     json.close();
     EXPECT_FALSE(config.load(dummy_json_file_path));
-    std::filesystem::remove(dummy_json_file_path);
+}
 
-    json.open(dummy_json_file_path.c_str());
-    json << "{" << std::endl;
-    json << "\t\"input\": {" << std::endl;
-    json << "\t\t\"receptor\": \"receptor_sample\"," << std::endl;
-    json << "\t\t\"flex\": \"flex_sample\"," << std::endl;
-    json << "\t\t\"ligands\": [" << std::endl;
+TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_Ligand) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+    config config;
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("input");
+    json_encoder.value("receptor", "receptor_sample");
+    json_encoder.value("flex", "flex_sample");
+    json_encoder.begin_array("ligands");
 #ifdef WIN32
-    json << "\t\t\t\"C:\\\\test\\\\ligand_sample\"" << std::endl;
+    json_encoder.value("C:\\test\\ligand_sample");
 #else
-    json << "\t\t\t\"/home/test/ligand_sample\"" << std::endl;
+    json_encoder.value("/home/test/ligand_sample");
 #endif
-    json << "\t\t]," << std::endl;
-    json << "\t\t\"batch\": [" << std::endl;
-    json << "\t\t\t\"batch_sample2\"" << std::endl;
-    json << "\t\t]" << std::endl;
-    json << "\t}," << std::endl;
-    json << "\t\"search_area\": {" << std::endl;
-    json << "\t\t\"maps\": \"maps_sample\"" << std::endl;
-    json << "\t}," << std::endl;
-    json << "\t\"output\": {" << std::endl;
-    json << "\t\t\"out\": \"out_sample\"," << std::endl;
-    json << "\t\t\"dir\": \"dir_sample\"," << std::endl;
-    json << "\t\t\"write_maps\": \"write_maps_sample\"" << std::endl;
-    json << "\t}" << std::endl;
-    json << "}" << std::endl;
+    json_encoder.end_array();
+    json_encoder.begin_array("batch");
+    json_encoder.value("batch_sample2");
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.begin_object("search_area");
+    json_encoder.value("maps", "maps_sample");
+    json_encoder.end_object();
+    json_encoder.begin_object("output");
+    json_encoder.value("out", "out_sample");
+    json_encoder.value("dir", "dir_sample");
+    json_encoder.value("write_maps", "write_maps_sample");
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+
+    EXPECT_FALSE(config.load(dummy_json_file_path));
+}
+
+TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_Batch) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+    config config;
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("input");
+    json_encoder.value("receptor", "receptor_sample");
+    json_encoder.value("flex", "flex_sample");
+    json_encoder.begin_array("ligands");
+    json_encoder.value("ligand_sample");
+    json_encoder.end_array();
+    json_encoder.begin_array("batch");
+#ifdef WIN32
+    json_encoder.value("C:\\test\\batch_sample");
+#else
+    json_encoder.value("/home/test/batch_sample");
+#endif
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.begin_object("search_area");
+    json_encoder.value("maps", "maps_sample");
+    json_encoder.end_object();
+    json_encoder.begin_object("output");
+    json_encoder.value("out", "out_sample");
+    json_encoder.value("dir", "dir_sample");
+    json_encoder.value("write_maps", "write_maps_sample");
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
     json.close();
     EXPECT_FALSE(config.load(dummy_json_file_path));
-    std::filesystem::remove(dummy_json_file_path);
+}
 
-    json.open(dummy_json_file_path.c_str());
-    json << "{" << std::endl;
-    json << "\t\"input\": {" << std::endl;
-    json << "\t\t\"receptor\": \"receptor_sample\"," << std::endl;
-    json << "\t\t\"flex\": \"flex_sample\"," << std::endl;
-    json << "\t\t\"ligands\": [" << std::endl;
-    json << "\t\t\t\"ligand_sample2\"" << std::endl;
-    json << "\t\t]," << std::endl;
-    json << "\t\t\"batch\": [" << std::endl;
+TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_Maps) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+    config config;
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("input");
+    json_encoder.value("receptor", "receptor_sample");
+    json_encoder.value("flex", "flex_sample");
+    json_encoder.begin_array("ligands");
+    json_encoder.value("ligand_sample");
+    json_encoder.end_array();
+    json_encoder.begin_array("batch");
+    json_encoder.value("batch_sample2");
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.begin_object("search_area");
 #ifdef WIN32
-    json << "\t\t\t\"C:\\\\test\\\\batch_sample\"" << std::endl;
+    json_encoder.value("maps", "C:\\test\\maps_sample");
 #else
-    json << "\t\t\t\"/home/test/batch_sample\"" << std::endl;
+    json_encoder.value("maps", "/home/test/maps_sample");
 #endif
-    json << "\t\t]" << std::endl;
-    json << "\t}," << std::endl;
-    json << "\t\"search_area\": {" << std::endl;
-    json << "\t\t\"maps\": \"maps_sample\"" << std::endl;
-    json << "\t}," << std::endl;
-    json << "\t\"output\": {" << std::endl;
-    json << "\t\t\"out\": \"out_sample\"," << std::endl;
-    json << "\t\t\"dir\": \"dir_sample\"," << std::endl;
-    json << "\t\t\"write_maps\": \"write_maps_sample\"" << std::endl;
-    json << "\t}" << std::endl;
-    json << "}" << std::endl;
+    json_encoder.end_object();
+    json_encoder.begin_object("output");
+    json_encoder.value("out", "out_sample");
+    json_encoder.value("dir", "dir_sample");
+    json_encoder.value("write_maps", "write_maps_sample");
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
     json.close();
     EXPECT_FALSE(config.load(dummy_json_file_path));
-    std::filesystem::remove(dummy_json_file_path);
+}
 
-    json.open(dummy_json_file_path.c_str());
-    json << "{" << std::endl;
-    json << "\t\"input\": {" << std::endl;
-    json << "\t\t\"receptor\": \"receptor_sample\"," << std::endl;
-    json << "\t\t\"flex\": \"flex_sample\"," << std::endl;
-    json << "\t\t\"ligands\": [" << std::endl;
-    json << "\t\t\t\"ligand_sample2\"" << std::endl;
-    json << "\t\t]," << std::endl;
-    json << "\t\t\"batch\": [" << std::endl;
-    json << "\t\t\t\"batch_sample2\"" << std::endl;
-    json << "\t\t]" << std::endl;
-    json << "\t}," << std::endl;
-    json << "\t\"search_area\": {" << std::endl;
+TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_Out) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+    config config;
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("input");
+    json_encoder.value("receptor", "receptor_sample");
+    json_encoder.value("flex", "flex_sample");
+    json_encoder.begin_array("ligands");
+    json_encoder.value("ligand_sample2");
+    json_encoder.end_array();
+    json_encoder.begin_array("batch");
+    json_encoder.value("batch_sample2");
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.begin_object("search_area");
+    json_encoder.value("maps", "maps_sample");
+    json_encoder.end_object();
+    json_encoder.begin_object("output");
 #ifdef WIN32
-    json << "\t\t\"maps\": \"C:\\\\test\\\\maps_sample\"" << std::endl;
+    json_encoder.value("out", "C:\\test\\out_sample");
 #else
-    json << "\t\t\"maps\": \"/home/test/maps_sample\"" << std::endl;
+    json_encoder.value("out", "/home/test/out_sample");
 #endif
-    json << "\t}," << std::endl;
-    json << "\t\"output\": {" << std::endl;
-    json << "\t\t\"out\": \"out_sample\"," << std::endl;
-    json << "\t\t\"dir\": \"dir_sample\"," << std::endl;
-    json << "\t\t\"write_maps\": \"write_maps_sample\"" << std::endl;
-    json << "\t}" << std::endl;
-    json << "}" << std::endl;
+    json_encoder.value("dir", "dir_sample");
+    json_encoder.value("write_maps", "write_maps_sample");
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
     json.close();
     EXPECT_FALSE(config.load(dummy_json_file_path));
-    std::filesystem::remove(dummy_json_file_path);
+}
 
-    json.open(dummy_json_file_path.c_str());
-    json << "{" << std::endl;
-    json << "\t\"input\": {" << std::endl;
-    json << "\t\t\"receptor\": \"receptor_sample\"," << std::endl;
-    json << "\t\t\"flex\": \"flex_sample\"," << std::endl;
-    json << "\t\t\"ligands\": [" << std::endl;
-    json << "\t\t\t\"ligand_sample2\"" << std::endl;
-    json << "\t\t]," << std::endl;
-    json << "\t\t\"batch\": [" << std::endl;
-    json << "\t\t\t\"batch_sample2\"" << std::endl;
-    json << "\t\t]" << std::endl;
-    json << "\t}," << std::endl;
-    json << "\t\"search_area\": {" << std::endl;
-    json << "\t\t\"maps\": \"maps_sample\"" << std::endl;
-    json << "\t}," << std::endl;
-    json << "\t\"output\": {" << std::endl;
+TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_Dir) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+    config config;
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("input");
+    json_encoder.value("receptor", "receptor_sample");
+    json_encoder.value("flex", "flex_sample");
+    json_encoder.begin_array("ligands");
+    json_encoder.value("ligand_sample2");
+    json_encoder.end_array();
+    json_encoder.begin_array("batch");
+    json_encoder.value("batch_sample2");
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.begin_object("search_area");
+    json_encoder.value("maps", "maps_sample");
+    json_encoder.end_object();
+    json_encoder.begin_object("output");
+    json_encoder.value("out", "out_sample");
 #ifdef WIN32
-    json << "\t\t\"out\": \"C:\\\\test\\\\out_sample\"," << std::endl;
+    json_encoder.value("dir", "C:\\test\\dir_sample");
 #else
-    json << "\t\t\"out\": \"/home/test/out_sample\"," << std::endl;
+    json_encoder.value("dir", "/home/test/dir_sample");
 #endif
-    json << "\t\t\"dir\": \"dir_sample\"," << std::endl;
-    json << "\t\t\"write_maps\": \"write_maps_sample\"" << std::endl;
-    json << "\t}" << std::endl;
-    json << "}" << std::endl;
+    json_encoder.value("write_maps", "write_maps_sample");
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
     json.close();
     EXPECT_FALSE(config.load(dummy_json_file_path));
-    std::filesystem::remove(dummy_json_file_path);
+}
 
-    json.open(dummy_json_file_path.c_str());
-    json << "{" << std::endl;
-    json << "\t\"input\": {" << std::endl;
-    json << "\t\t\"receptor\": \"receptor_sample\"," << std::endl;
-    json << "\t\t\"flex\": \"flex_sample\"," << std::endl;
-    json << "\t\t\"ligands\": [" << std::endl;
-    json << "\t\t\t\"ligand_sample2\"" << std::endl;
-    json << "\t\t]," << std::endl;
-    json << "\t\t\"batch\": [" << std::endl;
-    json << "\t\t\t\"batch_sample2\"" << std::endl;
-    json << "\t\t]" << std::endl;
-    json << "\t}," << std::endl;
-    json << "\t\"search_area\": {" << std::endl;
-    json << "\t\t\"maps\": \"maps_sample\"" << std::endl;
-    json << "\t}," << std::endl;
-    json << "\t\"output\": {" << std::endl;
-    json << "\t\t\"out\": \"out_sample\"," << std::endl;
+TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_WriteMaps) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+    config config;
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("input");
+    json_encoder.value("receptor", "receptor_sample");
+    json_encoder.value("flex", "flex_sample");
+    json_encoder.begin_array("ligands");
+    json_encoder.value("ligand_sample2");
+    json_encoder.end_array();
+    json_encoder.begin_array("batch");
+    json_encoder.value("batch_sample2");
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.begin_object("search_area");
+    json_encoder.value("maps", "maps_sample");
+    json_encoder.end_object();
+    json_encoder.begin_object("output");
+    json_encoder.value("out", "out_sample");
+    json_encoder.value("dir", "dir_sample");
 #ifdef WIN32
-    json << "\t\t\"dir\": \"C:\\\\test\\\\dir_sample\"," << std::endl;
+    json_encoder.value("write_maps", "C:\\test\\write_maps_sample");
 #else
-    json << "\t\t\"dir\": \"/home/test/dir_sample\"," << std::endl;
+    json_encoder.value("write_maps", "/home/test/write_maps_sample");
 #endif
-    json << "\t\t\"write_maps\": \"write_maps_sample\"" << std::endl;
-    json << "\t}" << std::endl;
-    json << "}" << std::endl;
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
     json.close();
     EXPECT_FALSE(config.load(dummy_json_file_path));
-    std::filesystem::remove(dummy_json_file_path);
-
-    json.open(dummy_json_file_path.c_str());
-    json << "{" << std::endl;
-    json << "\t\"input\": {" << std::endl;
-    json << "\t\t\"receptor\": \"receptor_sample\"," << std::endl;
-    json << "\t\t\"flex\": \"flex_sample\"," << std::endl;
-    json << "\t\t\"ligands\": [" << std::endl;
-    json << "\t\t\t\"ligand_sample2\"" << std::endl;
-    json << "\t\t]," << std::endl;
-    json << "\t\t\"batch\": [" << std::endl;
-    json << "\t\t\t\"batch_sample2\"" << std::endl;
-    json << "\t\t]" << std::endl;
-    json << "\t}," << std::endl;
-    json << "\t\"search_area\": {" << std::endl;
-    json << "\t\t\"maps\": \"maps_sample\"" << std::endl;
-    json << "\t}," << std::endl;
-    json << "\t\"output\": {" << std::endl;
-    json << "\t\t\"out\": \"out_sample\"," << std::endl;
-    json << "\t\t\"dir\": \"dir_sample\"," << std::endl;
-#ifdef WIN32
-    json << "\t\t\"write_maps\": \"C:\\\\test\\\\write_maps_sample\"" << std::endl;
-#else
-    json << "\t\t\"write_maps\": \"/home/test/write_maps_sample\"" << std::endl;
-#endif
-    json << "\t}" << std::endl;
-    json << "}" << std::endl;
-    json.close();
-    EXPECT_FALSE(config.load(dummy_json_file_path));
-    std::filesystem::remove(dummy_json_file_path);
 }
 
 TEST_F(Config_UnitTests, LoadValidator) {
-    const auto dummy_json_file_path = std::filesystem::current_path() /= "dummy.json";
-    std::ofstream json(dummy_json_file_path.c_str());
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
 
-    json << "{" << std::endl;
-    json << "\t\"input\": {" << std::endl;
-    json << "\t\t\"receptor\": \"receptor_sample\"," << std::endl;
-    json << "\t\t\"flex\": \"flex_sample\"," << std::endl;
-    json << "\t\t\"ligands\": [" << std::endl;
-    json << "\t\t\t\"ligand_sample1\"," << std::endl;
-    json << "\t\t\t\"ligand_sample2\"" << std::endl;
-    json << "\t\t]," << std::endl;
-    json << "\t\t\"batch\": [" << std::endl;
-    json << "\t\t\t\"batch_sample1\"," << std::endl;
-    json << "\t\t\t\"batch_sample2\"" << std::endl;
-    json << "\t\t]," << std::endl;
-    json << "\t\t\"scoring\": \"vinardo\"" << std::endl;
-    json << "\t}," << std::endl;
-    json << "\t\"search_area\": {" << std::endl;
-    json << "\t\t\"maps\": \"maps_sample\"," << std::endl;
-    json << "\t\t\"center_x\": 0.123456," << std::endl;
-    json << "\t\t\"center_y\": 0.654321," << std::endl;
-    json << "\t\t\"center_z\": -0.123456," << std::endl;
-    json << "\t\t\"size_x\": -0.654321," << std::endl;
-    json << "\t\t\"size_y\": 0.0," << std::endl;
-    json << "\t\t\"size_z\": -0.000135," << std::endl;
-    json << "\t\t\"autobox\": true" << std::endl;
-    json << "\t}," << std::endl;
-    json << "\t\"output\": {" << std::endl;
-    json << "\t\t\"out\": \"out_sample\"," << std::endl;
-    json << "\t\t\"dir\": \"dir_sample\"," << std::endl;
-    json << "\t\t\"write_maps\": \"write_maps_sample\"" << std::endl;
-    json << "\t}," << std::endl;
-    json << "\t\"advanced\": {" << std::endl;
-    json << "\t\t\"score_only\": true," << std::endl;
-    json << "\t\t\"local_only\": true," << std::endl;
-    json << "\t\t\"no_refine\": true," << std::endl;
-    json << "\t\t\"force_even_voxels\": true," << std::endl;
-    json << "\t\t\"randomize_only\": true," << std::endl;
-    json << "\t\t\"weight_gauss1\": 0.123456," << std::endl;
-    json << "\t\t\"weight_gauss2\": -0.123456," << std::endl;
-    json << "\t\t\"weight_repulsion\": 0.654321," << std::endl;
-    json << "\t\t\"weight_hydrophobic\": -0.654321," << std::endl;
-    json << "\t\t\"weight_hydrogen\": 0.135246," << std::endl;
-    json << "\t\t\"weight_rot\": -0.135246," << std::endl;
-    json << "\t\t\"weight_vinardo_gauss1\": -0.642531," << std::endl;
-    json << "\t\t\"weight_vinardo_repulsion\": 0.642531," << std::endl;
-    json << "\t\t\"weight_vinardo_hydrophobic\": -0.010011," << std::endl;
-    json << "\t\t\"weight_vinardo_hydrogen\": 0.010011," << std::endl;
-    json << "\t\t\"weight_vinardo_rot\": -1.023456," << std::endl;
-    json << "\t\t\"weight_ad4_vdw\": 1.023456," << std::endl;
-    json << "\t\t\"weight_ad4_hb\": -1.654320," << std::endl;
-    json << "\t\t\"weight_ad4_elec\": 1.065432," << std::endl;
-    json << "\t\t\"weight_ad4_dsolv\": -1.064235," << std::endl;
-    json << "\t\t\"weight_ad4_rot\": 1.064235," << std::endl;
-    json << "\t\t\"weight_glue\": 1.024653" << std::endl;
-    json << "\t}," << std::endl;
-    json << "\t\"misc\": {" << std::endl;
-    json << "\t\t\"seed\": 2," << std::endl;
-    json << "\t\t\"exhaustiveness\": 3," << std::endl;
-    json << "\t\t\"max_evals\": 4," << std::endl;
-    json << "\t\t\"num_modes\": 5," << std::endl;
-    json << "\t\t\"min_rmsd\": 2.0," << std::endl;
-    json << "\t\t\"energy_range\": -2.0," << std::endl;
-    json << "\t\t\"spacing\": -0.123" << std::endl;
-    json << "\t}" << std::endl;
-    json << "}" << std::endl;
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("input");
+    json_encoder.value("receptor", "receptor_sample");
+    json_encoder.value("flex", "flex_sample");
+    json_encoder.begin_array("ligands");
+    json_encoder.value("ligand_sample1");
+    json_encoder.value("ligand_sample2");
+    json_encoder.end_array();
+    json_encoder.begin_array("batch");
+    json_encoder.value("batch_sample1");
+    json_encoder.value("batch_sample2");
+    json_encoder.end_array();
+    json_encoder.value("scoring", std::string(magic_enum::enum_name(scoring::vinardo)));
+    json_encoder.end_object();
+    json_encoder.begin_object("search_area");
+    json_encoder.value("maps", "maps_sample");
+    json_encoder.value("center_x", 0.123456);
+    json_encoder.value("center_y", 0.654321);
+    json_encoder.value("center_z" , -0.123456);
+    json_encoder.value("size_x" , -0.654321);
+    json_encoder.value("size_y", 0.0);
+    json_encoder.value("size_z", -0.000135);
+    json_encoder.value("autobox", true);
+    json_encoder.end_object();
+    json_encoder.begin_object("output");
+    json_encoder.value("out", "out_sample");
+    json_encoder.value("dir", "dir_sample");
+    json_encoder.value("write_maps", "write_maps_sample");
+    json_encoder.end_object();
+    json_encoder.begin_object("advanced");
+    json_encoder.value("score_only", true);
+    json_encoder.value("local_only", true);
+    json_encoder.value("no_refine", true);
+    json_encoder.value("force_even_voxels", true);
+    json_encoder.value("randomize_only", true);
+    json_encoder.value("weight_gauss1", 0.123456);
+    json_encoder.value("weight_gauss2", -0.123456);
+    json_encoder.value("weight_repulsion", 0.654321);
+    json_encoder.value("weight_hydrophobic" , -0.654321);
+    json_encoder.value("weight_hydrogen", 0.135246);
+    json_encoder.value("weight_rot" , -0.135246);
+    json_encoder.value("weight_vinardo_gauss1" , -0.642531);
+    json_encoder.value("weight_vinardo_repulsion", 0.642531);
+    json_encoder.value("weight_vinardo_hydrophobic" , -0.010011);
+    json_encoder.value("weight_vinardo_hydrogen", 0.010011);
+    json_encoder.value("weight_vinardo_rot" , -1.023456);
+    json_encoder.value("weight_ad4_vdw", 1.023456);
+    json_encoder.value("weight_ad4_hb" , -1.654320);
+    json_encoder.value("weight_ad4_elec", 1.065432);
+    json_encoder.value("weight_ad4_dsolv" , -1.064235);
+    json_encoder.value("weight_ad4_rot", 1.064235);
+    json_encoder.value("weight_glue", 1.024653);
+    json_encoder.end_object();
+    json_encoder.begin_object("misc");
+    json_encoder.value("seed", 2ull);
+    json_encoder.value("exhaustiveness", 3ull);
+    json_encoder.value("max_evals", 4ull);
+    json_encoder.value("num_modes", 5ull);
+    json_encoder.value("min_rmsd", 2.0);
+    json_encoder.value("energy_range" , -2.0);
+    json_encoder.value("spacing", -0.123);
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
     json.close();
 
     config config;
@@ -402,30 +550,35 @@ TEST_F(Config_UnitTests, LoadValidator) {
     EXPECT_DOUBLE_EQ(2.0, config.misc.min_rmsd);
     EXPECT_DOUBLE_EQ(-2.0, config.misc.energy_range);
     EXPECT_DOUBLE_EQ(-0.123, config.misc.spacing);
-
-    std::filesystem::remove(dummy_json_file_path);
 }
 
-TEST_F(Config_UnitTests, FailOn_output_out_NotSpecifiedForSingleLigandMode) {
-    const auto dummy_json_file_path = std::filesystem::current_path() /= "dummy.json";
-    std::ofstream json(dummy_json_file_path.c_str());
+TEST_F(Config_UnitTests, FailOn_output_out_NotSpecified) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
 
-    json << "{" << std::endl;
-    json << "\t\"input\": {" << std::endl;
-    json << "\t\t\"receptor\": \"receptor_sample\"," << std::endl;
-    json << "\t\t\"ligands\": [" << std::endl;
-    json << "\t\t\t\"ligand_sample1\"" << std::endl;
-    json << "\t\t]" << std::endl;
-    json << "\t}," << std::endl;
-    json << "\t\"search_area\": {" << std::endl;
-    json << "\t\t\"center_x\": 0.123456," << std::endl;
-    json << "\t\t\"center_y\": 0.654321," << std::endl;
-    json << "\t\t\"center_z\": -0.123456," << std::endl;
-    json << "\t\t\"size_x\": -0.654321," << std::endl;
-    json << "\t\t\"size_y\": 0.0," << std::endl;
-    json << "\t\t\"size_z\": -0.000135" << std::endl;
-    json << "\t}" << std::endl;
-    json << "}" << std::endl;
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("input");
+    json_encoder.value("receptor", "receptor_sample");
+    json_encoder.begin_array("ligands");
+    json_encoder.value("ligand_sample1");
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.begin_object("search_area");
+    json_encoder.value("center_x", 0.123456);
+    json_encoder.value("center_y", 0.654321);
+    json_encoder.value("center_z", -0.123456);
+    json_encoder.value("size_x", -0.654321);
+    json_encoder.value("size_y", 0.0);
+    json_encoder.value("size_z", -0.000135);
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
     json.close();
 
     config config;
@@ -434,49 +587,385 @@ TEST_F(Config_UnitTests, FailOn_output_out_NotSpecifiedForSingleLigandMode) {
     ASSERT_TRUE(res);
     res = config.validate();
     ASSERT_FALSE(res);
-
-    std::filesystem::remove(dummy_json_file_path);
 }
 
-TEST_F(Config_UnitTests, FailOn_output_dir_NotSpecifiedForMultipleLigandsMode) {
-    const auto dummy_json_file_path = std::filesystem::current_path() /= "dummy.json";
-    std::ofstream json(dummy_json_file_path.c_str());
+TEST_F(Config_UnitTests, CheckThatReceptorAndLigandFilesArePresent) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
 
-    json << "{" << std::endl;
-    json << "\t\"input\": {" << std::endl;
-    json << "\t\t\"receptor\": \"receptor_sample\"," << std::endl;
-    json << "\t\t\"ligands\": [" << std::endl;
-    json << "\t\t\t\"ligand_sample1\"," << std::endl;
-    json << "\t\t\t\"ligand_sample2\"" << std::endl;
-    json << "\t\t]" << std::endl;
-    json << "\t}," << std::endl;
-    json << "\t\"search_area\": {" << std::endl;
-    json << "\t\t\"center_x\": 0.123456," << std::endl;
-    json << "\t\t\"center_y\": 0.654321," << std::endl;
-    json << "\t\t\"center_z\": -0.123456," << std::endl;
-    json << "\t\t\"size_x\": -0.654321," << std::endl;
-    json << "\t\t\"size_y\": 0.0," << std::endl;
-    json << "\t\t\"size_z\": -0.000135" << std::endl;
-    json << "\t}" << std::endl;
-    json << "}" << std::endl;
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("input");
+    json_encoder.value("receptor", "receptor_sample");
+    json_encoder.begin_array("ligands");
+    json_encoder.value("ligand_sample1");
+    json_encoder.value("ligand_sample2");
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.begin_object("search_area");
+    json_encoder.value("center_x", 0.123456);
+    json_encoder.value("center_y", 0.654321);
+    json_encoder.value("center_z", -0.123456);
+    json_encoder.value("size_x", -0.654321);
+    json_encoder.value("size_y", 0.0);
+    json_encoder.value("size_z", -0.000135);
+    json_encoder.end_object();
+    json_encoder.begin_object("output");
+    json_encoder.value("out", "out_sample");
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
     json.close();
 
     config config;
-
     auto res = config.load(dummy_json_file_path);
     ASSERT_TRUE(res);
     res = config.validate();
     ASSERT_FALSE(res);
 
-    std::filesystem::remove(dummy_json_file_path);
+    dummy_ofstream dummy;
+    const auto& receptor_sample = std::filesystem::current_path() / "receptor_sample";    
+    const auto& ligand_sample1 = std::filesystem::current_path() / "ligand_sample1";
+    const auto& ligand_sample2 = std::filesystem::current_path() / "ligand_sample2";
+
+    create_dummy_file(dummy, receptor_sample);
+    res = config.validate();
+    ASSERT_FALSE(res);
+    std::filesystem::remove(receptor_sample);
+
+    create_dummy_file(dummy, ligand_sample1);
+    create_dummy_file(dummy, ligand_sample2);
+    res = config.validate();
+    ASSERT_FALSE(res);
+
+    create_dummy_file(dummy, receptor_sample);
+    res = config.validate();
+    ASSERT_TRUE(res);
+}
+
+TEST_F(Config_UnitTests, CheckThatFlexFileIsPresent) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("input");
+    json_encoder.value("receptor", "receptor_sample");
+    json_encoder.value("flex", "flex_sample");
+    json_encoder.begin_array("ligands");
+    json_encoder.value("ligand_sample1");
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.begin_object("search_area");
+    json_encoder.value("center_x", 0.123456);
+    json_encoder.value("center_y", 0.654321);
+    json_encoder.value("center_z", -0.123456);
+    json_encoder.value("size_x", -0.654321);
+    json_encoder.value("size_y", 0.0);
+    json_encoder.value("size_z", -0.000135);
+    json_encoder.end_object();
+    json_encoder.begin_object("output");
+    json_encoder.value("out", "out_sample");
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+
+    config config;
+    auto res = config.load(dummy_json_file_path);
+    ASSERT_TRUE(res);
+
+    dummy_ofstream dummy;
+    create_dummy_file(dummy, std::filesystem::current_path() / "receptor_sample");
+    create_dummy_file(dummy, std::filesystem::current_path() / "ligand_sample1");
+
+    res = config.validate();
+    ASSERT_FALSE(res);
+
+    create_dummy_file(dummy, std::filesystem::current_path() / "flex_sample");
+    res = config.validate();
+    ASSERT_TRUE(res);
+}
+
+TEST_F(Config_UnitTests, CheckThatReceptorAndBatchFilesArePresent) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("input");
+    json_encoder.value("receptor", "receptor_sample");
+    json_encoder.begin_array("batch");
+    json_encoder.value("batch_sample1");
+    json_encoder.value("batch_sample2");
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.begin_object("search_area");
+    json_encoder.value("center_x", 0.123456);
+    json_encoder.value("center_y", 0.654321);
+    json_encoder.value("center_z", -0.123456);
+    json_encoder.value("size_x", -0.654321);
+    json_encoder.value("size_y", 0.0);
+    json_encoder.value("size_z", -0.000135);
+    json_encoder.end_object();
+    json_encoder.begin_object("output");
+    json_encoder.value("out", "out_sample");
+    json_encoder.value("dir", "dir_sample");
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+
+    config config;
+    auto res = config.load(dummy_json_file_path);
+    ASSERT_TRUE(res);
+    res = config.validate();
+    ASSERT_FALSE(res);
+
+    dummy_ofstream dummy;
+    const auto& receptor_sample = std::filesystem::current_path() / "receptor_sample";
+    const auto& batch_sample1 = std::filesystem::current_path() / "batch_sample1";
+    const auto& batch_sample2 = std::filesystem::current_path() / "batch_sample2";
+
+    create_dummy_file(dummy, receptor_sample);
+    res = config.validate();
+    ASSERT_FALSE(res);
+    std::filesystem::remove(receptor_sample);
+
+    create_dummy_file(dummy, batch_sample1);
+    create_dummy_file(dummy, batch_sample2);
+    res = config.validate();
+    ASSERT_FALSE(res);
+
+    create_dummy_file(dummy, receptor_sample);
+    res = config.validate();
+    ASSERT_TRUE(res);
 }
 
 TEST_F(Config_UnitTests, TestSimpleVinaScenario) {
-    const auto json_file = std::filesystem::current_path() /= "boinc-autodock-vina/samples/basic_docking/1iep_vina.json";
+    const auto& json_file = std::filesystem::current_path() / "boinc-autodock-vina/samples/basic_docking/1iep_vina.json";
     config config;
     ASSERT_TRUE(config.load(json_file));
     ASSERT_TRUE(config.validate());
-    const auto res = calculate(config, 0, [](double) { });
+    const auto res = calculator::calculate(config, 0, [](double) { });
     EXPECT_TRUE(res);
-    std::filesystem::remove(std::filesystem::current_path() /= "boinc-autodock-vina/samples/basic_docking/1iep_ligand_vina_out.pdbqt");
+    std::filesystem::remove(std::filesystem::current_path() / "boinc-autodock-vina/samples/basic_docking/1iep_ligand_vina_out.pdbqt");
+}
+
+TEST_F(Config_UnitTests, TestConfigsEqualAfterReadWrite) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("input");
+    json_encoder.value("receptor", "receptor_sample");
+    json_encoder.value("flex", "flex_sample");
+    json_encoder.begin_array("ligands");
+    json_encoder.value("ligand_sample1");
+    json_encoder.value("ligand_sample2");
+    json_encoder.end_array();
+    json_encoder.begin_array("batch");
+    json_encoder.value("batch_sample1");
+    json_encoder.value("batch_sample2");
+    json_encoder.end_array();
+    json_encoder.value("scoring", std::string(magic_enum::enum_name(scoring::vinardo)));
+    json_encoder.end_object();
+    json_encoder.begin_object("search_area");
+    json_encoder.value("maps", "maps_sample");
+    json_encoder.value("center_x", 0.123456);
+    json_encoder.value("center_y", 0.654321);
+    json_encoder.value("center_z", -0.123456);
+    json_encoder.value("size_x", -0.654321);
+    json_encoder.value("size_y", 0.0);
+    json_encoder.value("size_z", -0.000135);
+    json_encoder.value("autobox", true);
+    json_encoder.end_object();
+    json_encoder.begin_object("output");
+    json_encoder.value("out", "out_sample");
+    json_encoder.value("dir", "dir_sample");
+    json_encoder.value("write_maps", "write_maps_sample");
+    json_encoder.end_object();
+    json_encoder.begin_object("advanced");
+    json_encoder.value("score_only", true);
+    json_encoder.value("local_only", true);
+    json_encoder.value("no_refine", true);
+    json_encoder.value("force_even_voxels", true);
+    json_encoder.value("randomize_only", true);
+    json_encoder.value("weight_gauss1", 0.123456);
+    json_encoder.value("weight_gauss2", -0.123456);
+    json_encoder.value("weight_repulsion", 0.654321);
+    json_encoder.value("weight_hydrophobic", -0.654321);
+    json_encoder.value("weight_hydrogen", 0.135246);
+    json_encoder.value("weight_rot", -0.135246);
+    json_encoder.value("weight_vinardo_gauss1", -0.642531);
+    json_encoder.value("weight_vinardo_repulsion", 0.642531);
+    json_encoder.value("weight_vinardo_hydrophobic", -0.010011);
+    json_encoder.value("weight_vinardo_hydrogen", 0.010011);
+    json_encoder.value("weight_vinardo_rot", -1.023456);
+    json_encoder.value("weight_ad4_vdw", 1.023456);
+    json_encoder.value("weight_ad4_hb", -1.654320);
+    json_encoder.value("weight_ad4_elec", 1.065432);
+    json_encoder.value("weight_ad4_dsolv", -1.064235);
+    json_encoder.value("weight_ad4_rot", 1.064235);
+    json_encoder.value("weight_glue", 1.024653);
+    json_encoder.end_object();
+    json_encoder.begin_object("misc");
+    json_encoder.value("seed", 2ull);
+    json_encoder.value("exhaustiveness", 3ull);
+    json_encoder.value("max_evals", 4ull);
+    json_encoder.value("num_modes", 5ull);
+    json_encoder.value("min_rmsd", 2.0);
+    json_encoder.value("energy_range", -2.0);
+    json_encoder.value("spacing", -0.123);
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+
+    config config_copy;
+    config config;
+
+    ASSERT_TRUE(config.load(dummy_json_file_path));
+
+    const auto& dummy_copy_json_file_path = std::filesystem::current_path() / "dummy_copy.json";
+    ASSERT_TRUE(config.save(dummy_copy_json_file_path));
+
+    ASSERT_TRUE(config_copy.load(dummy_copy_json_file_path));
+
+    EXPECT_STREQ(config.input.receptor.c_str(), config_copy.input.receptor.c_str());
+    EXPECT_STREQ(config.input.flex.c_str(), config_copy.input.flex.c_str());
+    ASSERT_EQ(config.input.ligands.size(), config_copy.input.ligands.size());
+    EXPECT_STREQ(config.input.ligands[0].c_str(), config_copy.input.ligands[0].c_str());
+    EXPECT_STREQ(config.input.ligands[1].c_str(), config_copy.input.ligands[1].c_str());
+    ASSERT_EQ(config.input.batch.size(), config_copy.input.batch.size());
+    EXPECT_STREQ(config.input.batch[0].c_str(), config_copy.input.batch[0].c_str());
+    EXPECT_STREQ(config.input.batch[1].c_str(), config_copy.input.batch[1].c_str());
+    EXPECT_EQ(config.input.scoring, config_copy.input.scoring);
+    EXPECT_STREQ(config.search_area.maps.c_str(), config_copy.search_area.maps.c_str());
+    EXPECT_DOUBLE_EQ(config.search_area.center_x, config_copy.search_area.center_x);
+    EXPECT_DOUBLE_EQ(config.search_area.center_y, config_copy.search_area.center_y);
+    EXPECT_DOUBLE_EQ(config.search_area.center_z, config_copy.search_area.center_z);
+    EXPECT_DOUBLE_EQ(config.search_area.size_x, config_copy.search_area.size_x);
+    EXPECT_DOUBLE_EQ(config.search_area.size_y, config_copy.search_area.size_y);
+    EXPECT_DOUBLE_EQ(config.search_area.size_z, config_copy.search_area.size_z);
+    EXPECT_EQ(config.search_area.autobox, config_copy.search_area.autobox);
+    EXPECT_STREQ(config.output.out.c_str(), config_copy.output.out.c_str());
+    EXPECT_STREQ(config.output.dir.c_str(), config_copy.output.dir.c_str());
+    EXPECT_STREQ(config.output.write_maps.c_str(), config_copy.output.write_maps.c_str());
+    EXPECT_EQ(config.advanced.score_only, config_copy.advanced.score_only);
+    EXPECT_EQ(config.advanced.local_only, config_copy.advanced.local_only);
+    EXPECT_EQ(config.advanced.no_refine, config_copy.advanced.no_refine);
+    EXPECT_EQ(config.advanced.force_even_voxels, config_copy.advanced.force_even_voxels);
+    EXPECT_EQ(config.advanced.randomize_only, config_copy.advanced.randomize_only);
+    EXPECT_DOUBLE_EQ(config.advanced.weight_gauss1, config_copy.advanced.weight_gauss1);
+    EXPECT_DOUBLE_EQ(config.advanced.weight_gauss2, config_copy.advanced.weight_gauss2);
+    EXPECT_DOUBLE_EQ(config.advanced.weight_repulsion, config_copy.advanced.weight_repulsion);
+    EXPECT_DOUBLE_EQ(config.advanced.weight_hydrophobic, config_copy.advanced.weight_hydrophobic);
+    EXPECT_DOUBLE_EQ(config.advanced.weight_hydrogen, config_copy.advanced.weight_hydrogen);
+    EXPECT_DOUBLE_EQ(config.advanced.weight_rot, config_copy.advanced.weight_rot);
+    EXPECT_DOUBLE_EQ(config.advanced.weight_vinardo_gauss1, config_copy.advanced.weight_vinardo_gauss1);
+    EXPECT_DOUBLE_EQ(config.advanced.weight_vinardo_repulsion, config_copy.advanced.weight_vinardo_repulsion);
+    EXPECT_DOUBLE_EQ(config.advanced.weight_vinardo_hydrophobic, config_copy.advanced.weight_vinardo_hydrophobic);
+    EXPECT_DOUBLE_EQ(config.advanced.weight_vinardo_hydrogen, config_copy.advanced.weight_vinardo_hydrogen);
+    EXPECT_DOUBLE_EQ(config.advanced.weight_vinardo_rot, config_copy.advanced.weight_vinardo_rot);
+    EXPECT_DOUBLE_EQ(config.advanced.weight_ad4_vdw, config_copy.advanced.weight_ad4_vdw);
+    EXPECT_DOUBLE_EQ(config.advanced.weight_ad4_hb, config_copy.advanced.weight_ad4_hb);
+    EXPECT_DOUBLE_EQ(config.advanced.weight_ad4_elec, config_copy.advanced.weight_ad4_elec);
+    EXPECT_DOUBLE_EQ(config.advanced.weight_ad4_dsolv, config_copy.advanced.weight_ad4_dsolv);
+    EXPECT_DOUBLE_EQ(config.advanced.weight_ad4_rot, config_copy.advanced.weight_ad4_rot);
+    EXPECT_DOUBLE_EQ(config.advanced.weight_glue, config_copy.advanced.weight_glue);
+    EXPECT_EQ(config.misc.seed, config_copy.misc.seed);
+    EXPECT_EQ(config.misc.exhaustiveness, config_copy.misc.exhaustiveness);
+    EXPECT_EQ(config.misc.max_evals, config_copy.misc.max_evals);
+    EXPECT_EQ(config.misc.num_modes, config_copy.misc.num_modes);
+    EXPECT_DOUBLE_EQ(config.misc.min_rmsd, config_copy.misc.min_rmsd);
+    EXPECT_DOUBLE_EQ(config.misc.energy_range, config_copy.misc.energy_range);
+    EXPECT_DOUBLE_EQ(config.misc.spacing, config_copy.misc.spacing);
+
+    std::filesystem::remove(dummy_copy_json_file_path);
+}
+
+TEST_F(InputConfig_UnitTests, TestThatWorkGeneratorIsAbleToProcessAlreadyPreparedConfig) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("input");
+    json_encoder.value("receptor", "receptor_sample");
+    json_encoder.begin_array("ligands");
+    json_encoder.value("ligand_sample1");
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.begin_object("search_area");
+    json_encoder.value("center_x", 0.123456);
+    json_encoder.value("center_y", 0.654321);
+    json_encoder.value("center_z", -0.123456);
+    json_encoder.value("size_x", -0.654321);
+    json_encoder.value("size_y", 0.0);
+    json_encoder.value("size_z", -0.000135);
+    json_encoder.end_object();
+    json_encoder.begin_object("output");
+    json_encoder.value("out", "out_sample");
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+
+    dummy_ofstream dummy;
+    create_dummy_file(dummy, "receptor_sample");
+    create_dummy_file(dummy, "ligand_sample1");
+
+    generator generator;
+
+    auto res = generator.load(dummy_json_file_path);
+    ASSERT_TRUE(res);
+    res = generator.validate();
+    ASSERT_TRUE(res);
+}
+
+TEST_F(InputConfig_UnitTests, TestThatGetTempFolderNameAlwaysReturnsDifferentNames) {
+    ASSERT_STRNE(temp_folder::get_temp_folder_name().data(), temp_folder::get_temp_folder_name().data());
+}
+
+TEST_F(InputConfig_UnitTests, TestThatTempFolderIsCreatedAndThenCleared) {
+    std::filesystem::path directory;
+    {
+        const temp_folder temp(std::filesystem::current_path());
+        directory = temp();
+        ASSERT_TRUE(std::filesystem::is_directory(temp()));
+
+        dummy_ofstream stream;
+        create_dummy_file(stream, temp() / "test");
+
+        ASSERT_TRUE(std::filesystem::is_regular_file(temp() / "test"));
+    }
+
+    ASSERT_FALSE(std::filesystem::exists(directory));
 }

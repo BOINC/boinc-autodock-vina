@@ -21,38 +21,68 @@
 #include <vector>
 #include <filesystem>
 
+#include <jsoncons/json.hpp>
+#include "jsoncons_helper/jsoncons_helper.h"
+
 enum class scoring {
     ad4,
     vina,
     vinardo
 };
 
-struct input {
+class json_load {
+public:
+    virtual ~json_load() = default;
+
+    [[nodiscard]] virtual bool load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) = 0;
+ };
+
+class json_save {
+public:
+    virtual ~json_save() = default;
+
+    [[nodiscard]] virtual bool save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const = 0;
+};
+
+class input final : public json_load, public json_save {
+public:
     std::string receptor;
     std::string flex;
     std::vector<std::string> ligands;
     std::vector<std::string> batch;
     scoring scoring = scoring::vina;
+
+    [[nodiscard]] bool load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) override;
+    [[nodiscard]] bool save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const override;
 };
 
-struct search_area {
+class search_area final : public json_load, public json_save {
+public:
     std::string maps;
-    double center_x;
-    double center_y;
-    double center_z;
-    double size_x;
-    double size_y;
-    double size_z;
+    double center_x = .0;
+    double center_y = .0;
+    double center_z = .0;
+    double size_x = .0;
+    double size_y = .0;
+    double size_z = .0;
     bool autobox = false;
+
+    [[nodiscard]] bool load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) override;
+    [[nodiscard]] bool save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const override;
 };
 
-struct output {
+class output final : public json_load, public json_save {
+public:
     std::string out;
     std::string dir;
     std::string write_maps;
+
+    [[nodiscard]] bool load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) override;
+    [[nodiscard]] bool save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const override;
 };
 
-struct advanced {
+class advanced final : public json_load, public json_save {
+public:
     bool score_only = false;
     bool local_only = false;
     bool no_refine = false;
@@ -75,19 +105,27 @@ struct advanced {
     double weight_ad4_dsolv = 0.1322;
     double weight_ad4_rot = 0.2983;
     double weight_glue = 50.000000;
+
+    [[nodiscard]] bool load(const jsoncons::basic_json<char>& json, [[maybe_unused]] const std::filesystem::path& working_directory) override;
+    [[nodiscard]] bool save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const override;
 };
 
-struct misc {
-    int seed = 0;
-    int exhaustiveness = 8;
-    int max_evals = 0;
-    int num_modes = 9;
+class misc final : public json_load, public json_save {
+public:
+    int64_t seed = 0;
+    int64_t exhaustiveness = 8;
+    int64_t max_evals = 0;
+    int64_t num_modes = 9;
     double min_rmsd = 1.0;
     double energy_range = 3.0;
     double spacing = 0.375;
+
+    [[nodiscard]] bool load(const jsoncons::basic_json<char>& json, [[maybe_unused]] const std::filesystem::path& working_directory) override;
+    [[nodiscard]] bool save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const override;
 };
 
-struct config {
+class config {
+public:
     input input;
     search_area search_area;
     output output;
@@ -95,5 +133,8 @@ struct config {
     misc misc;
 
     [[nodiscard]] bool validate() const;
+    [[nodiscard]] bool check_files_exist() const;
     [[nodiscard]] bool load(const std::filesystem::path& config_file_path);
+    [[nodiscard]] bool save(const std::filesystem::path& config_file_path) const;
+    [[nodiscard]] std::vector<std::string> get_files() const;
 };

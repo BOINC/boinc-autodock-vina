@@ -7,6 +7,8 @@
         "boinc",
         "gtest",
         "jsoncons",
-        "magic-enum"
+        "magic-enum",
+        "python3",
+        "libzip"
     ]
 }

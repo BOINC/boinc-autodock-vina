@@ -53,50 +53,6 @@ inline void report_progress(double value) {
     }
 }
 
-inline std::filesystem::path get_checkpoint_file_path(const std::string& json) {
-    const auto& json_path = std::filesystem::path(json);
-    const auto& checkpoint_file_name = json_path.stem().string() + ".checkpoint";
-    const auto& working_dir = json_path.has_parent_path() ? json_path.parent_path() : std::filesystem::current_path();
-    const auto& checkpoint_file_path = (working_dir / checkpoint_file_name);
-
-    return checkpoint_file_path;
-}
-
-inline std::vector<std::string> get_checkpoint_data(const std::string& json) {
-    const auto& checkpoint_file_path = get_checkpoint_file_path(json);
-
-    if (!exists(checkpoint_file_path)) {
-        return {};
-    }
-
-    std::ifstream checkpoint(checkpoint_file_path.string());
-    std::string line;
-    std::vector<std::string> data;
-    while(std::getline(checkpoint, line)) {
-        if (!line.empty()) {
-            data.push_back(line);
-        }
-    }
-    checkpoint.close();
-
-    return data;
-}
-
-inline void save_checkpoint_data(const std::string& json, const std::string& data) {
-    const auto& checkpoint_file_path = get_checkpoint_file_path(json);
-
-    std::ofstream checkpoint;
-    checkpoint.open(checkpoint_file_path.string(), std::ios_base::app);
-    checkpoint << data << std::endl;
-    checkpoint.close();
-}
-
-inline void remove_checkpoint_data_file(const std::string& json) {
-    if (const auto& checkpoint_file_path = get_checkpoint_file_path(json); exists(checkpoint_file_path)) {
-        std::filesystem::remove(checkpoint_file_path);
-    }
-}
-
 int perform_docking(const std::string& json) noexcept {
     char buf[256];
 
@@ -116,11 +72,11 @@ int perform_docking(const std::string& json) noexcept {
 
         std::atomic result(false);
 
-        std::vector<config> configs;
-
+        const auto& json_path = std::filesystem::path(json);
+        const auto& working_directory = json_path.has_parent_path() ? json_path.parent_path() : std::filesystem::current_path();
         config conf;
 
-        if (!conf.load(json)) {
+        if (!conf.load(json_path)) {
             std::cerr << boinc_msg_prefix(buf, sizeof(buf)) << "Config load failed, cannot proceed further" << std::endl;
             boinc_finish(1.);
             return 1;
@@ -132,73 +88,18 @@ int perform_docking(const std::string& json) noexcept {
             return 1;
         }
 
-        if (conf.input.ligands.size() == 1 || conf.input.batch.size() == 1) {
-            configs.push_back(conf);
-        }
-        else if (conf.input.ligands.size() > 1) {
-            const auto& out_path = std::filesystem::path(conf.output.dir);
-            if (!exists(out_path)) {
-                create_directory(out_path);
-            }
-
-            for (const auto& ligand : conf.input.ligands) {
-                auto new_conf = conf;
-                new_conf.input.ligands.clear();
-                new_conf.input.ligands.push_back(ligand);
-                const auto& ligand_out_name = out_path / std::filesystem::path(ligand).filename();
-                new_conf.output.out = ligand_out_name.string();
-                configs.push_back(std::move(new_conf));
-            }
-        }
-        else if (conf.input.batch.size() > 1) {
-            for (const auto& batch : conf.input.batch) {
-                auto new_conf = conf;
-                new_conf.input.batch.clear();
-                new_conf.input.batch.push_back(batch);
-                configs.push_back(std::move(new_conf));
-            }
-        }
-
         boinc_fraction_done(0.);
 
-        std::thread worker([&result, &configs, &ncpus, &json] {
+        std::thread worker([&result, &conf, &ncpus] {
             char str[256];
             try {
-                const auto total = static_cast<double>(configs.size());
-                const auto& checkpoint_data = get_checkpoint_data(json);
-                for (std::vector<config>::size_type i = 0; i < configs.size(); ++i) {
-                    const auto& current_config = configs[i];
+                result = calculator::calculate(conf, ncpus, [](auto value) {
+                    report_progress(value);
+                    });
 
-                    std::string current_data;
-                    if (!current_config.input.ligands.empty() && current_config.input.ligands.size() == 1) {
-                        current_data = current_config.input.ligands.front();
-                    }
-                    else if (!current_config.input.batch.empty() && current_config.input.batch.size() == 1) {
-                        current_data = current_config.input.batch.front();
-                    }
-
-                    if (!checkpoint_data.empty()) {
-                        if (!current_data.empty()) {
-                            if (std::find(checkpoint_data.cbegin(), checkpoint_data.cend(), current_data) != checkpoint_data.cend()) {
-                                continue;
-                            }
-                        }
-                    }
-
-                    const auto current = static_cast<double>(i) + 1.;
-                    result = calculate(configs[i], ncpus, [&current, &total](auto value) {
-                        report_progress(value * current / total);
-                        });
-
-                    if (!result) {
-                        std::cerr << boinc_msg_prefix(str, sizeof(buf)) << " docking failed" << std::endl;
-                        boinc_finish(1);
-                        break;
-                    }
-
-                    if (!current_data.empty()) {
-                        save_checkpoint_data(json, current_data);
-                    }
+                if (!result) {
+                    std::cerr << boinc_msg_prefix(str, sizeof(buf)) << " docking failed" << std::endl;
+                    boinc_finish(1);
                 }
             }
             catch (const std::exception& ex)
@@ -215,8 +116,6 @@ int perform_docking(const std::string& json) noexcept {
             boinc_finish(1);
             return 1;
         }
-
-        remove_checkpoint_data_file(json);
 
         boinc_fraction_done(1.);
         boinc_finish(0);

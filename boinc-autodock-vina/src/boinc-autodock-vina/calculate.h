@@ -22,4 +22,7 @@
 
 #include "common/config.h"
 
-[[nodiscard]] bool calculate(const config& config, const int& ncpus, const std::function<void(double)>& progress_callback);
+class calculator {
+public:
+    [[nodiscard]] static bool calculate(const config& config, const int& ncpus, const std::function<void(double)>& progress_callback);
+};

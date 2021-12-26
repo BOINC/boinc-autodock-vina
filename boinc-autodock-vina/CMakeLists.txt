@@ -26,6 +26,8 @@ find_package(Boost REQUIRED COMPONENTS filesystem log math_tr1 program_options r
 find_package(magic_enum CONFIG REQUIRED)
 find_package(jsoncons CONFIG REQUIRED)
 find_package(GTest CONFIG REQUIRED)
+find_package(Python3 COMPONENTS Development REQUIRED)
+find_package(libzip CONFIG REQUIRED)
 
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 set(CMAKE_CXX_STANDARD 17)
@@ -36,26 +38,44 @@ if (UNIX)
     set(CMAKE_CXX_FLAGS "-fpermissive")
 endif()
 
+add_library(config
+    STATIC
+        src/common/config.h
+        src/common/config.cpp
+)
+
+add_library(input-config
+    STATIC
+        src/work-generator/input-config.h
+        src/work-generator/input-config.cpp
+)
+
+add_library(calculate
+    STATIC
+        src/boinc-autodock-vina/calculate.h
+        src/boinc-autodock-vina/calculate.cpp
+)
+
+add_library(jsoncons_helper
+    STATIC
+        ../common/src/jsoncons_helper/jsoncons_helper.h
+        ../common/src/jsoncons_helper/jsoncons_helper.cpp
+)
+
 add_executable(boinc-autodock-vina
      src/boinc-autodock-vina/boinc-autodock-vina.cpp
-     src/boinc-autodock-vina/calculate.h
-     src/boinc-autodock-vina/calculate.cpp
-     src/common/config.h
-     src/common/config.cpp
 )
 
 add_executable(config-validator
     src/config-validator/config-validator.cpp
-    src/common/config.h
-    src/common/config.cpp
 )
 
 add_executable(unit-tests
-    src/common/config.h
-    src/common/config.cpp
-    src/boinc-autodock-vina/calculate.h
-    src/boinc-autodock-vina/calculate.cpp
     src/unit-tests/unit-tests.cpp
+)
+
+add_executable(work-generator
+    src/work-generator/work-generator.cpp
 )
 
 if (UNIX AND CMAKE_CXX_COMPILER_ID MATCHES "GCC")
@@ -91,23 +111,87 @@ target_compile_definitions(unit-tests
     -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
 )
 
+target_compile_definitions(work-generator
+    PRIVATE
+    -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
+    -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
+)
+
+target_compile_definitions(config
+    PRIVATE
+    -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
+    -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
+)
+
+target_compile_definitions(input-config
+    PRIVATE
+    -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
+    -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
+)
+
+target_compile_definitions(calculate
+    PRIVATE
+    -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
+    -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
+)
+
+target_compile_definitions(jsoncons_helper
+    PRIVATE
+    -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
+    -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
+)
+
 target_include_directories(boinc-autodock-vina
     PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/src
+        ${CMAKE_CURRENT_LIST_DIR}/../common/src
 )
 
 target_include_directories(config-validator
     PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/src
+        ${CMAKE_CURRENT_LIST_DIR}/../common/src
 )
 
 target_include_directories(unit-tests
     PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/src
+        ${CMAKE_CURRENT_LIST_DIR}/../common/src
+)
+
+target_include_directories(work-generator
+    PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/src
+        ${CMAKE_CURRENT_LIST_DIR}/../common/src
+)
+
+target_include_directories(config
+    PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/src
+        ${CMAKE_CURRENT_LIST_DIR}/../common/src
+)
+
+target_include_directories(input-config
+    PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/src
+        ${CMAKE_CURRENT_LIST_DIR}/../common/src
+)
+
+target_include_directories(calculate
+    PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/src
+        ${CMAKE_CURRENT_LIST_DIR}/../common/src
+)
+
+target_include_directories(jsoncons_helper
+    PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/../common/src
 )
 
 target_link_libraries(boinc-autodock-vina
     PRIVATE
+        config
+        calculate
         unofficial::boinc::boinc
         unofficial::boinc::boincapi
         autodock-vina::autodock-vina::vina
@@ -125,16 +209,23 @@ target_link_libraries(boinc-autodock-vina
         Boost::timer
         magic_enum::magic_enum
         jsoncons
+        jsoncons_helper
 )
 
 target_link_libraries(config-validator
     PRIVATE
+        config
         magic_enum::magic_enum
         jsoncons
+        jsoncons_helper
 )
 
 target_link_libraries(unit-tests
     PRIVATE
+        config
+        calculate
+        input-config
+        jsoncons_helper
         GTest::gtest
         GTest::gtest_main
         autodock-vina::autodock-vina::vina
@@ -152,4 +243,38 @@ target_link_libraries(unit-tests
         Boost::timer
         magic_enum::magic_enum
         jsoncons
+        Python3::Python
+        libzip::zip
+)
+
+target_link_libraries(work-generator
+    PRIVATE
+        config
+        input-config
+        jsoncons_helper
+        magic_enum::magic_enum
+        jsoncons
+        Python3::Python
+        libzip::zip
+)
+
+target_link_libraries(config
+    PRIVATE
+       jsoncons
+)
+
+target_link_libraries(input-config
+    PRIVATE
+       jsoncons
+       libzip::zip
+)
+
+target_link_libraries(calculate
+    PRIVATE
+       jsoncons
+)
+
+target_link_libraries(jsoncons_helper
+    PRIVATE
+       jsoncons
 )
