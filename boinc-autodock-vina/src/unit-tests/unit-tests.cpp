@@ -19,6 +19,7 @@
 
 #include <gtest/gtest.h>
 #include <magic_enum.hpp>
+#include <zip.h>
 
 #include "common/config.h"
 #include "jsoncons_helper/jsoncons_helper.h"
@@ -77,6 +78,54 @@ void create_dummy_file(dummy_ofstream& stream, const std::filesystem::path& file
     stream() << "Dummy" << std::endl;
     stream.close();
 }
+
+template <typename T>
+using deleted_unique_ptr = std::unique_ptr<T, std::function<void(T*)>>;
+
+class zip_extract final {
+public:
+    static bool extract(const std::filesystem::path& zip_file, const std::filesystem::path& target) {
+        int error = 0;
+        const deleted_unique_ptr<zip_t> zip(zip_open(zip_file.string().data(), 0, &error), [](auto* z) {
+            if (z != nullptr) {
+                zip_close(z);
+            }
+        });
+        if (!zip) {
+            return false;
+        }
+
+        const auto& entries = zip_get_num_entries(zip.get(), 0);
+        for (zip_int64_t i = 0; i < entries; ++i) {
+            struct zip_stat file_stat {};
+            if (zip_stat_index(zip.get(), i, 0, &file_stat)) {
+                return false;
+            }
+            if (!(file_stat.valid & ZIP_STAT_NAME)) {
+                continue;
+            }
+            if ((file_stat.name[0] != '\0') && (file_stat.name[strlen(file_stat.name) - 1] == '/')) {
+                continue;
+            }
+            const deleted_unique_ptr<struct zip_file> file(zip_fopen_index(zip.get(), i, 0), [](auto* z) {
+                if (z != nullptr) {
+                    zip_fclose(z);
+                }
+            });
+            std::string buffer;
+            buffer.resize(file_stat.size, '\0');
+            if (zip_fread(file.get(), buffer.data(), file_stat.size) == -1) {
+                return false;
+            }
+            const auto name = target / file_stat.name;
+            if (!std::ofstream(name.string().data()).write(buffer.data(), file_stat.size)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+};
 
 class Config_UnitTests : public ::testing::Test {
 };
@@ -949,9 +998,33 @@ TEST_F(InputConfig_UnitTests, TestThatWorkGeneratorIsAbleToProcessAlreadyPrepare
     res = generator.validate();
     ASSERT_TRUE(res);
 
-    if (exists(std::filesystem::current_path() / "wu_1.zip")) {
-        std::filesystem::remove(std::filesystem::current_path() / "wu_1.zip");
-    }
+    const auto zip_path = std::filesystem::current_path() / "wu_1.zip";
+    ASSERT_TRUE(exists(zip_path));
+
+    const auto zip_extract_path = std::filesystem::current_path() / "wu_1_zip";
+    create_directories(zip_extract_path);
+    ASSERT_TRUE(zip_extract::extract(zip_path, zip_extract_path));
+
+    const auto config_path = zip_extract_path / "config.json";
+    ASSERT_TRUE(exists(config_path));
+
+    config conf;
+    ASSERT_TRUE(conf.load(config_path));
+    ASSERT_TRUE(conf.validate());
+
+    EXPECT_STREQ((zip_extract_path / "receptor_sample").string().data(), conf.input.receptor.data());
+    ASSERT_EQ(1, conf.input.ligands.size());
+    EXPECT_STREQ((zip_extract_path / "ligand_sample1").string().data(), conf.input.ligands[0].data());
+    EXPECT_DOUBLE_EQ(0.123456, conf.search_area.center_x);
+    EXPECT_DOUBLE_EQ(0.654321, conf.search_area.center_y);
+    EXPECT_DOUBLE_EQ(-0.123456, conf.search_area.center_z);
+    EXPECT_DOUBLE_EQ(-0.654321, conf.search_area.size_x);
+    EXPECT_DOUBLE_EQ(0.0, conf.search_area.size_y);
+    EXPECT_DOUBLE_EQ(-0.000135, conf.search_area.size_z);
+    EXPECT_STREQ((zip_extract_path / "out_sample").string().data(), conf.output.out.data());
+
+    std::filesystem::remove(zip_path);
+    remove_all(zip_extract_path);
 }
 
 TEST_F(InputConfig_UnitTests, TestThatGetTempFolderNameAlwaysReturnsDifferentNames) {

@@ -32,7 +32,8 @@ enum class cleanup {
     lps,
     waters,
     nonstdres,
-    deleteAltB
+    deleteAltB,
+    none
 };
 
 class prepare_receptors final : public json_load {
@@ -75,5 +76,4 @@ public:
 
 private:
     const std::filesystem::path folder;
-
 };
