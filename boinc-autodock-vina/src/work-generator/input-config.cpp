@@ -80,6 +80,9 @@ bool prepare_receptors::load(const jsoncons::basic_json<char>& json, [[maybe_unu
         else if (value == "deletealtb") {
             cleanup = cleanup::deleteAltB;
         }
+        else if (value == "none") {
+            cleanup = cleanup::none;
+        }
         else {
             std::cerr << "Wrong cleanup value: [" << value << "]" << std::endl;
             return false;
@@ -92,11 +95,19 @@ bool prepare_receptors::load(const jsoncons::basic_json<char>& json, [[maybe_unu
     return true;
 }
 
+bool prepare_receptors::validate() const {
+    return true;
+}
+
+bool prepare_receptors::has_data_loaded() const {
+    return !receptors.empty() || repair != repair::None || !preserves.empty() || cleanup != cleanup::none || delete_nonstd_residue == true;
+}
+
 bool generator::validate() const {
     return true;
 }
 
-bool generator::save_config(const config& config, const std::filesystem::path& working_directory) {
+bool generator::save_config(const config& config, const std::filesystem::path& working_directory, const std::filesystem::path& out_path) {
     const temp_folder temp_path(working_directory);
     const auto& config_path = temp_path() / "config.json";
     if (!config.save(config_path)) {
@@ -110,15 +121,15 @@ bool generator::save_config(const config& config, const std::filesystem::path& w
         }
     }
 
-    return create_zip(temp_path());
+    return create_zip(temp_path(), out_path);
 }
 
 template <typename T>
 using deleted_unique_ptr = std::unique_ptr<T, std::function<void(T*)>>;
 
-bool generator::create_zip(const std::filesystem::path& path) {
+bool generator::create_zip(const std::filesystem::path& path, const std::filesystem::path& out_path) {
     const auto name = "wu_" + std::to_string(++current_wu_number) + ".zip";
-    const auto zip_file_name = (std::filesystem::current_path() / name).string();
+    const auto zip_file_name = (out_path / name).string();
     int error = 0;
     const deleted_unique_ptr<zip_t> zip(zip_open(zip_file_name.data(), ZIP_CREATE | ZIP_EXCL, &error), [](auto* z) {
         if (z != nullptr) {
@@ -171,16 +182,10 @@ std::string temp_folder::get_temp_folder_name() {
     return ss.str();
 }
 
-bool generator::load(const std::filesystem::path& config_file_path) {
+bool generator::process(const std::filesystem::path& config_file_path, const std::filesystem::path& out_path) {
     if (!exists(config_file_path) || !is_regular_file(config_file_path)) {
         std::cerr << "Error happened while opening <" << config_file_path.string() << "> file" << std::endl;
         return false;
-    }
-
-    const auto& working_directory = config_file_path.has_parent_path() ? config_file_path.parent_path() : std::filesystem::current_path();
-    config config;
-    if (config.load(config_file_path) && config.validate()) {
-        return save_config(config, working_directory);
     }
 
     try {
@@ -190,8 +195,22 @@ bool generator::load(const std::filesystem::path& config_file_path) {
 
         const auto& json = jsoncons::json::parse(buffer);
 
-        if (json.contains("prepare_receptors") && !prepare_receptors.load(json["prepare_receptors"], working_directory)) {
+        const auto& working_directory = config_file_path.has_parent_path() ? config_file_path.parent_path() : std::filesystem::current_path();
+
+        prepare_receptors prepare_receptors;
+        if (json.contains("prepare_receptors") && !prepare_receptors.load(json["prepare_receptors"], working_directory) && !prepare_receptors.validate()) {
             return false;
+        }
+
+        const auto need_prepare_receptors_step = prepare_receptors.has_data_loaded();
+
+        config config;
+        if (!config.load(config_file_path)) {
+            return false;
+        }
+
+        if (!need_prepare_receptors_step && config.validate()) {
+            return save_config(config, working_directory, out_path);
         }
 
     }

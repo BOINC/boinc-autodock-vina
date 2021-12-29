@@ -993,7 +993,7 @@ TEST_F(InputConfig_UnitTests, TestThatWorkGeneratorIsAbleToProcessAlreadyPrepare
 
     generator generator;
 
-    auto res = generator.load(dummy_json_file_path);
+    auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
     ASSERT_TRUE(res);
     res = generator.validate();
     ASSERT_TRUE(res);
@@ -1024,7 +1024,6 @@ TEST_F(InputConfig_UnitTests, TestThatWorkGeneratorIsAbleToProcessAlreadyPrepare
     EXPECT_STREQ((zip_extract_path / "out_sample").string().data(), conf.output.out.data());
 
     std::filesystem::remove(zip_path);
-    remove_all(zip_extract_path);
 }
 
 TEST_F(InputConfig_UnitTests, TestThatGetTempFolderNameAlwaysReturnsDifferentNames) {

@@ -36,26 +36,39 @@ enum class cleanup {
     none
 };
 
-class prepare_receptors final : public json_load {
+class data_validate {
+public:
+    virtual ~data_validate() = default;
+
+    [[nodiscard]] virtual bool validate() const = 0;
+};
+
+class has_data {
+public:
+    virtual ~has_data() = default;
+
+    [[nodiscard]] virtual bool has_data_loaded() const = 0;
+};
+
+class prepare_receptors final : public json_load, public data_validate, public has_data {
 public:
     std::vector<std::string> receptors;
-    repair repair;
+    repair repair = repair::None;
     std::vector<std::string> preserves;
-    cleanup cleanup;
+    cleanup cleanup = cleanup::none;
     bool delete_nonstd_residue = false;
 
     [[nodiscard]] bool load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) override;
+    [[nodiscard]] bool validate() const override;
+    [[nodiscard]] bool has_data_loaded() const override;
 };
 
 class generator {
 public:
-    prepare_receptors prepare_receptors;
-
     [[nodiscard]] bool validate() const;
-    [[nodiscard]] bool load(const std::filesystem::path& config_file_path);
-    [[nodiscard]] bool process();
-    [[nodiscard]] bool save_config(const config& config, const std::filesystem::path& working_directory);
-    [[nodiscard]] bool create_zip(const std::filesystem::path& path);
+    [[nodiscard]] bool process(const std::filesystem::path& config_file_path, const std::filesystem::path& out_path);
+    [[nodiscard]] bool save_config(const config& config, const std::filesystem::path& working_directory, const std::filesystem::path& out_path);
+    [[nodiscard]] bool create_zip(const std::filesystem::path& path, const std::filesystem::path& out_path);
 
 private:
     uint64_t current_wu_number = 0;
