@@ -96,6 +96,12 @@ bool prepare_receptors::load(const jsoncons::basic_json<char>& json, [[maybe_unu
 }
 
 bool prepare_receptors::validate() const {
+    for (const auto& r : receptors) {
+        if (!std::filesystem::exists(r) || !std::filesystem::is_regular_file(r)) {
+            std::cerr << "Receptor file <" << r << "> is not found." << std::endl;
+            return false;
+        }
+    }
     return true;
 }
 
@@ -198,16 +204,16 @@ bool generator::process(const std::filesystem::path& config_file_path, const std
         const auto& working_directory = config_file_path.has_parent_path() ? config_file_path.parent_path() : std::filesystem::current_path();
 
         prepare_receptors prepare_receptors;
-        if (json.contains("prepare_receptors") && !prepare_receptors.load(json["prepare_receptors"], working_directory) && !prepare_receptors.validate()) {
+        if (json.contains("prepare_receptors") && (!prepare_receptors.load(json["prepare_receptors"], working_directory) || !prepare_receptors.validate())) {
             return false;
         }
-
-        const auto need_prepare_receptors_step = prepare_receptors.has_data_loaded();
 
         config config;
         if (!config.load(config_file_path)) {
             return false;
         }
+
+        const auto need_prepare_receptors_step = prepare_receptors.has_data_loaded();
 
         if (!need_prepare_receptors_step && config.validate()) {
             return save_config(config, working_directory, out_path);
@@ -219,5 +225,5 @@ bool generator::process(const std::filesystem::path& config_file_path, const std
         return false;
     }
 
-    return false;
+    return true;
 }

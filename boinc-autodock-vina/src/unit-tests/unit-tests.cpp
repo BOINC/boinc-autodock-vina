@@ -1024,6 +1024,7 @@ TEST_F(InputConfig_UnitTests, TestThatWorkGeneratorIsAbleToProcessAlreadyPrepare
     EXPECT_STREQ((zip_extract_path / "out_sample").string().data(), conf.output.out.data());
 
     std::filesystem::remove(zip_path);
+    remove_all(zip_extract_path);
 }
 
 TEST_F(InputConfig_UnitTests, TestThatGetTempFolderNameAlwaysReturnsDifferentNames) {
@@ -1044,4 +1045,170 @@ TEST_F(InputConfig_UnitTests, TestThatTempFolderIsCreatedAndThenCleared) {
     }
 
     ASSERT_FALSE(std::filesystem::exists(directory));
+}
+
+TEST_F(InputConfig_UnitTests, ValidatePrepareReceptors_HasDataLoaded) {
+    prepare_receptors pr;
+    EXPECT_FALSE(pr.has_data_loaded());
+
+    pr.receptors.push_back("Test");
+    EXPECT_TRUE(pr.has_data_loaded());
+
+    pr.receptors.pop_back();
+    EXPECT_FALSE(pr.has_data_loaded());
+
+    pr.repair = repair::bonds;
+    EXPECT_TRUE(pr.has_data_loaded());
+
+    pr.repair = repair::None;
+    EXPECT_FALSE(pr.has_data_loaded());
+
+    pr.preserves.push_back("Test");
+    EXPECT_TRUE(pr.has_data_loaded());
+
+    pr.preserves.pop_back();
+    EXPECT_FALSE(pr.has_data_loaded());
+
+    pr.cleanup = cleanup::deleteAltB;
+    EXPECT_TRUE(pr.has_data_loaded());
+
+    pr.cleanup = cleanup::none;
+    EXPECT_FALSE(pr.has_data_loaded());
+
+    pr.delete_nonstd_residue = true;
+    EXPECT_TRUE(pr.has_data_loaded());
+
+    pr.delete_nonstd_residue = false;
+    EXPECT_FALSE(pr.has_data_loaded());
+
+    pr.receptors.push_back("Test");
+    EXPECT_TRUE(pr.has_data_loaded());
+    pr.repair = repair::bonds_hydrogens;
+    EXPECT_TRUE(pr.has_data_loaded());
+    pr.preserves.push_back("Test");
+    EXPECT_TRUE(pr.has_data_loaded());
+    pr.cleanup = cleanup::lps;
+    EXPECT_TRUE(pr.has_data_loaded());
+    pr.delete_nonstd_residue = true;
+    EXPECT_TRUE(pr.has_data_loaded());
+}
+
+TEST_F(InputConfig_UnitTests, FailOnAbsolutePathInReceptors) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("prepare_receptors");
+    json_encoder.begin_array("receptors");
+#ifdef WIN32
+    json_encoder.value("C:\\test\\receptor_sample");
+#else
+    json_encoder.value("/home/test/receptor_sample");
+#endif
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+
+    generator generator;
+
+    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
+    EXPECT_FALSE(res);
+}
+
+TEST_F(InputConfig_UnitTests, CheckThatReceptorFileIsPresent) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("prepare_receptors");
+    json_encoder.begin_array("receptors");
+#ifdef WIN32
+    json_encoder.value("receptor_sample");
+#else
+    json_encoder.value("receptor_sample");
+#endif
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+
+    generator generator;
+
+    ASSERT_FALSE(generator.process(dummy_json_file_path, std::filesystem::current_path()));
+
+    dummy_ofstream dummy;
+    create_dummy_file(dummy, std::filesystem::current_path() / "receptor_sample");
+
+    EXPECT_TRUE(generator.process(dummy_json_file_path, std::filesystem::current_path()));
+}
+
+TEST_F(InputConfig_UnitTests, ValidatePrepareReceptorsValues) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("prepare_receptors");
+    json_encoder.begin_array("receptors");
+#ifdef WIN32
+    json_encoder.value("receptor_sample");
+#else
+    json_encoder.value("receptor_sample");
+#endif
+    json_encoder.end_array();
+    json_encoder.value("repair", std::string(magic_enum::enum_name(repair::bonds_hydrogens)));
+    json_encoder.begin_array("preserves");
+    json_encoder.value("test");
+    json_encoder.end_array();
+    json_encoder.value("cleanup", std::string(magic_enum::enum_name(cleanup::nonstdres)));
+    json_encoder.value("delete_nonstd_residue", true);
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+
+    dummy_ofstream dummy;
+    create_dummy_file(dummy, std::filesystem::current_path() / "receptor_sample");
+
+    const std::ifstream config_file(dummy_json_file_path.c_str());
+    std::stringstream buffer;
+    buffer << config_file.rdbuf();
+
+    const auto& input_json = jsoncons::json::parse(buffer);
+
+    const auto& working_directory = std::filesystem::current_path();
+
+    prepare_receptors prepare_receptors;
+    ASSERT_TRUE(input_json.contains("prepare_receptors"));
+    ASSERT_TRUE(prepare_receptors.load(input_json["prepare_receptors"], working_directory));
+    ASSERT_TRUE(prepare_receptors.validate());
+
+    ASSERT_EQ(1, prepare_receptors.receptors.size());
+    const auto receptor_sample = std::filesystem::current_path() / "receptor_sample";
+    EXPECT_STREQ(receptor_sample.string().c_str(), prepare_receptors.receptors[0].c_str());
+    EXPECT_EQ(repair::bonds_hydrogens, prepare_receptors.repair);
+    ASSERT_EQ(1, prepare_receptors.preserves.size());
+    EXPECT_STREQ("test", prepare_receptors.preserves[0].c_str());
+    EXPECT_EQ(cleanup::nonstdres, prepare_receptors.cleanup);
+    EXPECT_TRUE(prepare_receptors.delete_nonstd_residue);
 }
