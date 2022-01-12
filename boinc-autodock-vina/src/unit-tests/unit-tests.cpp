@@ -1,6 +1,6 @@
 // This file is part of BOINC.
 // https://boinc.berkeley.edu
-// Copyright (C) 2021 University of California
+// Copyright (C) 2022 University of California
 //
 // BOINC is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License
@@ -25,6 +25,7 @@
 #include "jsoncons_helper/jsoncons_helper.h"
 #include "work-generator/input-config.h"
 #include "boinc-autodock-vina/calculate.h"
+#include "work-generator/temp-folder.h"
 
 class dummy_ofstream final {
 public:
@@ -1149,12 +1150,7 @@ TEST_F(InputConfig_UnitTests, CheckThatReceptorFileIsPresent) {
 
     generator generator;
 
-    ASSERT_FALSE(generator.process(dummy_json_file_path, std::filesystem::current_path()));
-
-    dummy_ofstream dummy;
-    create_dummy_file(dummy, std::filesystem::current_path() / "receptor_sample");
-
-    EXPECT_TRUE(generator.process(dummy_json_file_path, std::filesystem::current_path()));
+    EXPECT_FALSE(generator.process(dummy_json_file_path, std::filesystem::current_path()));
 }
 
 TEST_F(InputConfig_UnitTests, ValidatePrepareReceptorsValues) {
@@ -1211,4 +1207,33 @@ TEST_F(InputConfig_UnitTests, ValidatePrepareReceptorsValues) {
     EXPECT_STREQ("test", prepare_receptors.preserves[0].c_str());
     EXPECT_EQ(cleanup::nonstdres, prepare_receptors.cleanup);
     EXPECT_TRUE(prepare_receptors.delete_nonstd_residue);
+}
+
+TEST_F(InputConfig_UnitTests, TestSimpleVinaScenario) {
+    const auto& json_file = std::filesystem::current_path() / "boinc-autodock-vina/samples/basic_docking_full/1iep_vina.json";
+
+    generator generator;
+    ASSERT_TRUE(generator.process(json_file, std::filesystem::current_path()));
+
+    const auto zip_path = std::filesystem::current_path() / "wu_1.zip";
+    ASSERT_TRUE(exists(zip_path));
+
+    const auto zip_extract_path = std::filesystem::current_path() / "wu_1_zip";
+    create_directories(zip_extract_path);
+    ASSERT_TRUE(zip_extract::extract(zip_path, zip_extract_path));
+
+    const auto config_path = zip_extract_path / "config.json";
+    ASSERT_TRUE(exists(config_path));
+
+    config conf;
+    ASSERT_TRUE(conf.load(config_path));
+    ASSERT_TRUE(conf.validate());
+
+    const auto res = calculator::calculate(conf, 0, [](double) {});
+    EXPECT_TRUE(res);
+
+    std::filesystem::remove(std::filesystem::current_path() / "boinc-autodock-vina/samples/basic_docking_full/1iep_receptor.pdbqt");
+
+    std::filesystem::remove(zip_path);
+    remove_all(zip_extract_path);
 }

@@ -9,6 +9,7 @@
         "jsoncons",
         "magic-enum",
         "python3",
-        "libzip"
+        "libzip",
+        "boost-process"
     ]
 }

@@ -1,6 +1,6 @@
 // This file is part of BOINC.
 // https://boinc.berkeley.edu
-// Copyright (C) 2021 University of California
+// Copyright (C) 2022 University of California
 //
 // BOINC is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License
@@ -22,6 +22,10 @@
 #include <random>
 #include <zip.h>
 #include <jsoncons/basic_json.hpp>
+#include <boost/process.hpp>
+#include <magic_enum.hpp>
+
+#include "temp-folder.h"
 
 bool prepare_receptors::load(const jsoncons::basic_json<char>& json, [[maybe_unused]] const std::filesystem::path& working_directory) {
     if (json.contains("receptors")) {
@@ -167,27 +171,6 @@ bool generator::create_zip(const std::filesystem::path& path, const std::filesys
     return true;
 }
 
-temp_folder::temp_folder(const std::filesystem::path& working_directory) : folder(working_directory / get_temp_folder_name()) {
-    create_directories(folder);
-}
-
-temp_folder::~temp_folder() {
-    remove_all(folder);
-}
-
-const std::filesystem::path& temp_folder::operator()() const {
-    return folder;
-}
-
-std::string temp_folder::get_temp_folder_name() {
-    static std::random_device rd;
-    static std::mt19937 mt(rd());
-    static std::uniform_int_distribution dist(std::numeric_limits<unsigned>::min(), std::numeric_limits<unsigned>::max());
-    std::stringstream ss;
-    ss << dist(mt);
-    return ss.str();
-}
-
 bool generator::process(const std::filesystem::path& config_file_path, const std::filesystem::path& out_path) {
     if (!exists(config_file_path) || !is_regular_file(config_file_path)) {
         std::cerr << "Error happened while opening <" << config_file_path.string() << "> file" << std::endl;
@@ -215,15 +198,65 @@ bool generator::process(const std::filesystem::path& config_file_path, const std
 
         const auto need_prepare_receptors_step = prepare_receptors.has_data_loaded();
 
-        if (!need_prepare_receptors_step && config.validate()) {
-            return save_config(config, working_directory, out_path);
+        if (need_prepare_receptors_step) {
+            //TODO: Could run in parallel
+            for (const auto& r : prepare_receptors.receptors) {
+                std::stringstream cmd;
+#ifdef WIN32
+                cmd << "cmd /c ";
+#endif
+
+                cmd << "prepare_receptor ";
+                cmd << "-r " << r << " ";
+
+                std::filesystem::path output(r);
+                output.replace_extension("pdbqt");
+                config.input.receptor = output.string();
+                cmd << "-o " << config.input.receptor << " ";
+
+                if (prepare_receptors.repair != repair::None) {
+                    cmd << "- A " << magic_enum::enum_name(prepare_receptors.repair) << " ";
+                }
+                for (const auto& p : prepare_receptors.preserves) {
+                    if (p == "all") {
+                        cmd << "-C ";
+                    } else {
+                        cmd << "-p " << p << " ";
+                    }
+                }
+                if (prepare_receptors.cleanup != cleanup::none) {
+                    cmd << "-U " << magic_enum::enum_name(prepare_receptors.cleanup) << " ";
+                }
+                if (prepare_receptors.delete_nonstd_residue) {
+                    cmd << "-e ";
+                }
+
+                boost::process::child prepare_receptor(cmd.str());
+                prepare_receptor.wait();
+                if (prepare_receptor.exit_code() != 0) {
+                    std::cerr << "Failed to prepare receptors: <" << cmd.str() << ">" << std::endl;
+                }
+            }
+            if (!config.validate()) {
+                std::cerr << "Failed to validate generated config." << std::endl;
+                return false;
+            }
+            if (!save_config(config, working_directory, out_path)) {
+                std::cerr << "Failed to save generated config." << std::endl;
+                return false;
+            }
+            return true;
+        }
+        else {
+            if (config.validate()) {
+                return save_config(config, working_directory, out_path);
+            }
         }
 
+        return false;
     }
     catch (const std::exception& ex) {
         std::cerr << "Error happened while processing <" << config_file_path.string() << "> file: " << ex.what() << std::endl;
         return false;
     }
-
-    return true;
 }

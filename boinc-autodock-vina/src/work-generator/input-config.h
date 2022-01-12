@@ -1,6 +1,6 @@
 // This file is part of BOINC.
 // https://boinc.berkeley.edu
-// Copyright (C) 2021 University of California
+// Copyright (C) 2022 University of California
 //
 // BOINC is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License
@@ -72,21 +72,4 @@ public:
 
 private:
     uint64_t current_wu_number = 0;
-};
-
-class temp_folder {
-public:
-    explicit temp_folder(const std::filesystem::path& working_directory);
-    ~temp_folder();
-    const std::filesystem::path& operator()() const;
-
-    temp_folder(temp_folder&&) = delete;
-    temp_folder& operator=(temp_folder&&) = delete;
-    temp_folder(const temp_folder&) = delete;
-    temp_folder& operator=(const temp_folder&) = delete;
-
-    [[nodiscard]] static std::string get_temp_folder_name();
-
-private:
-    const std::filesystem::path folder;
 };

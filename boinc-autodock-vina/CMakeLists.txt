@@ -1,6 +1,6 @@
 # This file is part of BOINC.
 # https://boinc.berkeley.edu
-# Copyright (C) 2021 University of California
+# Copyright (C) 2022 University of California
 #
 # BOINC is free software; you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License
@@ -48,6 +48,8 @@ add_library(input-config
     STATIC
         src/work-generator/input-config.h
         src/work-generator/input-config.cpp
+        src/work-generator/temp-folder.h
+        src/work-generator/temp-folder.cpp
 )
 
 add_library(calculate
