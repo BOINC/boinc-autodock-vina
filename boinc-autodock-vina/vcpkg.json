@@ -8,7 +8,6 @@
         "gtest",
         "jsoncons",
         "magic-enum",
-        "python3",
         "libzip",
         "boost-process"
     ]

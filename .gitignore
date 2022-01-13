@@ -377,3 +377,4 @@ build/
 
 # exceptions for samples folder
 !boinc-autodock-vina/samples/**/*.pdb
+!boinc-autodock-vina/samples/**/*.sdf

@@ -26,7 +26,6 @@ find_package(Boost REQUIRED COMPONENTS filesystem log math_tr1 program_options r
 find_package(magic_enum CONFIG REQUIRED)
 find_package(jsoncons CONFIG REQUIRED)
 find_package(GTest CONFIG REQUIRED)
-find_package(Python3 COMPONENTS Development REQUIRED)
 find_package(libzip CONFIG REQUIRED)
 
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -44,13 +43,15 @@ add_library(config
         src/common/config.cpp
 )
 
-add_library(input-config
-    STATIC
-        src/work-generator/input-config.h
-        src/work-generator/input-config.cpp
-        src/work-generator/temp-folder.h
-        src/work-generator/temp-folder.cpp
-)
+if (UNIX AND NOT APPLE)
+    add_library(input-config
+        STATIC
+            src/work-generator/input-config.h
+            src/work-generator/input-config.cpp
+            src/work-generator/temp-folder.h
+            src/work-generator/temp-folder.cpp
+    )
+endif()
 
 add_library(calculate
     STATIC
@@ -73,12 +74,25 @@ add_executable(config-validator
 )
 
 add_executable(unit-tests
-    src/unit-tests/unit-tests.cpp
+    src/unit-tests/config-tests.cpp
+    src/unit-tests/dummy-ofstream.h
+    src/unit-tests/dummy-ofstream.cpp
+    src/unit-tests/zip-extract.h
+    src/unit-tests/zip-extract.cpp
 )
 
-add_executable(work-generator
-    src/work-generator/work-generator.cpp
-)
+if (UNIX AND NOT APPLE)
+    target_sources(unit-tests
+        PRIVATE
+            src/unit-tests/input-config-tests.cpp
+    )
+endif()
+
+if (UNIX AND NOT APPLE)
+    add_executable(work-generator
+        src/work-generator/work-generator.cpp
+    )
+endif()
 
 if (UNIX AND CMAKE_CXX_COMPILER_ID MATCHES "GCC")
     target_compile_options(unit-tests PRIVATE -g -O0 --coverage -fprofile-abs-path)
@@ -113,11 +127,13 @@ target_compile_definitions(unit-tests
     -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
 )
 
-target_compile_definitions(work-generator
-    PRIVATE
-    -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
-    -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
-)
+if (UNIX AND NOT APPLE)
+    target_compile_definitions(work-generator
+        PRIVATE
+        -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
+        -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
+    )
+endif()
 
 target_compile_definitions(config
     PRIVATE
@@ -125,11 +141,13 @@ target_compile_definitions(config
     -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
 )
 
-target_compile_definitions(input-config
-    PRIVATE
-    -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
-    -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
-)
+if (UNIX AND NOT APPLE)
+    target_compile_definitions(input-config
+        PRIVATE
+        -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
+        -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
+    )
+endif()
 
 target_compile_definitions(calculate
     PRIVATE
@@ -161,11 +179,13 @@ target_include_directories(unit-tests
         ${CMAKE_CURRENT_LIST_DIR}/../common/src
 )
 
-target_include_directories(work-generator
-    PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}/src
-        ${CMAKE_CURRENT_LIST_DIR}/../common/src
-)
+if (UNIX AND NOT APPLE)
+    target_include_directories(work-generator
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/src
+            ${CMAKE_CURRENT_LIST_DIR}/../common/src
+    )
+endif()
 
 target_include_directories(config
     PRIVATE
@@ -173,11 +193,13 @@ target_include_directories(config
         ${CMAKE_CURRENT_LIST_DIR}/../common/src
 )
 
-target_include_directories(input-config
-    PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}/src
-        ${CMAKE_CURRENT_LIST_DIR}/../common/src
-)
+if (UNIX AND NOT APPLE)
+    target_include_directories(input-config
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/src
+            ${CMAKE_CURRENT_LIST_DIR}/../common/src
+    )
+endif()
 
 target_include_directories(calculate
     PRIVATE
@@ -222,54 +244,66 @@ target_link_libraries(config-validator
         jsoncons_helper
 )
 
-target_link_libraries(unit-tests
-    PRIVATE
-        config
-        calculate
-        input-config
-        jsoncons_helper
-        GTest::gtest
-        GTest::gtest_main
-        autodock-vina::autodock-vina::vina
-        autodock-vina::autodock-vina::vina_split
-        OpenSSL::SSL
-        OpenSSL::Crypto
-        Boost::boost
-        Boost::filesystem
-        Boost::log
-        Boost::math_tr1
-        Boost::program_options
-        Boost::random
-        Boost::serialization
-        Boost::thread
-        Boost::timer
-        magic_enum::magic_enum
-        jsoncons
-        Python3::Python
-        libzip::zip
+set (UNIT_TEST_LINK_LIBRARIES
+    config
+    calculate
+    jsoncons_helper
+    GTest::gtest
+    GTest::gtest_main
+    autodock-vina::autodock-vina::vina
+    autodock-vina::autodock-vina::vina_split
+    OpenSSL::SSL
+    OpenSSL::Crypto
+    Boost::boost
+    Boost::filesystem
+    Boost::log
+    Boost::math_tr1
+    Boost::program_options
+    Boost::random
+    Boost::serialization
+    Boost::thread
+    Boost::timer
+    magic_enum::magic_enum
+    jsoncons
+    libzip::zip
 )
 
-target_link_libraries(work-generator
-    PRIVATE
-        config
+if (UNIX AND NOT APPLE)
+    set (UNIT_TEST_LINK_LIBRARIES
+        ${UNIT_TEST_LINK_LIBRARIES}
         input-config
-        jsoncons_helper
-        magic_enum::magic_enum
-        jsoncons
-        Python3::Python
-        libzip::zip
+    )
+endif()
+
+target_link_libraries(unit-tests
+    PRIVATE
+        ${UNIT_TEST_LINK_LIBRARIES}
 )
+
+if (UNIX AND NOT APPLE)
+    target_link_libraries(work-generator
+        PRIVATE
+            config
+            input-config
+            jsoncons_helper
+            magic_enum::magic_enum
+            jsoncons
+            libzip::zip
+    )
+endif()
 
 target_link_libraries(config
     PRIVATE
        jsoncons
 )
 
-target_link_libraries(input-config
-    PRIVATE
-       jsoncons
-       libzip::zip
-)
+if (UNIX AND NOT APPLE)
+    target_link_libraries(input-config
+        PRIVATE
+        jsoncons
+        libzip::zip
+    )
+endif()
 
 target_link_libraries(calculate
     PRIVATE

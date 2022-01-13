@@ -198,6 +198,12 @@ bool generator::process(const std::filesystem::path& config_file_path, const std
 
         const auto need_prepare_receptors_step = prepare_receptors.has_data_loaded();
 
+        if (!need_prepare_receptors_step) {
+            if (config.validate()) {
+                return save_config(config, working_directory, out_path);
+            }
+        }
+
         if (need_prepare_receptors_step) {
             //TODO: Could run in parallel
             for (const auto& r : prepare_receptors.receptors) {
@@ -244,12 +250,6 @@ bool generator::process(const std::filesystem::path& config_file_path, const std
             if (!save_config(config, working_directory, out_path)) {
                 std::cerr << "Failed to save generated config." << std::endl;
                 return false;
-            }
-            return true;
-        }
-        else {
-            if (config.validate()) {
-                return save_config(config, working_directory, out_path);
             }
         }
 

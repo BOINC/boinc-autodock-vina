@@ -27,6 +27,13 @@
 #define BOINC_APPS_GIT_REVISION "unknown"
 #endif
 
+// Dependencies:
+//
+// ADFR: https://ccsb.scripps.edu/adfr/downloads/
+// Open Babel: https://open-babel.readthedocs.io/en/latest/Installation/install.html#install-binaries
+// For Windows additionally: https://www.lfd.uci.edu/~gohlke/pythonlibs/#openbabel
+// Meeko: https://autodock-vina.readthedocs.io/en/latest/docking_requirements.html#meeko
+
 void help() {
     std::cout << "Usage:" << std::endl;
     std::cout << "work-generator DIR" << std::endl;
