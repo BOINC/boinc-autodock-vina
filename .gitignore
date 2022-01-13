@@ -375,6 +375,10 @@ build/
 # vscode folder
 .vscode/
 
+# CMake cache files
+cmake.check_cache
+CMakeCache.txt
+
 # exceptions for samples folder
 !boinc-autodock-vina/samples/**/*.pdb
 !boinc-autodock-vina/samples/**/*.sdf

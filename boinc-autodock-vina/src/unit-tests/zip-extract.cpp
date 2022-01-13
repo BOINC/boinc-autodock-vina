@@ -19,6 +19,7 @@
 
 #include <functional>
 #include <fstream>
+#include <cstring>
 
 #include <zip.h>
 

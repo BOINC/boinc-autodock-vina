@@ -16,10 +16,12 @@
 // along with BOINC.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <gtest/gtest.h>
+#include <magic_enum.hpp>
 
 #include "dummy-ofstream.h"
 #include "zip-extract.h"
 #include "common/config.h"
+#include "boinc-autodock-vina/calculate.h"
 #include "work-generator/input-config.h"
 #include "work-generator/temp-folder.h"
 
