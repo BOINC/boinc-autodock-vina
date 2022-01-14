@@ -6,6 +6,7 @@ chmod a+x adfr_install
 ./adfr_install
 tar zxvf ~/ADFRsuite-1.0/ADFRsuite_x86_64Linux_1.0.tar.gz
 cd ADFRsuite_x86_64Linux_1.0/
+yes | ./install.sh -d ~/ADFRsuite -c 0
 
 Add to .bashrc:
 export PATH=~/ADFRsuite/bin:"$PATH"
