@@ -208,9 +208,6 @@ bool generator::process(const std::filesystem::path& config_file_path, const std
             //TODO: Could run in parallel
             for (const auto& r : prepare_receptors.receptors) {
                 std::stringstream cmd;
-#ifdef WIN32
-                cmd << "cmd /c ";
-#endif
 
                 cmd << "prepare_receptor ";
                 cmd << "-r " << r << " ";
@@ -242,18 +239,19 @@ bool generator::process(const std::filesystem::path& config_file_path, const std
                 if (prepare_receptor.exit_code() != 0) {
                     std::cerr << "Failed to prepare receptors: <" << cmd.str() << ">" << std::endl;
                 }
-            }
-            if (!config.validate()) {
-                std::cerr << "Failed to validate generated config." << std::endl;
-                return false;
-            }
-            if (!save_config(config, working_directory, out_path)) {
-                std::cerr << "Failed to save generated config." << std::endl;
-                return false;
+
+                if (!config.validate()) {
+                    std::cerr << "Failed to validate generated config." << std::endl;
+                    return false;
+                }
+                if (!save_config(config, working_directory, out_path)) {
+                    std::cerr << "Failed to save generated config." << std::endl;
+                    return false;
+                }
             }
         }
 
-        return false;
+        return true;
     }
     catch (const std::exception& ex) {
         std::cerr << "Error happened while processing <" << config_file_path.string() << "> file: " << ex.what() << std::endl;
