@@ -120,52 +120,6 @@ TEST_F(InputConfig_UnitTests, TestThatTempFolderIsCreatedAndThenCleared) {
     ASSERT_FALSE(std::filesystem::exists(directory));
 }
 
-TEST_F(InputConfig_UnitTests, ValidatePrepareReceptors_HasDataLoaded) {
-    prepare_receptors pr;
-    EXPECT_FALSE(pr.has_data_loaded());
-
-    pr.receptors.push_back("Test");
-    EXPECT_TRUE(pr.has_data_loaded());
-
-    pr.receptors.pop_back();
-    EXPECT_FALSE(pr.has_data_loaded());
-
-    pr.repair = repair::bonds;
-    EXPECT_TRUE(pr.has_data_loaded());
-
-    pr.repair = repair::None;
-    EXPECT_FALSE(pr.has_data_loaded());
-
-    pr.preserves.push_back("Test");
-    EXPECT_TRUE(pr.has_data_loaded());
-
-    pr.preserves.pop_back();
-    EXPECT_FALSE(pr.has_data_loaded());
-
-    pr.cleanup = cleanup::deleteAltB;
-    EXPECT_TRUE(pr.has_data_loaded());
-
-    pr.cleanup = cleanup::none;
-    EXPECT_FALSE(pr.has_data_loaded());
-
-    pr.delete_nonstd_residue = true;
-    EXPECT_TRUE(pr.has_data_loaded());
-
-    pr.delete_nonstd_residue = false;
-    EXPECT_FALSE(pr.has_data_loaded());
-
-    pr.receptors.push_back("Test");
-    EXPECT_TRUE(pr.has_data_loaded());
-    pr.repair = repair::bonds_hydrogens;
-    EXPECT_TRUE(pr.has_data_loaded());
-    pr.preserves.push_back("Test");
-    EXPECT_TRUE(pr.has_data_loaded());
-    pr.cleanup = cleanup::lps;
-    EXPECT_TRUE(pr.has_data_loaded());
-    pr.delete_nonstd_residue = true;
-    EXPECT_TRUE(pr.has_data_loaded());
-}
-
 TEST_F(InputConfig_UnitTests, FailOnAbsolutePathInReceptors) {
     const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
 

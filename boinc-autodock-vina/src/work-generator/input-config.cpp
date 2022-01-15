@@ -109,10 +109,6 @@ bool prepare_receptors::validate() const {
     return true;
 }
 
-bool prepare_receptors::has_data_loaded() const {
-    return !receptors.empty() || repair != repair::None || !preserves.empty() || cleanup != cleanup::none || delete_nonstd_residue == true;
-}
-
 bool generator::validate() const {
     return true;
 }
@@ -196,7 +192,7 @@ bool generator::process(const std::filesystem::path& config_file_path, const std
             return false;
         }
 
-        const auto need_prepare_receptors_step = prepare_receptors.has_data_loaded();
+        const auto need_prepare_receptors_step = !prepare_receptors.receptors.empty();
 
         if (!need_prepare_receptors_step) {
             if (config.validate()) {

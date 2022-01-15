@@ -43,14 +43,7 @@ public:
     [[nodiscard]] virtual bool validate() const = 0;
 };
 
-class has_data {
-public:
-    virtual ~has_data() = default;
-
-    [[nodiscard]] virtual bool has_data_loaded() const = 0;
-};
-
-class prepare_receptors final : public json_load, public data_validate, public has_data {
+class prepare_receptors final : public json_load, public data_validate {
 public:
     std::vector<std::string> receptors;
     repair repair = repair::None;
@@ -60,7 +53,26 @@ public:
 
     [[nodiscard]] bool load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) override;
     [[nodiscard]] bool validate() const override;
-    [[nodiscard]] bool has_data_loaded() const override;
+};
+
+class prepare_ligands final : public json_load, public data_validate {
+public:
+    std::vector<std::string> ligands;
+    bool break_macrocycles = false;
+    bool hydrate = false;
+    bool keep_nonpolar_hydrogens = false;
+    bool correct_protonation_for_ph = false;
+    double pH = .0;
+    bool flex = false;
+    std::vector<std::string> rigidity_bonds_smarts;
+    std::vector<std::pair<uint64_t, uint64_t>> rigidity_bonds_indices;
+    bool flexible_amides = false;
+    double double_bond_penalty = .0;
+    bool remove_index_map = false;
+    bool remove_smiles = false;
+
+    [[nodiscard]] bool load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) override;
+    [[nodiscard]] bool validate() const override;
 };
 
 class generator {
