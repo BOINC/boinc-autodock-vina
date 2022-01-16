@@ -57,7 +57,10 @@ public:
 
 class prepare_ligands final : public json_load, public data_validate {
 public:
-    std::vector<std::string> ligands;
+    std::string ligand;
+    std::vector<std::string> selected_ligands;
+    bool multimol = false;
+    std::string multimol_prefix;
     bool break_macrocycles = false;
     bool hydrate = false;
     bool keep_nonpolar_hydrogens = false;

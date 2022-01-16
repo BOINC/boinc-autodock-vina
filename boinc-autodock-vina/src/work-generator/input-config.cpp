@@ -109,6 +109,107 @@ bool prepare_receptors::validate() const {
     return true;
 }
 
+bool prepare_ligands::load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) {
+    if (json.contains("ligand")) {
+        const auto& value = std::filesystem::path(json["ligand"].as<std::string>());
+        if (value.is_absolute()) {
+            std::cerr << "Config should not contain absolute paths" << std::endl;
+            return false;
+        }
+        ligand = std::filesystem::path(working_directory / value).string();
+    }
+    if (json.contains("selected_ligands")) {
+        for (const auto& l : json["selected_ligands"].array_range()) {
+            const auto& value = std::filesystem::path(l.as<std::string>());
+            if (value.is_absolute()) {
+                std::cerr << "Config should not contain absolute paths" << std::endl;
+                return false;
+            }
+            selected_ligands.push_back(std::filesystem::path(working_directory / value).string());
+        }
+    }
+    if (json.contains("multimol")) {
+        multimol = json["multimol"].as<bool>();
+    }
+    if (json.contains("multimol_prefix")) {
+        const auto& prefix = json["multimol_prefix"].as<std::string>();
+        const auto& value = std::filesystem::path(prefix);
+        if (value.is_absolute()) {
+            std::cerr << "Config should not contain absolute paths" << std::endl;
+            return false;
+        }
+        multimol_prefix = prefix;
+    }
+    if (json.contains("break_macrocycles")) {
+        break_macrocycles = json["break_macrocycles"].as<bool>();
+    }
+    if (json.contains("hydrate")) {
+        hydrate = json["hydrate"].as<bool>();
+    }
+    if (json.contains("keep_nonpolar_hydrogens")) {
+        keep_nonpolar_hydrogens = json["keep_nonpolar_hydrogens"].as<bool>();
+    }
+    if (json.contains("correct_protonation_for_ph")) {
+        correct_protonation_for_ph = json["correct_protonation_for_ph"].as<bool>();
+    }
+    if (json.contains("pH")) {
+        pH = json["pH"].as<double>();
+    }
+    if (json.contains("flex")) {
+        flex = json["flex"].as<bool>();
+    }
+    if (json.contains("rigidity_bonds_smarts")) {
+        for (const auto& r : json["rigidity_bonds_smarts"].array_range()) {
+            rigidity_bonds_smarts.push_back(json["rigidity_bonds_smarts"].as<std::string>());
+        }
+    }
+    if (json.contains("rigidity_bonds_indices")) {
+        for (const auto& r : json["rigidity_bonds_indices"].array_range()) {
+            if (!r.is_array() || r.size() != 2) {
+                std::cerr << "Rigidity Bonds indices should always be an array of pairs." << std::endl;
+                return false;
+            }
+            bool first = true;
+            std::pair<uint64_t, uint64_t> p;
+            for (const auto& i : r.array_range()) {
+                if (first) {
+                    p.first = i.as<uint64_t>();
+                    first = false;
+                }
+                else {
+                    p.second = i.as<uint64_t>();
+                }
+            }
+            rigidity_bonds_indices.push_back(p);
+        }
+    }
+    if (json.contains("flexible_amides")) {
+        flexible_amides = json["flexible_amides"].as<bool>();
+    }
+    if (json.contains("double_bond_penalty")) {
+        double_bond_penalty = json["double_bond_penalty"].as<double>();
+    }
+    if (json.contains("remove_index_map")) {
+        remove_index_map = json["remove_index_map"].as<bool>();
+    }
+    if (json.contains("remove_smiles")) {
+        remove_smiles = json["remove_smiles"].as<bool>();
+    }
+    return true;
+}
+
+bool prepare_ligands::validate() const {
+    if (!std::filesystem::exists(ligand) || !std::filesystem::is_regular_file(ligand)) {
+        std::cerr << "Ligand file <" << ligand << "> is not found." << std::endl;
+        return false;
+    }
+    if (rigidity_bonds_smarts.size() != rigidity_bonds_indices.size()) {
+        std::cerr << "Count of Rigidity Bonds indices pairs should be equal to Rigidity Bonds SMARTS count." << std::endl;
+        return false;
+    }
+    return true;
+}
+
 bool generator::validate() const {
     return true;
 }
@@ -152,11 +253,12 @@ bool generator::create_zip(const std::filesystem::path& path, const std::filesys
 
     for (const auto& file : std::filesystem::directory_iterator(path)) {
         if (file.is_regular_file()) {
-            const deleted_unique_ptr<zip_source_t> source(zip_source_file(zip.get(), file.path().string().data(), 0, 0), [](auto*) {});
+            const auto& file_path = file.path();
+            const deleted_unique_ptr<zip_source_t> source(zip_source_file(zip.get(), file_path.string().data(), 0, 0), [](auto*) {});
             if (!source) {
                 std::cerr << "Failed to open file <" << file.path().string().data() << ">: " << zip_strerror(zip.get()) << std::endl;
             }
-            if (zip_file_add(zip.get(), file.path().filename().string().data(), source.get(), ZIP_FL_ENC_UTF_8) < 0) {
+            if (zip_file_add(zip.get(), file_path.filename().string().data(), source.get(), ZIP_FL_ENC_UTF_8) < 0) {
                 zip_source_free(source.get());
                 std::cerr << "Failed to add file <" << file.path().string().data() << "> to archive : " << zip_strerror(zip.get()) << std::endl;
                 return false;
@@ -204,7 +306,9 @@ bool generator::process(const std::filesystem::path& config_file_path, const std
             //TODO: Could run in parallel
             for (const auto& r : prepare_receptors.receptors) {
                 std::stringstream cmd;
-
+#ifdef WIN32
+                cmd << "cmd /c ";
+#endif
                 cmd << "prepare_receptor ";
                 cmd << "-r " << r << " ";
 
