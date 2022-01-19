@@ -43,7 +43,7 @@ add_library(config
         src/common/config.cpp
 )
 
-if (UNIX AND NOT APPLE)
+if (NOT APPLE)
     add_library(input-config
         STATIC
             src/work-generator/input-config.h
@@ -81,14 +81,14 @@ add_executable(unit-tests
     src/unit-tests/zip-extract.cpp
 )
 
-if (UNIX AND NOT APPLE)
+if (NOT APPLE)
     target_sources(unit-tests
         PRIVATE
             src/unit-tests/input-config-tests.cpp
     )
 endif()
 
-if (UNIX AND NOT APPLE)
+if (NOT APPLE)
     add_executable(work-generator
         src/work-generator/work-generator.cpp
     )
@@ -127,7 +127,7 @@ target_compile_definitions(unit-tests
     -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
 )
 
-if (UNIX AND NOT APPLE)
+if (NOT APPLE)
     target_compile_definitions(work-generator
         PRIVATE
         -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
@@ -141,7 +141,7 @@ target_compile_definitions(config
     -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
 )
 
-if (UNIX AND NOT APPLE)
+if (NOT APPLE)
     target_compile_definitions(input-config
         PRIVATE
         -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
@@ -179,7 +179,7 @@ target_include_directories(unit-tests
         ${CMAKE_CURRENT_LIST_DIR}/../common/src
 )
 
-if (UNIX AND NOT APPLE)
+if (NOT APPLE)
     target_include_directories(work-generator
         PRIVATE
             ${CMAKE_CURRENT_LIST_DIR}/src
@@ -193,7 +193,7 @@ target_include_directories(config
         ${CMAKE_CURRENT_LIST_DIR}/../common/src
 )
 
-if (UNIX AND NOT APPLE)
+if (NOT APPLE)
     target_include_directories(input-config
         PRIVATE
             ${CMAKE_CURRENT_LIST_DIR}/src
@@ -268,7 +268,7 @@ set (UNIT_TEST_LINK_LIBRARIES
     libzip::zip
 )
 
-if (UNIX AND NOT APPLE)
+if (NOT APPLE)
     set (UNIT_TEST_LINK_LIBRARIES
         ${UNIT_TEST_LINK_LIBRARIES}
         input-config
@@ -280,7 +280,7 @@ target_link_libraries(unit-tests
         ${UNIT_TEST_LINK_LIBRARIES}
 )
 
-if (UNIX AND NOT APPLE)
+if (NOT APPLE)
     target_link_libraries(work-generator
         PRIVATE
             config
@@ -297,7 +297,7 @@ target_link_libraries(config
        jsoncons
 )
 
-if (UNIX AND NOT APPLE)
+if (NOT APPLE)
     target_link_libraries(input-config
         PRIVATE
         jsoncons

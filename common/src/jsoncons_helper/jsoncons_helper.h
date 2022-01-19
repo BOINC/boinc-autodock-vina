@@ -1,6 +1,6 @@
 // This file is part of BOINC.
 // https://boinc.berkeley.edu
-// Copyright (C) 2021 University of California
+// Copyright (C) 2022 University of California
 //
 // BOINC is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License
@@ -28,6 +28,7 @@ public:
     bool begin_object(const std::string& key) const;
     bool end_object() const;
 
+    bool begin_array() const;
     bool begin_array(const std::string& key) const;
     bool end_array() const;
 

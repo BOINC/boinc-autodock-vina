@@ -35,7 +35,7 @@ bool prepare_receptors::load(const jsoncons::basic_json<char>& json, [[maybe_unu
                 std::cerr << "Config should not contain absolute paths" << std::endl;
                 return false;
             }
-            receptors.push_back(std::filesystem::path(working_directory / value).string());
+            receptors.emplace_back(std::filesystem::path(working_directory / value).string());
         }
     }
     if (json.contains("repair")) {
@@ -100,6 +100,11 @@ bool prepare_receptors::load(const jsoncons::basic_json<char>& json, [[maybe_unu
 }
 
 bool prepare_receptors::validate() const {
+    if (receptors.empty()) {
+        std::cerr << "No receptor file specified" << std::endl;
+        return false;
+    }
+
     for (const auto& r : receptors) {
         if (!std::filesystem::exists(r) || !std::filesystem::is_regular_file(r)) {
             std::cerr << "Receptor file <" << r << "> is not found." << std::endl;
@@ -125,7 +130,7 @@ bool prepare_ligands::load(const jsoncons::basic_json<char>& json, const std::fi
                 std::cerr << "Config should not contain absolute paths" << std::endl;
                 return false;
             }
-            selected_ligands.push_back(std::filesystem::path(working_directory / value).string());
+            selected_ligands.emplace_back(std::filesystem::path(working_directory / value).string());
         }
     }
     if (json.contains("multimol")) {
@@ -133,11 +138,21 @@ bool prepare_ligands::load(const jsoncons::basic_json<char>& json, const std::fi
     }
     if (json.contains("multimol_prefix")) {
         const auto& prefix = json["multimol_prefix"].as<std::string>();
-        const auto& value = std::filesystem::path(prefix);
-        if (value.is_absolute()) {
+        if (std::filesystem::path(prefix).is_absolute()) {
             std::cerr << "Config should not contain absolute paths" << std::endl;
             return false;
         }
+        const std::string illegal = "/<>:\"\\|?*";
+
+        if (std::any_of(prefix.cbegin(), prefix.cend(), [&](const auto& p) {
+            return std::any_of(illegal.cbegin(), illegal.cend(), [&](const auto& i) {
+                return i == p;
+                });
+            })) {
+            std::cerr << "'multimol_prefix' contains illegal symbol" << std::endl;
+            return false;
+        }
+
         multimol_prefix = prefix;
     }
     if (json.contains("break_macrocycles")) {
@@ -199,6 +214,11 @@ bool prepare_ligands::load(const jsoncons::basic_json<char>& json, const std::fi
 }
 
 bool prepare_ligands::validate() const {
+    if (ligand.empty()) {
+        std::cerr << "No ligand file specified." << std::endl;
+        return false;
+    }
+
     if (!std::filesystem::exists(ligand) || !std::filesystem::is_regular_file(ligand)) {
         std::cerr << "Ligand file <" << ligand << "> is not found." << std::endl;
         return false;
@@ -283,6 +303,11 @@ bool generator::process(const std::filesystem::path& config_file_path, const std
         const auto& json = jsoncons::json::parse(buffer);
 
         const auto& working_directory = config_file_path.has_parent_path() ? config_file_path.parent_path() : std::filesystem::current_path();
+
+        prepare_ligands prepare_ligands;
+        if (json.contains("prepare_ligands") && (!prepare_ligands.load(json["prepare_ligands"], working_directory) || !prepare_ligands.validate())) {
+            return false;
+        }
 
         prepare_receptors prepare_receptors;
         if (json.contains("prepare_receptors") && (!prepare_receptors.load(json["prepare_receptors"], working_directory) || !prepare_receptors.validate())) {

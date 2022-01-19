@@ -1,6 +1,6 @@
 // This file is part of BOINC.
 // https://boinc.berkeley.edu
-// Copyright (C) 2021 University of California
+// Copyright (C) 2022 University of California
 //
 // BOINC is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License
@@ -47,7 +47,7 @@ bool input::load(const jsoncons::basic_json<char>& json, const std::filesystem::
                 std::cerr << "Config should not contain absolute paths" << std::endl;
                 return false;
             }
-            ligands.push_back(std::filesystem::path(working_directory / value).string());
+            ligands.emplace_back(std::filesystem::path(working_directory / value).string());
         }
     }
     if (json.contains("batch")) {
@@ -57,7 +57,7 @@ bool input::load(const jsoncons::basic_json<char>& json, const std::filesystem::
                 std::cerr << "Config should not contain absolute paths" << std::endl;
                 return false;
             }
-            batch.push_back(std::filesystem::path(working_directory / value).string());
+            batch.emplace_back(std::filesystem::path(working_directory / value).string());
         }
     }
     if (json.contains("scoring")) {

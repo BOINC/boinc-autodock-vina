@@ -235,6 +235,332 @@ TEST_F(InputConfig_UnitTests, ValidatePrepareReceptorsValues) {
     EXPECT_TRUE(prepare_receptors.delete_nonstd_residue);
 }
 
+TEST_F(InputConfig_UnitTests, FailOnNoReceptorSpecidiedWhenStructureIsNotEmpty) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("prepare_receptors");
+    json_encoder.value("repair", std::string(magic_enum::enum_name(repair::bonds_hydrogens)));
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+
+    generator generator;
+
+    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
+    EXPECT_FALSE(res);
+}
+
+TEST_F(InputConfig_UnitTests, FailOnAbsolutePathInLigand) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("prepare_ligands");
+#ifdef WIN32
+    json_encoder.value("ligand", "C:\\test\\ligand_sample");
+#else
+    json_encoder.value("ligand", "/home/test/ligand_sample");
+#endif
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+
+    generator generator;
+
+    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
+    EXPECT_FALSE(res);
+}
+
+TEST_F(InputConfig_UnitTests, FailOnAbsolutePathInSelectedLigands) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("prepare_ligands");
+    json_encoder.value("ligand", "ligand_sample");
+    json_encoder.begin_array("selected_ligands");
+#ifdef WIN32
+    json_encoder.value("C:\\test\\ligand_1");
+#else
+    json_encoder.value("/home/test/ligand_1");
+#endif
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+
+    dummy_ofstream dummy;
+    create_dummy_file(dummy, std::filesystem::current_path() / "ligand_sample");
+
+    generator generator;
+
+    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
+    EXPECT_FALSE(res);
+}
+
+TEST_F(InputConfig_UnitTests, FailOnNoLigandSpecifiedWhenStructureIsNotEmpty) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("prepare_ligands");
+    json_encoder.begin_array("selected_ligands");
+#ifdef WIN32
+    json_encoder.value("ligand_1");
+#else
+    json_encoder.value("ligand_1");
+#endif
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+
+    generator generator;
+
+    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
+    EXPECT_FALSE(res);
+}
+
+TEST_F(InputConfig_UnitTests, CheckThatLigandFileIsPresent) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("prepare_ligands");
+    json_encoder.value("ligand", "ligand_sample");
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+
+    generator generator;
+
+    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
+    EXPECT_FALSE(res);
+}
+
+TEST_F(InputConfig_UnitTests, FailWhenRigidityBondsSmartsPresentedWithoutRigidityBondsIndices) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("prepare_ligands");
+    json_encoder.value("ligand", "ligand_sample");
+    json_encoder.begin_array("rigidity_bonds_smarts");
+    json_encoder.value("rbs_sample");
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+
+    generator generator;
+
+    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
+    EXPECT_FALSE(res);
+}
+
+TEST_F(InputConfig_UnitTests, FailWhenRigidityBondsIndicesPresentedWithoutRigidityBondsSmarts) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("prepare_ligands");
+    json_encoder.value("ligand", "ligand_sample");
+    json_encoder.begin_array("rigidity_bonds_indices");
+    json_encoder.begin_array();
+    json_encoder.value(static_cast<uint64_t>(1ull));
+    json_encoder.value(static_cast<uint64_t>(2ull));
+    json_encoder.end_array();
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+
+    generator generator;
+
+    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
+    EXPECT_FALSE(res);
+}
+
+TEST_F(InputConfig_UnitTests, FailWhenRigidityBondsIndicesContainsOnlyOneIndex) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("prepare_ligands");
+    json_encoder.value("ligand", "ligand_sample");
+    json_encoder.begin_array("rigidity_bonds_smarts");
+    json_encoder.value("rbs_sample");
+    json_encoder.end_array();
+    json_encoder.begin_array("rigidity_bonds_indices");
+    json_encoder.begin_array();
+    json_encoder.value(static_cast<uint64_t>(1ull));
+    json_encoder.end_array();
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+
+    generator generator;
+
+    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
+    EXPECT_FALSE(res);
+}
+
+TEST_F(InputConfig_UnitTests, TestThatRigidityBondsSmartsAndRigidityBondsIndicesContainsHaveTheSmaeElementsCount) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("prepare_ligands");
+    json_encoder.value("ligand", "ligand_sample");
+    json_encoder.begin_array("rigidity_bonds_smarts");
+    json_encoder.value("rbs_sample");
+    json_encoder.end_array();
+    json_encoder.begin_array("rigidity_bonds_indices");
+    json_encoder.begin_array();
+    json_encoder.value(static_cast<uint64_t>(1ull));
+    json_encoder.value(static_cast<uint64_t>(2ull));
+    json_encoder.end_array();
+    json_encoder.begin_array();
+    json_encoder.value(static_cast<uint64_t>(1ull));
+    json_encoder.value(static_cast<uint64_t>(2ull));
+    json_encoder.end_array();
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+
+    generator generator;
+
+    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
+    EXPECT_FALSE(res);
+}
+
+TEST_F(InputConfig_UnitTests, FailOnAbsolutePathInMultimolPrefix) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("prepare_ligands");
+    json_encoder.value("ligand", "ligand_sample");
+    
+#ifdef WIN32
+    json_encoder.value("multimol_prefix", "C:\\test\\prefix_sample");
+#else
+    json_encoder.value("multimol_prefix", "/home/test/prefix_sample");
+#endif
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+
+    generator generator;
+
+    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
+    EXPECT_FALSE(res);
+}
+
+TEST_F(InputConfig_UnitTests, FailOnIllegalSymbolInMultimolPrefix) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("prepare_ligands");
+    json_encoder.value("ligand", "ligand_sample");
+
+#ifdef WIN32
+    json_encoder.value("multimol_prefix", "prefix\\sample");
+#else
+    json_encoder.value("multimol_prefix", "prefix/sample");
+#endif
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+
+    generator generator;
+
+    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
+    EXPECT_FALSE(res);
+}
+
 TEST_F(InputConfig_UnitTests, TestSimpleVinaScenario) {
     const auto& json_file = std::filesystem::current_path() / "boinc-autodock-vina/samples/basic_docking_full/1iep_vina.json";
 
