@@ -382,3 +382,4 @@ CMakeCache.txt
 # exceptions for samples folder
 !boinc-autodock-vina/samples/**/*.pdb
 !boinc-autodock-vina/samples/**/*.sdf
+!boinc-autodock-vina/samples/**/*.tmp

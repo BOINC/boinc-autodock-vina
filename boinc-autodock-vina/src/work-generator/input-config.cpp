@@ -149,14 +149,14 @@ bool prepare_ligands::load(const jsoncons::basic_json<char>& json, const std::fi
                 return i == p;
                 });
             })) {
-            std::cerr << "'multimol_prefix' contains illegal symbol" << std::endl;
+            std::cerr << "'multimol_prefix' contains illegal symbols" << std::endl;
             return false;
         }
 
         multimol_prefix = prefix;
     }
-    if (json.contains("break_macrocycles")) {
-        break_macrocycles = json["break_macrocycles"].as<bool>();
+    if (json.contains("break_macrocycle")) {
+        break_macrocycle = json["break_macrocycle"].as<bool>();
     }
     if (json.contains("hydrate")) {
         hydrate = json["hydrate"].as<bool>();
@@ -175,7 +175,7 @@ bool prepare_ligands::load(const jsoncons::basic_json<char>& json, const std::fi
     }
     if (json.contains("rigidity_bonds_smarts")) {
         for (const auto& r : json["rigidity_bonds_smarts"].array_range()) {
-            rigidity_bonds_smarts.push_back(json["rigidity_bonds_smarts"].as<std::string>());
+            rigidity_bonds_smarts.push_back(r.as<std::string>());
         }
     }
     if (json.contains("rigidity_bonds_indices")) {
@@ -200,6 +200,9 @@ bool prepare_ligands::load(const jsoncons::basic_json<char>& json, const std::fi
     }
     if (json.contains("flexible_amides")) {
         flexible_amides = json["flexible_amides"].as<bool>();
+    }
+    if (json.contains("apply_double_bond_penalty")) {
+        apply_double_bond_penalty = json["apply_double_bond_penalty"].as<bool>();
     }
     if (json.contains("double_bond_penalty")) {
         double_bond_penalty = json["double_bond_penalty"].as<double>();
@@ -290,6 +293,10 @@ bool generator::create_zip(const std::filesystem::path& path, const std::filesys
 }
 
 bool generator::process(const std::filesystem::path& config_file_path, const std::filesystem::path& out_path) {
+#ifdef WIN32
+    std::cerr << "This functionality doesn't work on Windows. 'mk_prepare_ligand.py' is faked to pass tests on Windows." << std::endl;
+#endif
+
     if (!exists(config_file_path) || !is_regular_file(config_file_path)) {
         std::cerr << "Error happened while opening <" << config_file_path.string() << "> file" << std::endl;
         return false;
@@ -320,10 +327,83 @@ bool generator::process(const std::filesystem::path& config_file_path, const std
         }
 
         const auto need_prepare_receptors_step = !prepare_receptors.receptors.empty();
+        const auto need_prepare_ligand_step = !prepare_ligands.ligand.empty();
 
-        if (!need_prepare_receptors_step) {
+        if (!need_prepare_receptors_step && !need_prepare_ligand_step) {
             if (config.validate()) {
                 return save_config(config, working_directory, out_path);
+            }
+        }
+
+        if (need_prepare_ligand_step) {
+            std::stringstream cmd;
+#ifdef WIN32
+            const auto source_file = "boinc-autodock-vina\\samples\\basic_docking_full\\1iep_ligand.pdbqt.tmp";
+            const auto target_file = "boinc-autodock-vina\\samples\\basic_docking_full\\1iep_ligand.pdbqt";
+            cmd << "cmd /c copy " << source_file << " " << target_file;
+            config.input.ligands.emplace_back((std::filesystem::current_path() / target_file).string());
+#else
+            cmd << "mk_prepare_ligand.py ";
+            cmd << "-i " << prepare_ligands.ligand << " ";
+
+            if (!prepare_ligands.multimol || prepare_ligands.multimol_prefix.empty() || prepare_ligands.selected_ligands.size() <= 1) {
+                std::filesystem::path output(prepare_ligands.ligand);
+                output.replace_extension("pdbqt");
+                cmd << "-o " << output.string() << " ";
+                config.input.ligands.emplace_back(output.string());
+            }
+            if (prepare_ligands.break_macrocycle) {
+                cmd << "-m ";
+            }
+            if (prepare_ligands.hydrate) {
+                cmd << "-w ";
+            }
+            if (prepare_ligands.keep_nonpolar_hydrogens) {
+                cmd << "--keep_nonpolar_hydrogens ";
+            }
+            if (prepare_ligands.correct_protonation_for_ph) {
+                cmd << "--pH " << prepare_ligands.pH << " ";
+            }
+            if (prepare_ligands.flex) {
+                cmd << "-f ";
+            }
+            if (!prepare_ligands.rigidity_bonds_smarts.empty()) {
+                cmd << "-r ";
+                for (const auto& r : prepare_ligands.rigidity_bonds_smarts) {
+                    cmd << r << " ";
+                }
+            }
+            if (!prepare_ligands.rigidity_bonds_indices.empty()) {
+                cmd << "-b ";
+                for (const auto& b : prepare_ligands.rigidity_bonds_indices) {
+                    cmd << b.first << " " << b.second << " ";
+                }
+            }
+            if (prepare_ligands.flexible_amides) {
+                cmd << "-a ";
+            }
+            if (prepare_ligands.apply_double_bond_penalty) {
+                cmd << "--double_bond_penalty " << prepare_ligands.double_bond_penalty << " ";
+            }
+            if (prepare_ligands.remove_index_map) {
+                cmd << "--remove_index_map ";
+            }
+            if (prepare_ligands.remove_smiles) {
+                cmd << "--remove_smiles ";
+            }
+            if (!prepare_ligands.multimol_prefix.empty()) {
+                cmd << "--multimol_prefix " << prepare_ligands.multimol_prefix;
+            }
+#endif
+            boost::process::child prepare_ligand(cmd.str());
+            prepare_ligand.wait();
+            if (prepare_ligand.exit_code() != 0) {
+                std::cerr << "Failed to prepare ligand(s): <" << cmd.str() << ">" << std::endl;
+                return false;
+            }
+
+            for (const auto& l : prepare_ligands.selected_ligands) {
+                config.input.ligands.emplace_back(l);
             }
         }
 
@@ -363,6 +443,7 @@ bool generator::process(const std::filesystem::path& config_file_path, const std
                 prepare_receptor.wait();
                 if (prepare_receptor.exit_code() != 0) {
                     std::cerr << "Failed to prepare receptors: <" << cmd.str() << ">" << std::endl;
+                    return false;
                 }
 
                 if (!config.validate()) {

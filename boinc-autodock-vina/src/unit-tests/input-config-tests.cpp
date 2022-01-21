@@ -191,11 +191,7 @@ TEST_F(InputConfig_UnitTests, ValidatePrepareReceptorsValues) {
     json_encoder.begin_object();
     json_encoder.begin_object("prepare_receptors");
     json_encoder.begin_array("receptors");
-#ifdef WIN32
     json_encoder.value("receptor_sample");
-#else
-    json_encoder.value("receptor_sample");
-#endif
     json_encoder.end_array();
     json_encoder.value("repair", std::string(magic_enum::enum_name(repair::bonds_hydrogens)));
     json_encoder.begin_array("preserves");
@@ -209,8 +205,9 @@ TEST_F(InputConfig_UnitTests, ValidatePrepareReceptorsValues) {
     jsoncons_encoder.flush();
     json.close();
 
+    const auto receptor_sample = std::filesystem::current_path() / "receptor_sample";
     dummy_ofstream dummy;
-    create_dummy_file(dummy, std::filesystem::current_path() / "receptor_sample");
+    create_dummy_file(dummy, receptor_sample);
 
     const std::ifstream config_file(dummy_json_file_path.c_str());
     std::stringstream buffer;
@@ -226,7 +223,6 @@ TEST_F(InputConfig_UnitTests, ValidatePrepareReceptorsValues) {
     ASSERT_TRUE(prepare_receptors.validate());
 
     ASSERT_EQ(1, prepare_receptors.receptors.size());
-    const auto receptor_sample = std::filesystem::current_path() / "receptor_sample";
     EXPECT_STREQ(receptor_sample.string().c_str(), prepare_receptors.receptors[0].c_str());
     EXPECT_EQ(repair::bonds_hydrogens, prepare_receptors.repair);
     ASSERT_EQ(1, prepare_receptors.preserves.size());
@@ -561,6 +557,94 @@ TEST_F(InputConfig_UnitTests, FailOnIllegalSymbolInMultimolPrefix) {
     EXPECT_FALSE(res);
 }
 
+TEST_F(InputConfig_UnitTests, ValidatePrepareLigandsValues) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("prepare_ligands");
+    json_encoder.value("ligand", "ligand_sample");
+    json_encoder.begin_array("selected_ligands");
+    json_encoder.value("ligand_1");
+    json_encoder.value("ligand_2");
+    json_encoder.end_array();
+    json_encoder.value("multimol", true);
+    json_encoder.value("multimol_prefix", "prefix_");
+    json_encoder.value("break_macrocycle", true);
+    json_encoder.value("hydrate", true);
+    json_encoder.value("keep_nonpolar_hydrogens", true);
+    json_encoder.value("correct_protonation_for_ph", true);
+    json_encoder.value("pH", 1.0);
+    json_encoder.value("flex", true);
+    json_encoder.begin_array("rigidity_bonds_smarts");
+    json_encoder.value("smart_1");
+    json_encoder.end_array();
+    json_encoder.begin_array("rigidity_bonds_indices");
+    json_encoder.begin_array();
+    json_encoder.value(static_cast<uint64_t>(1ull));
+    json_encoder.value(static_cast<uint64_t>(2ull));
+    json_encoder.end_array();
+    json_encoder.end_array();
+    json_encoder.value("flexible_amides", true);
+    json_encoder.value("apply_double_bond_penalty", true);
+    json_encoder.value("double_bond_penalty", 100.0);
+    json_encoder.value("remove_index_map", true);
+    json_encoder.value("remove_smiles", true);
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+
+    
+    const auto ligand_sample = std::filesystem::current_path() / "ligand_sample";
+    dummy_ofstream dummy;
+    create_dummy_file(dummy, ligand_sample);
+
+    const std::ifstream config_file(dummy_json_file_path.c_str());
+    std::stringstream buffer;
+    buffer << config_file.rdbuf();
+
+    const auto& input_json = jsoncons::json::parse(buffer);
+
+    const auto& working_directory = std::filesystem::current_path();
+
+    prepare_ligands prepare_ligands;
+    ASSERT_TRUE(input_json.contains("prepare_ligands"));
+    ASSERT_TRUE(prepare_ligands.load(input_json["prepare_ligands"], working_directory));
+    ASSERT_TRUE(prepare_ligands.validate());
+
+    EXPECT_STREQ(ligand_sample.string().c_str(), prepare_ligands.ligand.c_str());
+    ASSERT_EQ(2, prepare_ligands.selected_ligands.size());
+    const auto ligand_1 = (std::filesystem::current_path() / "ligand_1").string();
+    const auto ligand_2 = (std::filesystem::current_path() / "ligand_2").string();
+    EXPECT_STREQ(ligand_1.c_str(), prepare_ligands.selected_ligands[0].c_str());
+    EXPECT_STREQ(ligand_2.c_str(), prepare_ligands.selected_ligands[1].c_str());
+    EXPECT_TRUE(prepare_ligands.multimol);
+    EXPECT_STREQ("prefix_", prepare_ligands.multimol_prefix.c_str());
+    EXPECT_TRUE(prepare_ligands.break_macrocycle);
+    EXPECT_TRUE(prepare_ligands.hydrate);
+    EXPECT_TRUE(prepare_ligands.keep_nonpolar_hydrogens);
+    EXPECT_TRUE(prepare_ligands.correct_protonation_for_ph);
+    EXPECT_DOUBLE_EQ(1.0, prepare_ligands.pH);
+    EXPECT_TRUE(prepare_ligands.flex);
+    ASSERT_EQ(1, prepare_ligands.rigidity_bonds_smarts.size());
+    EXPECT_STREQ("smart_1", prepare_ligands.rigidity_bonds_smarts[0].c_str());
+    ASSERT_EQ(1, prepare_ligands.rigidity_bonds_indices.size());
+    EXPECT_EQ(static_cast<uint64_t>(1ull), prepare_ligands.rigidity_bonds_indices[0].first);
+    EXPECT_EQ(static_cast<uint64_t>(2ull), prepare_ligands.rigidity_bonds_indices[0].second);
+    EXPECT_TRUE(prepare_ligands.flexible_amides);
+    EXPECT_TRUE(prepare_ligands.apply_double_bond_penalty);
+    EXPECT_DOUBLE_EQ(100.0, prepare_ligands.double_bond_penalty);
+    EXPECT_TRUE(prepare_ligands.remove_index_map);
+    EXPECT_TRUE(prepare_ligands.remove_smiles);
+}
+
 TEST_F(InputConfig_UnitTests, TestSimpleVinaScenario) {
     const auto& json_file = std::filesystem::current_path() / "boinc-autodock-vina/samples/basic_docking_full/1iep_vina.json";
 
@@ -585,6 +669,7 @@ TEST_F(InputConfig_UnitTests, TestSimpleVinaScenario) {
     EXPECT_TRUE(res);
 
     std::filesystem::remove(std::filesystem::current_path() / "boinc-autodock-vina/samples/basic_docking_full/1iep_receptor.pdbqt");
+    std::filesystem::remove(std::filesystem::current_path() / "boinc-autodock-vina/samples/basic_docking_full/1iep_ligand.pdbqt");
 
     std::filesystem::remove(zip_path);
     remove_all(zip_extract_path);

@@ -61,7 +61,7 @@ public:
     std::vector<std::string> selected_ligands;
     bool multimol = false;
     std::string multimol_prefix;
-    bool break_macrocycles = false;
+    bool break_macrocycle = false;
     bool hydrate = false;
     bool keep_nonpolar_hydrogens = false;
     bool correct_protonation_for_ph = false;
@@ -70,6 +70,7 @@ public:
     std::vector<std::string> rigidity_bonds_smarts;
     std::vector<std::pair<uint64_t, uint64_t>> rigidity_bonds_indices;
     bool flexible_amides = false;
+    bool apply_double_bond_penalty = false;
     double double_bond_penalty = .0;
     bool remove_index_map = false;
     bool remove_smiles = false;
