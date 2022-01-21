@@ -164,10 +164,8 @@ bool prepare_ligands::load(const jsoncons::basic_json<char>& json, const std::fi
     if (json.contains("keep_nonpolar_hydrogens")) {
         keep_nonpolar_hydrogens = json["keep_nonpolar_hydrogens"].as<bool>();
     }
-    if (json.contains("correct_protonation_for_ph")) {
-        correct_protonation_for_ph = json["correct_protonation_for_ph"].as<bool>();
-    }
     if (json.contains("pH")) {
+        correct_protonation_for_ph = true;
         pH = json["pH"].as<double>();
     }
     if (json.contains("flex")) {
@@ -201,11 +199,9 @@ bool prepare_ligands::load(const jsoncons::basic_json<char>& json, const std::fi
     if (json.contains("flexible_amides")) {
         flexible_amides = json["flexible_amides"].as<bool>();
     }
-    if (json.contains("apply_double_bond_penalty")) {
-        apply_double_bond_penalty = json["apply_double_bond_penalty"].as<bool>();
-    }
     if (json.contains("double_bond_penalty")) {
         double_bond_penalty = json["double_bond_penalty"].as<double>();
+        apply_double_bond_penalty = true;
     }
     if (json.contains("remove_index_map")) {
         remove_index_map = json["remove_index_map"].as<bool>();

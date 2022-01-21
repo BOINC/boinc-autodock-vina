@@ -6,7 +6,6 @@
     },
     "prepare_ligands": {
         "ligand": "1iep_ligand.sdf",
-        "correct_protonation_for_ph": true,
         "pH": 7.4
     },
     "search_area": {

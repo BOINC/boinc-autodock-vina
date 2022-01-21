@@ -578,7 +578,6 @@ TEST_F(InputConfig_UnitTests, ValidatePrepareLigandsValues) {
     json_encoder.value("break_macrocycle", true);
     json_encoder.value("hydrate", true);
     json_encoder.value("keep_nonpolar_hydrogens", true);
-    json_encoder.value("correct_protonation_for_ph", true);
     json_encoder.value("pH", 1.0);
     json_encoder.value("flex", true);
     json_encoder.begin_array("rigidity_bonds_smarts");
@@ -591,7 +590,6 @@ TEST_F(InputConfig_UnitTests, ValidatePrepareLigandsValues) {
     json_encoder.end_array();
     json_encoder.end_array();
     json_encoder.value("flexible_amides", true);
-    json_encoder.value("apply_double_bond_penalty", true);
     json_encoder.value("double_bond_penalty", 100.0);
     json_encoder.value("remove_index_map", true);
     json_encoder.value("remove_smiles", true);
