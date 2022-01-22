@@ -35,7 +35,7 @@ public:
     virtual ~json_load() = default;
 
     [[nodiscard]] virtual bool load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) = 0;
- };
+};
 
 class json_save {
 public:
@@ -137,4 +137,6 @@ public:
     [[nodiscard]] bool load(const std::filesystem::path& config_file_path);
     [[nodiscard]] bool save(const std::filesystem::path& config_file_path) const;
     [[nodiscard]] std::vector<std::string> get_files() const;
+    [[nodiscard]] std::vector<std::string> get_files_from_gpf() const;
+    [[nodiscard]] std::filesystem::path get_gpf_filename() const;
 };

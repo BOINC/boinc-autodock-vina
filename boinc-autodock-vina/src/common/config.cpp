@@ -666,7 +666,8 @@ bool config::load(const std::filesystem::path& config_file_path) {
         if (json.contains("misc") && !misc.load(json["misc"], working_directory)) {
             return false;
         }
-    } catch (const std::exception& ex) {
+    }
+    catch (const std::exception& ex) {
         std::cerr << "Error happened while processing <" << config_file_path.string() << "> file: " << ex.what() << std::endl;
         return false;
     }
@@ -788,5 +789,42 @@ std::vector<std::string> config::get_files() const {
         }
     }
 
+    if (!search_area.maps.empty()) {
+        files.push_back(get_gpf_filename().string());
+        const auto& maps = get_files_from_gpf();
+        files.insert(files.end(), maps.cbegin(), maps.cend());
+    }
+
     return files;
+}
+
+std::vector<std::string> config::get_files_from_gpf() const {
+    const auto& maps = get_gpf_filename();
+
+    if (!exists(maps) || !is_regular_file(maps)) {
+        std::cerr << "Failed to find maps file <" << maps.string() << ">." << std::endl;
+        return {};
+    }
+
+    const auto& path = maps.parent_path();
+
+    const std::vector<std::string> types{ "map", "gridfld", "elecmap", "dsolvmap" };
+
+    std::vector<std::string> files;
+
+    std::ifstream gpf(maps);
+    std::string line;
+    while (std::getline(gpf, line)) {
+        std::istringstream iss(line);
+        const std::vector results((std::istream_iterator<std::string>(iss)), std::istream_iterator<std::string>());
+        if (results.size() > 1 && std::any_of(types.cbegin(), types.cend(), [&](const auto& t) { return t == results[0]; })) {
+            files.emplace_back((path / results[1]).string());
+        }
+    }
+
+    return files;
+}
+
+std::filesystem::path config::get_gpf_filename() const {
+    return std::filesystem::path(search_area.maps).replace_extension("gpf");
 }

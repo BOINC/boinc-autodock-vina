@@ -261,7 +261,7 @@ bool generator::create_zip(const std::filesystem::path& path, const std::filesys
         if (z != nullptr) {
             zip_close(z);
         }
-    });
+        });
 
     if (!zip) {
         zip_error_t zip_error;
@@ -424,7 +424,8 @@ bool generator::process(const std::filesystem::path& config_file_path, const std
                 for (const auto& p : prepare_receptors.preserves) {
                     if (p == "all") {
                         cmd << "-C ";
-                    } else {
+                    }
+                    else {
                         cmd << "-p " << p << " ";
                     }
                 }

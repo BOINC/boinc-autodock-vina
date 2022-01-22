@@ -28,8 +28,7 @@
 template <typename T>
 using deleted_unique_ptr = std::unique_ptr<T, std::function<void(T*)>>;
 
-class Config_UnitTests : public ::testing::Test {
-};
+class Config_UnitTests : public ::testing::Test {};
 
 TEST_F(Config_UnitTests, FailOnConfigDefaults) {
     config config;
@@ -384,8 +383,8 @@ TEST_F(Config_UnitTests, LoadValidator) {
     json_encoder.value("maps", "maps_sample");
     json_encoder.value("center_x", 0.123456);
     json_encoder.value("center_y", 0.654321);
-    json_encoder.value("center_z" , -0.123456);
-    json_encoder.value("size_x" , -0.654321);
+    json_encoder.value("center_z", -0.123456);
+    json_encoder.value("size_x", -0.654321);
     json_encoder.value("size_y", 0.0);
     json_encoder.value("size_z", -0.000135);
     json_encoder.value("autobox", true);
@@ -404,18 +403,18 @@ TEST_F(Config_UnitTests, LoadValidator) {
     json_encoder.value("weight_gauss1", 0.123456);
     json_encoder.value("weight_gauss2", -0.123456);
     json_encoder.value("weight_repulsion", 0.654321);
-    json_encoder.value("weight_hydrophobic" , -0.654321);
+    json_encoder.value("weight_hydrophobic", -0.654321);
     json_encoder.value("weight_hydrogen", 0.135246);
-    json_encoder.value("weight_rot" , -0.135246);
-    json_encoder.value("weight_vinardo_gauss1" , -0.642531);
+    json_encoder.value("weight_rot", -0.135246);
+    json_encoder.value("weight_vinardo_gauss1", -0.642531);
     json_encoder.value("weight_vinardo_repulsion", 0.642531);
-    json_encoder.value("weight_vinardo_hydrophobic" , -0.010011);
+    json_encoder.value("weight_vinardo_hydrophobic", -0.010011);
     json_encoder.value("weight_vinardo_hydrogen", 0.010011);
-    json_encoder.value("weight_vinardo_rot" , -1.023456);
+    json_encoder.value("weight_vinardo_rot", -1.023456);
     json_encoder.value("weight_ad4_vdw", 1.023456);
-    json_encoder.value("weight_ad4_hb" , -1.654320);
+    json_encoder.value("weight_ad4_hb", -1.654320);
     json_encoder.value("weight_ad4_elec", 1.065432);
-    json_encoder.value("weight_ad4_dsolv" , -1.064235);
+    json_encoder.value("weight_ad4_dsolv", -1.064235);
     json_encoder.value("weight_ad4_rot", 1.064235);
     json_encoder.value("weight_glue", 1.024653);
     json_encoder.end_object();
@@ -425,7 +424,7 @@ TEST_F(Config_UnitTests, LoadValidator) {
     json_encoder.value("max_evals", static_cast<uint64_t>(4ull));
     json_encoder.value("num_modes", static_cast<uint64_t>(5ull));
     json_encoder.value("min_rmsd", 2.0);
-    json_encoder.value("energy_range" , -2.0);
+    json_encoder.value("energy_range", -2.0);
     json_encoder.value("spacing", -0.123);
     json_encoder.end_object();
     json_encoder.end_object();
@@ -704,14 +703,84 @@ TEST_F(Config_UnitTests, CheckThatReceptorAndBatchFilesArePresent) {
     ASSERT_TRUE(res);
 }
 
-TEST_F(Config_UnitTests, TestSimpleVinaScenario) {
-    const auto& json_file = std::filesystem::current_path() / "boinc-autodock-vina/samples/basic_docking/1iep_vina.json";
+TEST_F(Config_UnitTests, CheckThatMapsFilesArePresent) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("input");
+    json_encoder.begin_array("ligands");
+    json_encoder.value("ligand_sample1");
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.begin_object("search_area");
+    json_encoder.value("maps", "receptor_sample");
+    json_encoder.value("center_x", 0.123456);
+    json_encoder.value("center_y", 0.654321);
+    json_encoder.value("center_z", -0.123456);
+    json_encoder.value("size_x", -0.654321);
+    json_encoder.value("size_y", 0.0);
+    json_encoder.value("size_z", -0.000135);
+    json_encoder.end_object();
+    json_encoder.begin_object("output");
+    json_encoder.value("out", "out_sample");
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+
     config config;
-    ASSERT_TRUE(config.load(json_file));
-    ASSERT_TRUE(config.validate());
-    const auto res = calculator::calculate(config, 0, [](double) { });
-    EXPECT_TRUE(res);
-    std::filesystem::remove(std::filesystem::current_path() / "boinc-autodock-vina/samples/basic_docking/1iep_ligand_vina_out.pdbqt");
+    auto res = config.load(dummy_json_file_path);
+    ASSERT_TRUE(res);
+
+    dummy_ofstream dummy;
+    create_dummy_file(dummy, std::filesystem::current_path() / "ligand_sample1");
+
+    res = config.validate();
+    ASSERT_FALSE(res);
+
+    dummy_ofstream gpf;
+    gpf.open(std::filesystem::current_path() / "receptor_sample.gpf");
+
+    gpf() <<
+        "npts 54 54 54                        # num.grid points in xyz" << std::endl <<
+        "gridfld 1iep_receptor.maps.fld       # grid_data_file" << std::endl <<
+        "spacing 0.375                        # spacing(A)" << std::endl <<
+        "receptor_types A C OA N SA HD        # receptor atom types" << std::endl <<
+        "ligand_types A C NA OA N HD          # ligand atom types" << std::endl <<
+        "receptor 1iep_receptor.pdbqt         # macromolecule" << std::endl <<
+        "gridcenter 15.190 53.903 16.917      # xyz - coordinates or auto" << std::endl <<
+        "smooth 0.5                           # store minimum energy w / in rad(A)" << std::endl <<
+        "map 1iep_receptor.A.map              # atom - specific affinity map" << std::endl <<
+        "map 1iep_receptor.C.map              # atom - specific affinity map" << std::endl <<
+        "map 1iep_receptor.NA.map             # atom - specific affinity map" << std::endl <<
+        "map 1iep_receptor.OA.map             # atom - specific affinity map" << std::endl <<
+        "map 1iep_receptor.N.map              # atom - specific affinity map" << std::endl <<
+        "map 1iep_receptor.HD.map             # atom - specific affinity map" << std::endl <<
+        "elecmap 1iep_receptor.e.map          # electrostatic potential map" << std::endl <<
+        "dsolvmap 1iep_receptor.d.map         # desolvation potential map" << std::endl <<
+        "dielectric - 0.1465                   #  < 0, AD4 distance - dep.diel; > 0, constant" << std::endl;
+
+    gpf.close();
+
+    create_dummy_file(dummy, std::filesystem::current_path() / "1iep_receptor.maps.fld");
+    create_dummy_file(dummy, std::filesystem::current_path() / "1iep_receptor.A.map");
+    create_dummy_file(dummy, std::filesystem::current_path() / "1iep_receptor.C.map");
+    create_dummy_file(dummy, std::filesystem::current_path() / "1iep_receptor.NA.map");
+    create_dummy_file(dummy, std::filesystem::current_path() / "1iep_receptor.OA.map");
+    create_dummy_file(dummy, std::filesystem::current_path() / "1iep_receptor.N.map");
+    create_dummy_file(dummy, std::filesystem::current_path() / "1iep_receptor.HD.map");
+    create_dummy_file(dummy, std::filesystem::current_path() / "1iep_receptor.e.map");
+    create_dummy_file(dummy, std::filesystem::current_path() / "1iep_receptor.d.map");
+
+    res = config.validate();
+    ASSERT_TRUE(res);
 }
 
 TEST_F(Config_UnitTests, TestConfigsEqualAfterReadWrite) {
@@ -852,3 +921,69 @@ TEST_F(Config_UnitTests, TestConfigsEqualAfterReadWrite) {
 
     std::filesystem::remove(dummy_copy_json_file_path);
 }
+
+TEST_F(Config_UnitTests, Validate_GetGPF_Filename) {
+    config config;
+    config.search_area.maps = (std::filesystem::current_path() / "dummy").string();
+    EXPECT_STREQ((std::filesystem::current_path() / "dummy.gpf").string().c_str(), config.get_gpf_filename().string().c_str());
+}
+
+TEST_F(Config_UnitTests, CheckReadOfGPF) {
+    const auto& dummy_gpf_file_path = std::filesystem::current_path() / "dummy.gpf";
+
+    dummy_ofstream gpf;
+    gpf.open(dummy_gpf_file_path);
+
+    gpf() <<
+        "npts 54 54 54                        # num.grid points in xyz" << std::endl <<
+        "gridfld 1iep_receptor.maps.fld       # grid_data_file" << std::endl <<
+        "spacing 0.375                        # spacing(A)" << std::endl <<
+        "receptor_types A C OA N SA HD        # receptor atom types" << std::endl <<
+        "ligand_types A C NA OA N HD          # ligand atom types" << std::endl <<
+        "receptor 1iep_receptor.pdbqt         # macromolecule" << std::endl <<
+        "gridcenter 15.190 53.903 16.917      # xyz - coordinates or auto" << std::endl <<
+        "smooth 0.5                           # store minimum energy w / in rad(A)" << std::endl <<
+        "map 1iep_receptor.A.map              # atom - specific affinity map" << std::endl <<
+        "map 1iep_receptor.C.map              # atom - specific affinity map" << std::endl <<
+        "map 1iep_receptor.NA.map             # atom - specific affinity map" << std::endl <<
+        "map 1iep_receptor.OA.map             # atom - specific affinity map" << std::endl <<
+        "map 1iep_receptor.N.map              # atom - specific affinity map" << std::endl <<
+        "map 1iep_receptor.HD.map             # atom - specific affinity map" << std::endl <<
+        "elecmap 1iep_receptor.e.map          # electrostatic potential map" << std::endl <<
+        "dsolvmap 1iep_receptor.d.map         # desolvation potential map" << std::endl <<
+        "dielectric - 0.1465                   #  < 0, AD4 distance - dep.diel; > 0, constant" << std::endl;
+
+    gpf.close();
+
+    config config;
+    config.search_area.maps = (std::filesystem::current_path() / "dummy").string();
+
+    const auto& files = config.get_files_from_gpf();
+    const auto& lookup = [&](const auto& file) {
+        return std::any_of(files.cbegin(), files.cend(), [&](const auto& f) {
+            return f == file;
+            });
+    };
+
+    EXPECT_EQ(9, files.size());
+    EXPECT_TRUE(lookup((std::filesystem::current_path() / "1iep_receptor.maps.fld").string()));
+    EXPECT_TRUE(lookup((std::filesystem::current_path() / "1iep_receptor.A.map").string()));
+    EXPECT_TRUE(lookup((std::filesystem::current_path() / "1iep_receptor.C.map").string()));
+    EXPECT_TRUE(lookup((std::filesystem::current_path() / "1iep_receptor.NA.map").string()));
+    EXPECT_TRUE(lookup((std::filesystem::current_path() / "1iep_receptor.OA.map").string()));
+    EXPECT_TRUE(lookup((std::filesystem::current_path() / "1iep_receptor.N.map").string()));
+    EXPECT_TRUE(lookup((std::filesystem::current_path() / "1iep_receptor.HD.map").string()));
+    EXPECT_TRUE(lookup((std::filesystem::current_path() / "1iep_receptor.e.map").string()));
+    EXPECT_TRUE(lookup((std::filesystem::current_path() / "1iep_receptor.d.map").string()));
+}
+
+TEST_F(Config_UnitTests, TestSimpleVinaScenario) {
+    const auto& json_file = std::filesystem::current_path() / "boinc-autodock-vina/samples/basic_docking/1iep_vina.json";
+    config config;
+    ASSERT_TRUE(config.load(json_file));
+    ASSERT_TRUE(config.validate());
+    const auto res = calculator::calculate(config, 0, [](double) {});
+    EXPECT_TRUE(res);
+    std::filesystem::remove(std::filesystem::current_path() / "boinc-autodock-vina/samples/basic_docking/1iep_ligand_vina_out.pdbqt");
+}
+

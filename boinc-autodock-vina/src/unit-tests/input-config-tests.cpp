@@ -25,8 +25,7 @@
 #include "work-generator/input-config.h"
 #include "work-generator/temp-folder.h"
 
-class InputConfig_UnitTests : public ::testing::Test {
-};
+class InputConfig_UnitTests : public ::testing::Test {};
 
 TEST_F(InputConfig_UnitTests, TestThatWorkGeneratorIsAbleToProcessAlreadyPreparedConfig) {
     const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
@@ -509,7 +508,7 @@ TEST_F(InputConfig_UnitTests, FailOnAbsolutePathInMultimolPrefix) {
     json_encoder.begin_object();
     json_encoder.begin_object("prepare_ligands");
     json_encoder.value("ligand", "ligand_sample");
-    
+
 #ifdef WIN32
     json_encoder.value("multimol_prefix", "C:\\test\\prefix_sample");
 #else
@@ -599,7 +598,7 @@ TEST_F(InputConfig_UnitTests, ValidatePrepareLigandsValues) {
     jsoncons_encoder.flush();
     json.close();
 
-    
+
     const auto ligand_sample = std::filesystem::current_path() / "ligand_sample";
     dummy_ofstream dummy;
     create_dummy_file(dummy, ligand_sample);
