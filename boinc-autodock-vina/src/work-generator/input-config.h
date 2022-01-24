@@ -81,10 +81,9 @@ public:
 
 class generator {
 public:
-    [[nodiscard]] bool validate() const;
-    [[nodiscard]] bool process(const std::filesystem::path& config_file_path, const std::filesystem::path& out_path);
-    [[nodiscard]] bool save_config(const config& config, const std::filesystem::path& working_directory, const std::filesystem::path& out_path);
-    [[nodiscard]] bool create_zip(const std::filesystem::path& path, const std::filesystem::path& out_path);
+    [[nodiscard]] bool process(const std::filesystem::path& config_file_path, const std::filesystem::path& out_path, const std::string& prefix);
+    [[nodiscard]] bool save_config(const config& config, const std::filesystem::path& working_directory, const std::filesystem::path& out_path, const std::string& prefix);
+    [[nodiscard]] bool create_zip(const std::filesystem::path& path, const std::filesystem::path& out_path, const std::string& prefix);
 
 private:
     uint64_t current_wu_number = 0;

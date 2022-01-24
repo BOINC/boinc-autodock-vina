@@ -229,11 +229,7 @@ bool prepare_ligands::validate() const {
     return true;
 }
 
-bool generator::validate() const {
-    return true;
-}
-
-bool generator::save_config(const config& config, const std::filesystem::path& working_directory, const std::filesystem::path& out_path) {
+bool generator::save_config(const config& config, const std::filesystem::path& working_directory, const std::filesystem::path& out_path, const std::string& prefix) {
     const temp_folder temp_path(working_directory);
     const auto& config_path = temp_path() / "config.json";
     if (!config.save(config_path)) {
@@ -247,14 +243,14 @@ bool generator::save_config(const config& config, const std::filesystem::path& w
         }
     }
 
-    return create_zip(temp_path(), out_path);
+    return create_zip(temp_path(), out_path, prefix);
 }
 
 template <typename T>
 using deleted_unique_ptr = std::unique_ptr<T, std::function<void(T*)>>;
 
-bool generator::create_zip(const std::filesystem::path& path, const std::filesystem::path& out_path) {
-    const auto name = "wu_" + std::to_string(++current_wu_number) + ".zip";
+bool generator::create_zip(const std::filesystem::path& path, const std::filesystem::path& out_path, const std::string& prefix) {
+    const auto name = "wu_" + prefix + "_" + std::to_string(++current_wu_number) + ".zip";
     const auto zip_file_name = (out_path / name).string();
     int error = 0;
     const deleted_unique_ptr<zip_t> zip(zip_open(zip_file_name.data(), ZIP_CREATE | ZIP_EXCL, &error), [](auto* z) {
@@ -288,7 +284,7 @@ bool generator::create_zip(const std::filesystem::path& path, const std::filesys
     return true;
 }
 
-bool generator::process(const std::filesystem::path& config_file_path, const std::filesystem::path& out_path) {
+bool generator::process(const std::filesystem::path& config_file_path, const std::filesystem::path& out_path, const std::string& prefix) {
 #ifdef WIN32
     std::cerr << "This functionality doesn't work on Windows. 'mk_prepare_ligand.py' is faked to pass tests on Windows." << std::endl;
 #endif
@@ -327,7 +323,7 @@ bool generator::process(const std::filesystem::path& config_file_path, const std
 
         if (!need_prepare_receptors_step && !need_prepare_ligand_step) {
             if (config.validate()) {
-                return save_config(config, working_directory, out_path);
+                return save_config(config, working_directory, out_path, prefix);
             }
         }
 
@@ -447,7 +443,7 @@ bool generator::process(const std::filesystem::path& config_file_path, const std
                     std::cerr << "Failed to validate generated config." << std::endl;
                     return false;
                 }
-                if (!save_config(config, working_directory, out_path)) {
+                if (!save_config(config, working_directory, out_path, prefix)) {
                     std::cerr << "Failed to save generated config." << std::endl;
                     return false;
                 }

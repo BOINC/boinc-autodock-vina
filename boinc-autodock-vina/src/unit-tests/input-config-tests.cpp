@@ -65,15 +65,13 @@ TEST_F(InputConfig_UnitTests, TestThatWorkGeneratorIsAbleToProcessAlreadyPrepare
 
     generator generator;
 
-    auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
-    ASSERT_TRUE(res);
-    res = generator.validate();
+    auto res = generator.process(dummy_json_file_path, std::filesystem::current_path(), "test");
     ASSERT_TRUE(res);
 
-    const auto zip_path = std::filesystem::current_path() / "wu_1.zip";
+    const auto zip_path = std::filesystem::current_path() / "wu_test_1.zip";
     ASSERT_TRUE(exists(zip_path));
 
-    const auto zip_extract_path = std::filesystem::current_path() / "wu_1_zip";
+    const auto zip_extract_path = std::filesystem::current_path() / "wu_test_1_zip";
     create_directories(zip_extract_path);
     ASSERT_TRUE(zip_extract::extract(zip_path, zip_extract_path));
 
@@ -145,7 +143,7 @@ TEST_F(InputConfig_UnitTests, FailOnAbsolutePathInReceptors) {
 
     generator generator;
 
-    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
+    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path(), "test");
     EXPECT_FALSE(res);
 }
 
@@ -175,7 +173,7 @@ TEST_F(InputConfig_UnitTests, CheckThatReceptorFileIsPresent) {
 
     generator generator;
 
-    EXPECT_FALSE(generator.process(dummy_json_file_path, std::filesystem::current_path()));
+    EXPECT_FALSE(generator.process(dummy_json_file_path, std::filesystem::current_path(), "test"));
 }
 
 TEST_F(InputConfig_UnitTests, ValidatePrepareReceptorsValues) {
@@ -250,7 +248,7 @@ TEST_F(InputConfig_UnitTests, FailOnNoReceptorSpecidiedWhenStructureIsNotEmpty) 
 
     generator generator;
 
-    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
+    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path(), "test");
     EXPECT_FALSE(res);
 }
 
@@ -278,7 +276,7 @@ TEST_F(InputConfig_UnitTests, FailOnAbsolutePathInLigand) {
 
     generator generator;
 
-    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
+    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path(), "test");
     EXPECT_FALSE(res);
 }
 
@@ -312,7 +310,7 @@ TEST_F(InputConfig_UnitTests, FailOnAbsolutePathInSelectedLigands) {
 
     generator generator;
 
-    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
+    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path(), "test");
     EXPECT_FALSE(res);
 }
 
@@ -342,7 +340,7 @@ TEST_F(InputConfig_UnitTests, FailOnNoLigandSpecifiedWhenStructureIsNotEmpty) {
 
     generator generator;
 
-    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
+    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path(), "test");
     EXPECT_FALSE(res);
 }
 
@@ -366,7 +364,7 @@ TEST_F(InputConfig_UnitTests, CheckThatLigandFileIsPresent) {
 
     generator generator;
 
-    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
+    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path(), "test");
     EXPECT_FALSE(res);
 }
 
@@ -393,7 +391,7 @@ TEST_F(InputConfig_UnitTests, FailWhenRigidityBondsSmartsPresentedWithoutRigidit
 
     generator generator;
 
-    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
+    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path(), "test");
     EXPECT_FALSE(res);
 }
 
@@ -423,7 +421,7 @@ TEST_F(InputConfig_UnitTests, FailWhenRigidityBondsIndicesPresentedWithoutRigidi
 
     generator generator;
 
-    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
+    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path(), "test");
     EXPECT_FALSE(res);
 }
 
@@ -455,7 +453,7 @@ TEST_F(InputConfig_UnitTests, FailWhenRigidityBondsIndicesContainsOnlyOneIndex) 
 
     generator generator;
 
-    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
+    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path(), "test");
     EXPECT_FALSE(res);
 }
 
@@ -492,7 +490,7 @@ TEST_F(InputConfig_UnitTests, TestThatRigidityBondsSmartsAndRigidityBondsIndices
 
     generator generator;
 
-    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
+    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path(), "test");
     EXPECT_FALSE(res);
 }
 
@@ -522,7 +520,7 @@ TEST_F(InputConfig_UnitTests, FailOnAbsolutePathInMultimolPrefix) {
 
     generator generator;
 
-    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
+    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path(), "test");
     EXPECT_FALSE(res);
 }
 
@@ -552,7 +550,7 @@ TEST_F(InputConfig_UnitTests, FailOnIllegalSymbolInMultimolPrefix) {
 
     generator generator;
 
-    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path());
+    const auto res = generator.process(dummy_json_file_path, std::filesystem::current_path(), "test");
     EXPECT_FALSE(res);
 }
 
@@ -646,12 +644,12 @@ TEST_F(InputConfig_UnitTests, TestSimpleVinaScenario) {
     const auto& json_file = std::filesystem::current_path() / "boinc-autodock-vina/samples/basic_docking_full/1iep_vina.json";
 
     generator generator;
-    ASSERT_TRUE(generator.process(json_file, std::filesystem::current_path()));
+    ASSERT_TRUE(generator.process(json_file, std::filesystem::current_path(), "test"));
 
-    const auto zip_path = std::filesystem::current_path() / "wu_1.zip";
+    const auto zip_path = std::filesystem::current_path() / "wu_test_1.zip";
     ASSERT_TRUE(exists(zip_path));
 
-    const auto zip_extract_path = std::filesystem::current_path() / "wu_1_zip";
+    const auto zip_extract_path = std::filesystem::current_path() / "wu_test_1_zip";
     create_directories(zip_extract_path);
     ASSERT_TRUE(zip_extract::extract(zip_path, zip_extract_path));
 

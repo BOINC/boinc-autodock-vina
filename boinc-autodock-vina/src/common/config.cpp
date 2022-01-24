@@ -790,7 +790,7 @@ std::vector<std::string> config::get_files() const {
     }
 
     if (!search_area.maps.empty()) {
-        files.push_back(get_gpf_filename().string());
+        files.emplace_back(get_gpf_filename().string());
         const auto& maps = get_files_from_gpf();
         files.insert(files.end(), maps.cbegin(), maps.cend());
     }
@@ -808,7 +808,7 @@ std::vector<std::string> config::get_files_from_gpf() const {
 
     const auto& path = maps.parent_path();
 
-    const std::vector<std::string> types{ "map", "gridfld", "elecmap", "dsolvmap" };
+    const std::array<std::string, 4> types{ "map", "gridfld", "elecmap", "dsolvmap" };
 
     std::vector<std::string> files;
 
