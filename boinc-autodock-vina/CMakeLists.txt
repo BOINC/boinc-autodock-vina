@@ -286,6 +286,10 @@ if (NOT APPLE)
             config
             input-config
             jsoncons_helper
+            autodock-vina::autodock-vina::vina
+            autodock-vina::autodock-vina::vina_split
+            OpenSSL::SSL
+            OpenSSL::Crypto
             Boost::boost
             Boost::filesystem
             Boost::log
@@ -304,11 +308,13 @@ endif()
 target_link_libraries(config
     PRIVATE
        jsoncons
+       jsoncons_helper
 )
 
 if (NOT APPLE)
     target_link_libraries(input-config
         PRIVATE
+        config
         jsoncons
         libzip::zip
     )

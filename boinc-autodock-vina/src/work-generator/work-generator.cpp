@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
 
     std::random_device rd;
     std::mt19937 mt(rd());
-    const std::uniform_int_distribution dist(std::numeric_limits<uint64_t>::min(), std::numeric_limits<uint64_t>::max());
+    std::uniform_int_distribution dist(std::numeric_limits<uint64_t>::min(), std::numeric_limits<uint64_t>::max());
 
     std::stringstream ss;
     ss << std::setw(16) << std::setfill('0') << std::hex << dist(mt);
