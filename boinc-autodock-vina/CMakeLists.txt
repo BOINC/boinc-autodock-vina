@@ -286,6 +286,15 @@ if (NOT APPLE)
             config
             input-config
             jsoncons_helper
+            Boost::boost
+            Boost::filesystem
+            Boost::log
+            Boost::math_tr1
+            Boost::program_options
+            Boost::random
+            Boost::serialization
+            Boost::thread
+            Boost::timer
             magic_enum::magic_enum
             jsoncons
             libzip::zip

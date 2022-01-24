@@ -97,6 +97,223 @@ TEST_F(InputConfig_UnitTests, TestThatWorkGeneratorIsAbleToProcessAlreadyPrepare
     remove_all(zip_extract_path);
 }
 
+TEST_F(InputConfig_UnitTests, TestThatGeneratorAddsRandomSeedIfNotSet) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("input");
+    json_encoder.value("receptor", "receptor_sample");
+    json_encoder.begin_array("ligands");
+    json_encoder.value("ligand_sample1");
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.begin_object("search_area");
+    json_encoder.value("center_x", 0.123456);
+    json_encoder.value("center_y", 0.654321);
+    json_encoder.value("center_z", -0.123456);
+    json_encoder.value("size_x", -0.654321);
+    json_encoder.value("size_y", 0.0);
+    json_encoder.value("size_z", -0.000135);
+    json_encoder.end_object();
+    json_encoder.begin_object("output");
+    json_encoder.value("out", "out_sample");
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+
+    dummy_ofstream dummy;
+    create_dummy_file(dummy, "receptor_sample");
+    create_dummy_file(dummy, "ligand_sample1");
+
+    generator generator;
+
+    auto res = generator.process(dummy_json_file_path, std::filesystem::current_path(), "test");
+    ASSERT_TRUE(res);
+
+    const auto zip_path = std::filesystem::current_path() / "wu_test_1.zip";
+    ASSERT_TRUE(exists(zip_path));
+
+    const auto zip_extract_path = std::filesystem::current_path() / "wu_test_1_zip";
+    create_directories(zip_extract_path);
+    ASSERT_TRUE(zip_extract::extract(zip_path, zip_extract_path));
+
+    const auto config_path = zip_extract_path / "config.json";
+    ASSERT_TRUE(exists(config_path));
+
+    config conf;
+    ASSERT_TRUE(conf.load(config_path));
+    ASSERT_TRUE(conf.validate());
+
+    EXPECT_STREQ((zip_extract_path / "receptor_sample").string().data(), conf.input.receptor.data());
+    ASSERT_EQ(1, conf.input.ligands.size());
+    EXPECT_STREQ((zip_extract_path / "ligand_sample1").string().data(), conf.input.ligands[0].data());
+    EXPECT_DOUBLE_EQ(0.123456, conf.search_area.center_x);
+    EXPECT_DOUBLE_EQ(0.654321, conf.search_area.center_y);
+    EXPECT_DOUBLE_EQ(-0.123456, conf.search_area.center_z);
+    EXPECT_DOUBLE_EQ(-0.654321, conf.search_area.size_x);
+    EXPECT_DOUBLE_EQ(0.0, conf.search_area.size_y);
+    EXPECT_DOUBLE_EQ(-0.000135, conf.search_area.size_z);
+    EXPECT_STREQ((zip_extract_path / "out_sample").string().data(), conf.output.out.data());
+    EXPECT_NE(0, conf.misc.seed);
+
+    std::filesystem::remove(zip_path);
+    remove_all(zip_extract_path);
+}
+
+TEST_F(InputConfig_UnitTests, TestThatGeneratorPreservesRandomSeedIfSet) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("input");
+    json_encoder.value("receptor", "receptor_sample");
+    json_encoder.begin_array("ligands");
+    json_encoder.value("ligand_sample1");
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.begin_object("search_area");
+    json_encoder.value("center_x", 0.123456);
+    json_encoder.value("center_y", 0.654321);
+    json_encoder.value("center_z", -0.123456);
+    json_encoder.value("size_x", -0.654321);
+    json_encoder.value("size_y", 0.0);
+    json_encoder.value("size_z", -0.000135);
+    json_encoder.end_object();
+    json_encoder.begin_object("output");
+    json_encoder.value("out", "out_sample");
+    json_encoder.end_object();
+    json_encoder.begin_object("misc");
+    json_encoder.value("seed", static_cast<uint64_t>(1234567890ull));
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+
+    dummy_ofstream dummy;
+    create_dummy_file(dummy, "receptor_sample");
+    create_dummy_file(dummy, "ligand_sample1");
+
+    generator generator;
+
+    auto res = generator.process(dummy_json_file_path, std::filesystem::current_path(), "test");
+    ASSERT_TRUE(res);
+
+    const auto zip_path = std::filesystem::current_path() / "wu_test_1.zip";
+    ASSERT_TRUE(exists(zip_path));
+
+    const auto zip_extract_path = std::filesystem::current_path() / "wu_test_1_zip";
+    create_directories(zip_extract_path);
+    ASSERT_TRUE(zip_extract::extract(zip_path, zip_extract_path));
+
+    const auto config_path = zip_extract_path / "config.json";
+    ASSERT_TRUE(exists(config_path));
+
+    config conf;
+    ASSERT_TRUE(conf.load(config_path));
+    ASSERT_TRUE(conf.validate());
+
+    EXPECT_STREQ((zip_extract_path / "receptor_sample").string().data(), conf.input.receptor.data());
+    ASSERT_EQ(1, conf.input.ligands.size());
+    EXPECT_STREQ((zip_extract_path / "ligand_sample1").string().data(), conf.input.ligands[0].data());
+    EXPECT_DOUBLE_EQ(0.123456, conf.search_area.center_x);
+    EXPECT_DOUBLE_EQ(0.654321, conf.search_area.center_y);
+    EXPECT_DOUBLE_EQ(-0.123456, conf.search_area.center_z);
+    EXPECT_DOUBLE_EQ(-0.654321, conf.search_area.size_x);
+    EXPECT_DOUBLE_EQ(0.0, conf.search_area.size_y);
+    EXPECT_DOUBLE_EQ(-0.000135, conf.search_area.size_z);
+    EXPECT_STREQ((zip_extract_path / "out_sample").string().data(), conf.output.out.data());
+    EXPECT_EQ(1234567890, conf.misc.seed);
+
+    std::filesystem::remove(zip_path);
+    remove_all(zip_extract_path);
+}
+
+TEST_F(InputConfig_UnitTests, ValidateGetFilesProcessedFunction) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("input");
+    json_encoder.value("receptor", "receptor_sample");
+    json_encoder.begin_array("ligands");
+    json_encoder.value("ligand_sample1");
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.begin_object("search_area");
+    json_encoder.value("center_x", 0.123456);
+    json_encoder.value("center_y", 0.654321);
+    json_encoder.value("center_z", -0.123456);
+    json_encoder.value("size_x", -0.654321);
+    json_encoder.value("size_y", 0.0);
+    json_encoder.value("size_z", -0.000135);
+    json_encoder.end_object();
+    json_encoder.begin_object("output");
+    json_encoder.value("out", "out_sample");
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+
+    dummy_ofstream dummy;
+    create_dummy_file(dummy, "receptor_sample");
+    create_dummy_file(dummy, "ligand_sample1");
+
+    generator generator;
+    EXPECT_EQ(0, generator.get_files_processed());
+
+    auto res = generator.process(dummy_json_file_path, std::filesystem::current_path(), "test");
+    ASSERT_TRUE(res);
+    EXPECT_EQ(1, generator.get_files_processed());
+
+    const auto zip_path = std::filesystem::current_path() / "wu_test_1.zip";
+    ASSERT_TRUE(exists(zip_path));
+
+    const auto zip_extract_path = std::filesystem::current_path() / "wu_test_1_zip";
+    create_directories(zip_extract_path);
+    ASSERT_TRUE(zip_extract::extract(zip_path, zip_extract_path));
+
+    const auto config_path = zip_extract_path / "config.json";
+    ASSERT_TRUE(exists(config_path));
+
+    config conf;
+    ASSERT_TRUE(conf.load(config_path));
+    ASSERT_TRUE(conf.validate());
+
+    EXPECT_STREQ((zip_extract_path / "receptor_sample").string().data(), conf.input.receptor.data());
+    ASSERT_EQ(1, conf.input.ligands.size());
+    EXPECT_STREQ((zip_extract_path / "ligand_sample1").string().data(), conf.input.ligands[0].data());
+    EXPECT_DOUBLE_EQ(0.123456, conf.search_area.center_x);
+    EXPECT_DOUBLE_EQ(0.654321, conf.search_area.center_y);
+    EXPECT_DOUBLE_EQ(-0.123456, conf.search_area.center_z);
+    EXPECT_DOUBLE_EQ(-0.654321, conf.search_area.size_x);
+    EXPECT_DOUBLE_EQ(0.0, conf.search_area.size_y);
+    EXPECT_DOUBLE_EQ(-0.000135, conf.search_area.size_z);
+    EXPECT_STREQ((zip_extract_path / "out_sample").string().data(), conf.output.out.data());
+
+    std::filesystem::remove(zip_path);
+    remove_all(zip_extract_path);
+}
+
 TEST_F(InputConfig_UnitTests, TestThatGetTempFolderNameAlwaysReturnsDifferentNames) {
     ASSERT_STRNE(temp_folder::get_temp_folder_name().data(), temp_folder::get_temp_folder_name().data());
 }

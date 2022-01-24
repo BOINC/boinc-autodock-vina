@@ -284,6 +284,10 @@ bool generator::create_zip(const std::filesystem::path& path, const std::filesys
     return true;
 }
 
+uint64_t generator::get_files_processed() const {
+    return current_wu_number;
+}
+
 bool generator::process(const std::filesystem::path& config_file_path, const std::filesystem::path& out_path, const std::string& prefix) {
 #ifdef WIN32
     std::cerr << "This functionality doesn't work on Windows. 'mk_prepare_ligand.py' is faked to pass tests on Windows." << std::endl;
@@ -316,6 +320,13 @@ bool generator::process(const std::filesystem::path& config_file_path, const std
         config config;
         if (!config.load(config_file_path)) {
             return false;
+        }
+
+        if (config.misc.seed == 0) {
+            static std::random_device rd;
+            static std::mt19937 mt(rd());
+            static std::uniform_int_distribution dist(std::numeric_limits<int64_t>::min(), std::numeric_limits<int64_t>::max());
+            config.misc.seed = dist(mt);
         }
 
         const auto need_prepare_receptors_step = !prepare_receptors.receptors.empty();

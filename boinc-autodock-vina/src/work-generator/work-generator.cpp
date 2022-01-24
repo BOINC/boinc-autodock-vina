@@ -16,6 +16,7 @@
 // along with BOINC.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <iostream>
+#include <random>
 
 #include <work-generator/input-config.h>
 
@@ -29,7 +30,7 @@
 
 void help() {
     std::cout << "Usage:" << std::endl;
-    std::cout << "work-generator DIR" << std::endl;
+    std::cout << "work-generator OUT_DIR IN_DIR" << std::endl;
 }
 
 inline void header() {
@@ -37,13 +38,63 @@ inline void header() {
     std::cout << " (" << BOINC_APPS_GIT_REVISION << ")" << std::endl;
 }
 
+inline bool process_directory(const std::filesystem::path& directory, const std::function<bool(const std::filesystem::path& out_path)>& process) {
+    for (const auto& e : std::filesystem::directory_iterator(directory)) {
+        if (e.is_directory()) {
+            if (!process_directory(e.path(), process)) {
+                std::cerr << "Failed to process directory <" << e.path().string() << ">." << std::endl;
+                return false;
+            }
+        }
+        else if (e.is_regular_file() && e.path().extension() == "json") {
+            if (!process(e.path())) {
+                std::cerr << "Failed to process <" << e.path().string() << ">." << std::endl;
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 int main(int argc, char** argv) {
     header();
 
-    if (argc != 2) {
+    if (argc != 3) {
         help();
         return 1;
     }
+
+    std::filesystem::path out_dir(argv[1]);
+    const std::filesystem::path in_dir(argv[2]);
+
+    if (!exists(in_dir) || !is_directory(in_dir)) {
+        std::cerr << "<" << argv[1] << "> is not a valid directory path." << std::endl;
+        return 1;
+    }
+
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    const std::uniform_int_distribution dist(std::numeric_limits<uint64_t>::min(), std::numeric_limits<uint64_t>::max());
+
+    std::stringstream ss;
+    ss << std::setw(16) << std::setfill('0') << std::hex << dist(mt);
+    const auto uid = ss.str();
+
+    out_dir /= uid;
+    create_directories(out_dir);
+
+    generator generator;
+
+    const auto& process = [&](const auto& path) {
+        return generator.process(path, out_dir, uid);
+    };
+
+    if (!process_directory(in_dir, process)) {
+        std::cerr << "Failed to process input directory <" << in_dir.string() << ">." << std::endl;
+        return 1;
+    }
+
+    std::cout << "WUs generated: " << generator.get_files_processed() << std::endl;
 
     return 0;
 }
