@@ -46,7 +46,7 @@ inline bool process_directory(const std::filesystem::path& directory, const std:
                 return false;
             }
         }
-        else if (e.is_regular_file() && e.path().extension() == "json") {
+        else if (e.is_regular_file() && e.path().extension() == ".json") {
             if (!process(e.path())) {
                 std::cerr << "Failed to process <" << e.path().string() << ">." << std::endl;
                 return false;
@@ -86,6 +86,7 @@ int main(int argc, char** argv) {
     generator generator;
 
     const auto& process = [&](const auto& path) {
+        std::cout << "Processing file: <" << path.string() << ">." << std::endl;
         return generator.process(path, out_dir, uid);
     };
 
@@ -94,6 +95,7 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    std::cout << "WUs output directory: <" << out_dir.string() << ">." << std::endl;
     std::cout << "WUs generated: " << generator.get_files_processed() << std::endl;
 
     return 0;
