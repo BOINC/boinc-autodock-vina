@@ -349,7 +349,7 @@ bool generator::process(const std::filesystem::path& config_file_path, const std
             cmd << "mk_prepare_ligand.py ";
             cmd << "-i " << prepare_ligands.ligand << " ";
 
-            if (!prepare_ligands.multimol || prepare_ligands.multimol_prefix.empty() || prepare_ligands.selected_ligands.size() <= 1) {
+            if (!prepare_ligands.multimol || prepare_ligands.multimol_prefix.empty() || prepare_ligands.selected_ligands.empty()) {
                 std::filesystem::path output(prepare_ligands.ligand);
                 output.replace_extension("pdbqt");
                 cmd << "-o " << output.string() << " ";
