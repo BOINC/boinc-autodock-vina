@@ -8,7 +8,10 @@
         "gtest",
         "jsoncons",
         "magic-enum",
-        "libzip",
-        "boost-process"
+        "boost-process",
+        {
+            "name": "libzip",
+            "default-features": false
+        }
     ]
 }

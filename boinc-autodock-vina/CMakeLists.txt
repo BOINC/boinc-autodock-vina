@@ -252,8 +252,6 @@ set (UNIT_TEST_LINK_LIBRARIES
     GTest::gtest_main
     autodock-vina::autodock-vina::vina
     autodock-vina::autodock-vina::vina_split
-    OpenSSL::SSL
-    OpenSSL::Crypto
     Boost::boost
     Boost::filesystem
     Boost::log
@@ -286,22 +284,10 @@ if (NOT APPLE)
             config
             input-config
             jsoncons_helper
-            autodock-vina::autodock-vina::vina
-            autodock-vina::autodock-vina::vina_split
-            OpenSSL::SSL
-            OpenSSL::Crypto
-            Boost::boost
-            Boost::filesystem
-            Boost::log
-            Boost::math_tr1
-            Boost::program_options
-            Boost::random
-            Boost::serialization
-            Boost::thread
-            Boost::timer
             magic_enum::magic_enum
             jsoncons
             libzip::zip
+            Boost::filesystem
     )
 endif()
 
