@@ -67,8 +67,8 @@ jobs:
           yes | ./install.sh -d $HOME/ADFRsuite -c 0
           cd $dir
           echo "$HOME/ADFRsuite/bin" >> $GITHUB_PATH
-          echo "Installing OpenBabel and RDKit"
-          sudo apt-get install -y openbabel libopenbabel-dev swig python-rdkit librdkit1 rdkit-data
+          echo "Installing OpenBabel"
+          sudo apt-get install -y openbabel libopenbabel-dev swig
           echo "$HOME/.local/bin" >> $GITHUB_PATH
           echo "Installing Meeko and Scipy"
           pip3 install numpy openbabel meeko rdkit-pypi scipy matplotlib ipython jupyter pandas sympy nose
