@@ -67,12 +67,12 @@ jobs:
           yes | ./install.sh -d $HOME/ADFRsuite -c 0
           cd $dir
           echo "$HOME/ADFRsuite/bin" >> $GITHUB_PATH
-          echo "Installing OpenBabel"
-          sudo apt-get install -y openbabel libopenbabel-dev swig
+          echo "Installing OpenBabel and RDKit"
+          sudo apt-get install -y openbabel libopenbabel-dev swig python-rdkit librdkit1 rdkit-data
           echo "$HOME/.local/bin" >> $GITHUB_PATH
           export PATH=~/.local/bin/:"$PATH"
           echo "Installing Meeko and Scipy"
-          pip3 install -U numpy openbabel meeko rdkit-pypi scipy matplotlib ipython pandas sympy nose
+          pip3 install -U numpy openbabel meeko rdkit-pypi scipy matplotlib ipython jupyter pandas sympy nose
 
       - name: Configure Python for vcpkg binary cache
         if: ${{ success() }}
