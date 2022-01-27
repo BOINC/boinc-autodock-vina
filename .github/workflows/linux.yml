@@ -57,14 +57,13 @@ jobs:
           sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu binutils-aarch64-linux-gnu qemu-user-static
 
       - name: Install boinc-autodock-vina dependencies
-        if: ${{ success() && matrix.configuration == 'x86-linux-static' && matrix.app == 'boinc-autodock-vina' }}
+        if: ${{ success() && matrix.configuration == 'x64-linux-static' && matrix.app == 'boinc-autodock-vina' }}
         run: |
           echo "Installing ADFR Suite"
           wget https://ccsb.scripps.edu/adfr/download/1028/ -O $HOME/adfr_install --no-check-certificate
           chmod a+x $HOME/adfr_install
           $HOME/adfr_install
-          tar zxvf $HOME/ADFRsuite-1.0/ADFRsuite_x86_64Linux_1.0.tar.gz
-          cd ADFRsuite_x86_64Linux_1.0/
+          tar zxvf $HOME/ADFRsuite-1.0/ADFRsuite_x86_64Linux_1.0.tar.gz -C $HOME
           yes | $HOME/ADFRsuite_x86_64Linux_1.0/install.sh -d $HOME/ADFRsuite -c 0
           echo "$HOME/ADFRsuite/bin" >> $GITHUB_PATH
           echo "Installing OpenBabel and RDKit"

@@ -273,6 +273,8 @@ qemu_command = None
 run_build = True
 run_tests = True
 
+force_build_work_generator = False
+
 for a in sys.argv[1:]:
     if a in apps:
         apps_to_build.append(a)
@@ -281,6 +283,8 @@ for a in sys.argv[1:]:
             run_build = False
         elif (a == '-nt'):
             run_tests = False
+        elif (a == '-wg'):
+            force_build_work_generator = True
         else:
             p = a.split('=')
             if (len(p) < 2):
@@ -360,8 +364,14 @@ path_fixed = False
 
 if (get_target_os_from_triplet(vcpkg_overlay_triplet) == 'linux'):
     specific_init_params = build_linux_specific_init_params(arch)
+    if (get_arch_from_triplet(vcpkg_overlay_triplet) == '64'):
+        build_work_generator_param = '-DBUILD_WORK_GENERATOR=ON'
 else:
     specific_init_params = ''
+    build_work_generator_param = ''
+
+if (force_build_work_generator):
+    build_work_generator_param = '-DBUILD_WORK_GENERATOR=ON'
 
 for a in apps_to_build:
     if run_build:
@@ -380,6 +390,7 @@ for a in apps_to_build:
             'cmake -B {build_dir} '
             '-S {a} '
             '{arch_param} '
+            '{build_work_generator_param} '
             '-DCMAKE_TOOLCHAIN_FILE={vcpkg_cmake} '
             '-DVCPKG_OVERLAY_PORTS={vcpkg_overlay_ports} '
             '-DVCPKG_OVERLAY_TRIPLETS={vcpkg_overlay_triplets} '
@@ -394,6 +405,7 @@ for a in apps_to_build:
                 vcpkg_overlay_triplets=vcpkg_overlay_triplets,
                 vcpkg_overlay_triplet=vcpkg_overlay_triplet,
                 arch_param=arch_param,
+                build_work_generator_param=build_work_generator_param,
                 boinc_apps_git_revision=boinc_apps_git_revision,
                 specific_init_params=specific_init_params
                 ), shell=True)

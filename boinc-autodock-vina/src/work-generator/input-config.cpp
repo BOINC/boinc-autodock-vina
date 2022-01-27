@@ -290,7 +290,7 @@ uint64_t generator::get_files_processed() const {
 
 bool generator::process(const std::filesystem::path& config_file_path, const std::filesystem::path& out_path, const std::string& prefix) {
 #ifdef WIN32
-    std::cerr << "This functionality doesn't work on Windows. 'mk_prepare_ligand.py' is faked to pass tests on Windows." << std::endl;
+    std::cerr << "This functionality doesn't work on Windows. 'mk_prepare_ligand.py' and 'prepare_receptor' are faked to pass tests on Windows." << std::endl;
 #endif
 
     if (!exists(config_file_path) || !is_regular_file(config_file_path)) {
@@ -415,8 +415,11 @@ bool generator::process(const std::filesystem::path& config_file_path, const std
             for (const auto& r : prepare_receptors.receptors) {
                 std::stringstream cmd;
 #ifdef WIN32
-                cmd << "cmd /c ";
-#endif
+                const auto source_file = "boinc-autodock-vina\\samples\\basic_docking_full\\1iep_receptor.pdbqt.tmp";
+                const auto target_file = "boinc-autodock-vina\\samples\\basic_docking_full\\1iep_receptor.pdbqt";
+                cmd << "cmd /c copy " << source_file << " " << target_file;
+                config.input.receptor = (std::filesystem::current_path() / target_file).string();
+#else
                 cmd << "prepare_receptor ";
                 cmd << "-r " << r << " ";
 
@@ -442,6 +445,7 @@ bool generator::process(const std::filesystem::path& config_file_path, const std
                 if (prepare_receptors.delete_nonstd_residue) {
                     cmd << "-e ";
                 }
+#endif
 
                 boost::process::child prepare_receptor(cmd.str());
                 prepare_receptor.wait();

@@ -43,7 +43,7 @@ add_library(config
         src/common/config.cpp
 )
 
-if (NOT APPLE)
+if (BUILD_WORK_GENERATOR)
     add_library(input-config
         STATIC
             src/work-generator/input-config.h
@@ -81,14 +81,14 @@ add_executable(unit-tests
     src/unit-tests/zip-extract.cpp
 )
 
-if (NOT APPLE)
+if (BUILD_WORK_GENERATOR)
     target_sources(unit-tests
         PRIVATE
             src/unit-tests/input-config-tests.cpp
     )
 endif()
 
-if (NOT APPLE)
+if (BUILD_WORK_GENERATOR)
     add_executable(work-generator
         src/work-generator/work-generator.cpp
     )
@@ -127,7 +127,7 @@ target_compile_definitions(unit-tests
     -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
 )
 
-if (NOT APPLE)
+if (BUILD_WORK_GENERATOR)
     target_compile_definitions(work-generator
         PRIVATE
         -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
@@ -141,7 +141,7 @@ target_compile_definitions(config
     -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
 )
 
-if (NOT APPLE)
+if (BUILD_WORK_GENERATOR)
     target_compile_definitions(input-config
         PRIVATE
         -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
@@ -179,7 +179,7 @@ target_include_directories(unit-tests
         ${CMAKE_CURRENT_LIST_DIR}/../common/src
 )
 
-if (NOT APPLE)
+if (BUILD_WORK_GENERATOR)
     target_include_directories(work-generator
         PRIVATE
             ${CMAKE_CURRENT_LIST_DIR}/src
@@ -193,7 +193,7 @@ target_include_directories(config
         ${CMAKE_CURRENT_LIST_DIR}/../common/src
 )
 
-if (NOT APPLE)
+if (BUILD_WORK_GENERATOR)
     target_include_directories(input-config
         PRIVATE
             ${CMAKE_CURRENT_LIST_DIR}/src
@@ -266,7 +266,7 @@ set (UNIT_TEST_LINK_LIBRARIES
     libzip::zip
 )
 
-if (NOT APPLE)
+if (BUILD_WORK_GENERATOR)
     set (UNIT_TEST_LINK_LIBRARIES
         ${UNIT_TEST_LINK_LIBRARIES}
         input-config
@@ -278,7 +278,7 @@ target_link_libraries(unit-tests
         ${UNIT_TEST_LINK_LIBRARIES}
 )
 
-if (NOT APPLE)
+if (BUILD_WORK_GENERATOR)
     target_link_libraries(work-generator
         PRIVATE
             config
@@ -297,7 +297,7 @@ target_link_libraries(config
        jsoncons_helper
 )
 
-if (NOT APPLE)
+if (BUILD_WORK_GENERATOR)
     target_link_libraries(input-config
         PRIVATE
         config
