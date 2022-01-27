@@ -60,11 +60,12 @@ jobs:
         if: ${{ success() && matrix.configuration == 'x64-linux-static' && matrix.app == 'boinc-autodock-vina' }}
         run: |
           echo "Installing ADFR Suite"
-          wget https://ccsb.scripps.edu/adfr/download/1028/ -O $HOME/adfr_install --no-check-certificate
-          chmod a+x $HOME/adfr_install
-          $HOME/adfr_install
-          tar zxvf $HOME/ADFRsuite-1.0/ADFRsuite_x86_64Linux_1.0.tar.gz -C $HOME
-          yes | $HOME/ADFRsuite_x86_64Linux_1.0/install.sh -d $HOME/ADFRsuite -c 0
+          wget https://ccsb.scripps.edu/adfr/download/1038/ -O $HOME/ADFRsuite_x86_64Linux_1.0.tar.gz --no-check-certificate
+          tar zxvf $HOME/ADFRsuite_x86_64Linux_1.0.tar.gz -C $HOME
+          dir=$(pwd)
+          cd $HOME/ADFRsuite_x86_64Linux_1.0/
+          yes | ./install.sh -d $HOME/ADFRsuite -c 0
+          cd $dir
           echo "$HOME/ADFRsuite/bin" >> $GITHUB_PATH
           echo "Installing OpenBabel and RDKit"
           sudo apt-get install -y openbabel libopenbabel-dev swig python-rdkit librdkit1 rdkit-data

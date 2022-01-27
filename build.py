@@ -362,13 +362,13 @@ vcpkg_overlay_ports = os.path.join(os.getcwd(), 'vcpkg_custom_ports')
 boinc_apps_git_revision = subprocess.check_output('git rev-parse --short HEAD', shell=True).decode('utf-8').strip()
 path_fixed = False
 
+specific_init_params = ''
+build_work_generator_param = ''
+
 if (get_target_os_from_triplet(vcpkg_overlay_triplet) == 'linux'):
     specific_init_params = build_linux_specific_init_params(arch)
     if (get_arch_from_triplet(vcpkg_overlay_triplet) == '64'):
         build_work_generator_param = '-DBUILD_WORK_GENERATOR=ON'
-else:
-    specific_init_params = ''
-    build_work_generator_param = ''
 
 if (force_build_work_generator):
     build_work_generator_param = '-DBUILD_WORK_GENERATOR=ON'
