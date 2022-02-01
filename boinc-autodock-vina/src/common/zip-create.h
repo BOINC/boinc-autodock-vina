@@ -18,11 +18,9 @@
 #pragma once
 
 #include <filesystem>
-#include <functional>
+#include <vector>
 
-#include "common/config.h"
-
-class calculator {
+class zip_create final {
 public:
-    [[nodiscard]] static bool calculate(const config& config, const int& ncpus, const std::function<void(double)>& progress_callback);
+    static bool create(const std::filesystem::path& zip_file, const std::vector<std::filesystem::path>& files);
 };

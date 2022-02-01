@@ -17,12 +17,21 @@
 
 #pragma once
 
+#include <fstream>
 #include <filesystem>
-#include <functional>
+#include <vector>
 
-#include "common/config.h"
-
-class calculator {
+class dummy_ofstream final {
 public:
-    [[nodiscard]] static bool calculate(const config& config, const int& ncpus, const std::function<void(double)>& progress_callback);
+    ~dummy_ofstream();
+    std::ofstream& operator()();
+    void open(const std::filesystem::path& file);
+    void close();
+private:
+    std::ofstream stream;
+    std::filesystem::path file_path;
+    bool stream_open = false;
+    std::vector<std::filesystem::path> open_files;
 };
+
+void create_dummy_file(dummy_ofstream& stream, const std::filesystem::path& file);

@@ -15,14 +15,28 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with BOINC.  If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once
+#include "temp-folder.h"
 
-#include <filesystem>
-#include <functional>
+#include <random>
+#include <sstream>
 
-#include "common/config.h"
+temp_folder::temp_folder(const std::filesystem::path& working_directory) : folder(working_directory / get_temp_folder_name()) {
+    create_directories(folder);
+}
 
-class calculator {
-public:
-    [[nodiscard]] static bool calculate(const config& config, const int& ncpus, const std::function<void(double)>& progress_callback);
-};
+temp_folder::~temp_folder() {
+    remove_all(folder);
+}
+
+const std::filesystem::path& temp_folder::operator()() const {
+    return folder;
+}
+
+std::string temp_folder::get_temp_folder_name() {
+    static std::random_device rd;
+    static std::mt19937 mt(rd());
+    static std::uniform_int_distribution dist(std::numeric_limits<unsigned>::min(), std::numeric_limits<unsigned>::max());
+    std::stringstream ss;
+    ss << dist(mt);
+    return ss.str();
+}

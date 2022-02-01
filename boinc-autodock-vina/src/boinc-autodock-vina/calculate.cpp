@@ -1,6 +1,6 @@
 // This file is part of BOINC.
 // https://boinc.berkeley.edu
-// Copyright (C) 2021 University of California
+// Copyright (C) 2022 University of California
 //
 // BOINC is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License
@@ -22,11 +22,11 @@
 #include <autodock-vina/vina.h>
 #include <magic_enum.hpp>
 
-bool calculate(const config& config, const int& ncpus, const std::function<void(double)>& progress_callback) {
+bool calculator::calculate(const config& config, const int& ncpus, const std::function<void(double)>& progress_callback) {
     constexpr int vina_verbosity = 1;
 
     Vina vina(std::string(magic_enum::enum_name(config.input.scoring)), ncpus,
-        config.misc.seed, vina_verbosity, config.advanced.no_refine, 
+        config.misc.seed, vina_verbosity, config.advanced.no_refine,
         const_cast<std::function<void(double)>*>(&progress_callback));
 
     if (!config.input.receptor.empty() || !config.input.flex.empty()) {
@@ -63,8 +63,7 @@ bool calculate(const config& config, const int& ncpus, const std::function<void(
             }
             else {
                 if ((config.advanced.score_only || config.advanced.local_only) && config.search_area.autobox) {
-                    constexpr size_t buffer_size = 4;
-                    const std::vector<double>& dim = vina.grid_dimensions_from_ligand(buffer_size);
+                    const auto& dim = vina.grid_dimensions_from_ligand();
                     vina.compute_vina_maps(dim[0], dim[1], dim[2], dim[3], dim[4], dim[5],
                         config.misc.spacing, config.advanced.force_even_voxels);
                 }
