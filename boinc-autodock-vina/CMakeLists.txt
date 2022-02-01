@@ -43,6 +43,14 @@ add_library(config
         src/common/config.cpp
 )
 
+add_library(zip-helper
+    STATIC
+        src/common/zip-extract.h
+        src/common/zip-extract.cpp
+        src/common/zip-create.h
+        src/common/zip-create.cpp
+)
+
 if (BUILD_WORK_GENERATOR)
     add_library(input-config
         STATIC
@@ -66,7 +74,7 @@ add_library(jsoncons_helper
 )
 
 add_executable(boinc-autodock-vina
-     src/boinc-autodock-vina/boinc-autodock-vina.cpp
+    src/boinc-autodock-vina/boinc-autodock-vina.cpp
 )
 
 add_executable(config-validator
@@ -77,8 +85,6 @@ add_executable(unit-tests
     src/unit-tests/config-tests.cpp
     src/unit-tests/dummy-ofstream.h
     src/unit-tests/dummy-ofstream.cpp
-    src/unit-tests/zip-extract.h
-    src/unit-tests/zip-extract.cpp
 )
 
 if (BUILD_WORK_GENERATOR)
@@ -111,54 +117,54 @@ endif()
 
 target_compile_definitions(boinc-autodock-vina
     PRIVATE
-    -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
-    -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
+        -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
+        -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
 )
 
 target_compile_definitions(config-validator
     PRIVATE
-    -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
-    -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
+        -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
+        -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
 )
 
 target_compile_definitions(unit-tests
     PRIVATE
-    -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
-    -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
+        -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
+        -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
 )
 
 if (BUILD_WORK_GENERATOR)
     target_compile_definitions(work-generator
         PRIVATE
-        -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
-        -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
+            -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
+            -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
     )
 endif()
 
 target_compile_definitions(config
     PRIVATE
-    -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
-    -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
+        -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
+        -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
 )
 
 if (BUILD_WORK_GENERATOR)
     target_compile_definitions(input-config
         PRIVATE
-        -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
-        -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
+            -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
+            -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
     )
 endif()
 
 target_compile_definitions(calculate
     PRIVATE
-    -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
-    -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
+        -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
+        -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
 )
 
 target_compile_definitions(jsoncons_helper
     PRIVATE
-    -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
-    -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
+        -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
+        -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
 )
 
 target_include_directories(boinc-autodock-vina
@@ -188,6 +194,12 @@ if (BUILD_WORK_GENERATOR)
 endif()
 
 target_include_directories(config
+    PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/src
+        ${CMAKE_CURRENT_LIST_DIR}/../common/src
+)
+
+target_include_directories(zip-helper
     PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/src
         ${CMAKE_CURRENT_LIST_DIR}/../common/src
@@ -234,6 +246,8 @@ target_link_libraries(boinc-autodock-vina
         magic_enum::magic_enum
         jsoncons
         jsoncons_helper
+        zip-helper
+        libzip::zip
 )
 
 target_link_libraries(config-validator
@@ -242,6 +256,7 @@ target_link_libraries(config-validator
         magic_enum::magic_enum
         jsoncons
         jsoncons_helper
+        zip-helper
 )
 
 set (UNIT_TEST_LINK_LIBRARIES
@@ -263,6 +278,7 @@ set (UNIT_TEST_LINK_LIBRARIES
     Boost::timer
     magic_enum::magic_enum
     jsoncons
+    zip-helper
     libzip::zip
 )
 
@@ -297,12 +313,18 @@ target_link_libraries(config
        jsoncons_helper
 )
 
+target_link_libraries(zip-helper
+    PRIVATE
+        libzip::zip
+)
+
 if (BUILD_WORK_GENERATOR)
     target_link_libraries(input-config
         PRIVATE
-        config
-        jsoncons
-        libzip::zip
+            config
+            jsoncons
+            zip-helper
+            libzip::zip
     )
 endif()
 

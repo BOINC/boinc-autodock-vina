@@ -20,10 +20,11 @@
 #include <iostream>
 #include <fstream>
 #include <random>
-#include <zip.h>
 #include <jsoncons/basic_json.hpp>
 #include <boost/process.hpp>
 #include <magic_enum.hpp>
+
+#include <common/zip-create.h>
 
 #include "temp-folder.h"
 
@@ -246,42 +247,19 @@ bool generator::save_config(const config& config, const std::filesystem::path& w
     return create_zip(temp_path(), out_path, prefix);
 }
 
-template <typename T>
-using deleted_unique_ptr = std::unique_ptr<T, std::function<void(T*)>>;
-
 bool generator::create_zip(const std::filesystem::path& path, const std::filesystem::path& out_path, const std::string& prefix) {
     const auto name = "wu_" + prefix + "_" + std::to_string(++current_wu_number) + ".zip";
     const auto zip_file_name = (out_path / name).string();
-    int error = 0;
-    const deleted_unique_ptr<zip_t> zip(zip_open(zip_file_name.data(), ZIP_CREATE | ZIP_EXCL, &error), [](auto* z) {
-        if (z != nullptr) {
-            zip_close(z);
-        }
-        });
 
-    if (!zip) {
-        zip_error_t zip_error;
-        zip_error_init_with_code(&zip_error, error);
-        std::cerr << "Failed to create archive <" << zip_file_name << ">: " << zip_error_strerror(&zip_error) << std::endl;
-        return false;
-    }
+    std::vector<std::filesystem::path> files;
 
     for (const auto& file : std::filesystem::directory_iterator(path)) {
         if (file.is_regular_file()) {
-            const auto& file_path = file.path();
-            const deleted_unique_ptr<zip_source_t> source(zip_source_file(zip.get(), file_path.string().data(), 0, 0), [](auto*) {});
-            if (!source) {
-                std::cerr << "Failed to open file <" << file.path().string().data() << ">: " << zip_strerror(zip.get()) << std::endl;
-            }
-            if (zip_file_add(zip.get(), file_path.filename().string().data(), source.get(), ZIP_FL_ENC_UTF_8) < 0) {
-                zip_source_free(source.get());
-                std::cerr << "Failed to add file <" << file.path().string().data() << "> to archive : " << zip_strerror(zip.get()) << std::endl;
-                return false;
-            }
+            files.push_back(file.path());
         }
     }
 
-    return true;
+    return zip_create::create(zip_file_name, files);
 }
 
 uint64_t generator::get_files_processed() const {

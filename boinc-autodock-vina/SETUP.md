@@ -3,12 +3,12 @@
 # ADFR Suite install
 
 ```
-wget https://ccsb.scripps.edu/adfr/download/1028/ -O adfr_install --no-check-certificate
-chmod a+x adfr_install
-./adfr_install
-tar zxvf ~/ADFRsuite-1.0/ADFRsuite_x86_64Linux_1.0.tar.gz
-cd ADFRsuite_x86_64Linux_1.0/
-yes | ./install.sh -d ~/ADFRsuite -c 0
+wget https://ccsb.scripps.edu/adfr/download/1038/ -O $HOME/ADFRsuite_x86_64Linux_1.0.tar.gz --no-check-certificate
+tar zxvf $HOME/ADFRsuite_x86_64Linux_1.0.tar.gz -C $HOME
+dir=$(pwd)
+cd $HOME/ADFRsuite_x86_64Linux_1.0/
+yes | ./install.sh -d $HOME/ADFRsuite -c 0
+cd $dir
 ```
 
 Add to .bashrc:
@@ -20,12 +20,13 @@ export PATH=~/ADFRsuite/bin:"$PATH"
 
 ```
 sudo apt-get install openbabel libopenbabel-dev swig
+sudo ln -s /usr/include/openbabel3/ /usr/local/include/openbabel3
 ```
 
 # RDKit
 
 ```
-sudo apt-get install python-rdkit librdkit1 rdkit-data
+sudo apt-get install python3-rdkit librdkit1 rdkit-data
 ```
 
 # Meeko

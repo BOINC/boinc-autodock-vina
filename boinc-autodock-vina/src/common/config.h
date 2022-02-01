@@ -138,5 +138,7 @@ public:
     [[nodiscard]] bool save(const std::filesystem::path& config_file_path) const;
     [[nodiscard]] std::vector<std::string> get_files() const;
     [[nodiscard]] std::vector<std::string> get_files_from_gpf() const;
+    [[nodiscard]] static std::vector<std::string> get_files_from_gpf(const std::filesystem::path& maps);
     [[nodiscard]] std::filesystem::path get_gpf_filename() const;
+    [[nodiscard]] std::vector<std::string> get_out_files() const;
 };

@@ -799,8 +799,10 @@ std::vector<std::string> config::get_files() const {
 }
 
 std::vector<std::string> config::get_files_from_gpf() const {
-    const auto& maps = get_gpf_filename();
+    return get_files_from_gpf(get_gpf_filename());
+}
 
+std::vector<std::string> config::get_files_from_gpf(const std::filesystem::path& maps) {
     if (!exists(maps) || !is_regular_file(maps)) {
         std::cerr << "Failed to find maps file <" << maps.string() << ">." << std::endl;
         return {};
@@ -827,4 +829,29 @@ std::vector<std::string> config::get_files_from_gpf() const {
 
 std::filesystem::path config::get_gpf_filename() const {
     return std::filesystem::path(search_area.maps).replace_extension("gpf");
+}
+
+std::vector<std::string> config::get_out_files() const {
+    std::vector<std::string> files;
+
+    if (!output.out.empty()) {
+        files.push_back(output.out);
+    }
+    if (!output.dir.empty()) {
+        for (const auto& file : std::filesystem::directory_iterator(output.dir)) {
+            if (file.is_regular_file()) {
+                files.push_back(file.path().string());
+            }
+        }
+    }
+    if (!output.write_maps.empty()) {
+        const auto maps = std::filesystem::path(output.write_maps);
+        for (const auto & file : std::filesystem::directory_iterator(maps.parent_path())) {
+            if (file.path().filename().string().rfind(maps.filename().string(), 0) == 0 && file.is_regular_file()) {
+                files.push_back(file.path().string());
+            }
+        }
+    }
+
+    return files;
 }

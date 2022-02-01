@@ -977,6 +977,58 @@ TEST_F(Config_UnitTests, CheckReadOfGPF) {
     EXPECT_TRUE(lookup((std::filesystem::current_path() / "1iep_receptor.d.map").string()));
 }
 
+TEST_F(Config_UnitTests, TestGetOutFiles) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("output");
+    json_encoder.value("out", "out_sample");
+    json_encoder.value("dir", "dir_sample");
+    json_encoder.value("write_maps", "write_maps/sample");
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+
+    config config;
+
+    ASSERT_TRUE(config.load(dummy_json_file_path));
+
+    create_directories(std::filesystem::current_path() / "dir_sample");
+    create_directories(std::filesystem::current_path() / "write_maps");
+
+    dummy_ofstream dummy;
+    create_dummy_file(dummy, "out_sample");
+    create_dummy_file(dummy, std::filesystem::path("dir_sample") / "sample1");
+    create_dummy_file(dummy, std::filesystem::path("dir_sample") / "sample2");
+    create_dummy_file(dummy, std::filesystem::path("write_maps") / "sample_1.map");
+    create_dummy_file(dummy, std::filesystem::path("write_maps") / "sample_2.map");
+    create_dummy_file(dummy, std::filesystem::path("write_maps") / "sample_3.map");
+
+    const auto& files = config.get_out_files();
+
+    const auto& lookup = [&](const auto& file) {
+        return std::any_of(files.cbegin(), files.cend(), [&](const auto& f) {
+            return f == file;
+            });
+    };
+
+    EXPECT_EQ(6, files.size());
+    EXPECT_TRUE(lookup((std::filesystem::current_path() / "out_sample").string()));
+    EXPECT_TRUE(lookup((std::filesystem::current_path() / "dir_sample" / "sample1").string()));
+    EXPECT_TRUE(lookup((std::filesystem::current_path() / "dir_sample" / "sample2").string()));
+    EXPECT_TRUE(lookup((std::filesystem::current_path() / "write_maps" / "sample_1.map").string()));
+    EXPECT_TRUE(lookup((std::filesystem::current_path() / "write_maps" / "sample_2.map").string()));
+    EXPECT_TRUE(lookup((std::filesystem::current_path() / "write_maps" / "sample_3.map").string()));
+}
+
 TEST_F(Config_UnitTests, TestSimpleVinaScenario) {
     const auto& json_file = std::filesystem::current_path() / "boinc-autodock-vina/samples/basic_docking/1iep_vina.json";
     config config;
@@ -986,4 +1038,3 @@ TEST_F(Config_UnitTests, TestSimpleVinaScenario) {
     EXPECT_TRUE(res);
     std::filesystem::remove(std::filesystem::current_path() / "boinc-autodock-vina/samples/basic_docking/1iep_ligand_vina_out.pdbqt");
 }
-
