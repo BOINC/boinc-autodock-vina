@@ -267,13 +267,13 @@ if (len(sys.argv) < 2):
 apps_to_build = []
 vcpkg_overlay_triplets = None
 vcpkg_overlay_triplet = None
-opencppcoverage_path = None
 qemu_command = None
 
 run_build = True
 run_tests = True
 
 force_build_work_generator = False
+coverage_report = False
 
 for a in sys.argv[1:]:
     if a in apps:
@@ -285,6 +285,8 @@ for a in sys.argv[1:]:
             run_tests = False
         elif (a == '-wg'):
             force_build_work_generator = True
+        elif (a == '-cr'):
+            coverage_report = True
         else:
             p = a.split('=')
             if (len(p) < 2):
@@ -295,8 +297,6 @@ for a in sys.argv[1:]:
                 vcpkg_overlay_triplets = p[1]
             elif (p[0] == '-t' and vcpkg_overlay_triplet is None):
                 vcpkg_overlay_triplet = p[1]
-            elif (p[0] == '-occ' and opencppcoverage_path is None):
-                opencppcoverage_path = p[1]
             elif (p[0] == '-qemu' and qemu_command is None):
                 qemu_command = p[1]
             else:
@@ -364,6 +364,7 @@ path_fixed = False
 
 specific_init_params = ''
 build_work_generator_param = ''
+coverage_report_param = ''
 
 if (get_target_os_from_triplet(vcpkg_overlay_triplet) == 'linux'):
     specific_init_params = build_linux_specific_init_params(arch)
@@ -372,6 +373,8 @@ if (get_target_os_from_triplet(vcpkg_overlay_triplet) == 'linux'):
 
 if (force_build_work_generator):
     build_work_generator_param = '-DBUILD_WORK_GENERATOR=ON'
+if (coverage_report):
+    coverage_report_param = '-DCOVERAGE_REPORT=ON'
 
 for a in apps_to_build:
     if run_build:
@@ -391,6 +394,7 @@ for a in apps_to_build:
             '-S {a} '
             '{arch_param} '
             '{build_work_generator_param} '
+            '{coverage_report_param} '
             '-DCMAKE_TOOLCHAIN_FILE={vcpkg_cmake} '
             '-DVCPKG_OVERLAY_PORTS={vcpkg_overlay_ports} '
             '-DVCPKG_OVERLAY_TRIPLETS={vcpkg_overlay_triplets} '
@@ -406,6 +410,7 @@ for a in apps_to_build:
                 vcpkg_overlay_triplet=vcpkg_overlay_triplet,
                 arch_param=arch_param,
                 build_work_generator_param=build_work_generator_param,
+                coverage_report_param=coverage_report_param,
                 boinc_apps_git_revision=boinc_apps_git_revision,
                 specific_init_params=specific_init_params
                 ), shell=True)
@@ -430,35 +435,16 @@ for a in apps_to_build:
         else:
             unittest_path = os.path.join(os.getcwd(), 'build', a, vcpkg_overlay_triplet, 'unit-tests')
         if os.path.isfile(unittest_path):
-            if os.name == 'nt':
-                if opencppcoverage_path is None:
-                    result = subprocess.call(unittest_path, shell=True)
-                else:
-                    result = subprocess.call((
-                        '{opencppcoverage_path} '
-                        '--cover_children '
-                        '--optimized_build '
-                        '--sources {sources} '
-                        '--export_type=cobertura:cobertura.xml '
-                        '-- '
-                        '{unittest_path} '
-                        '--gtest_output=xml:gtest.xml'
-                        ).format(
-                            opencppcoverage_path=opencppcoverage_path,
-                            sources=os.getcwd(),
-                            unittest_path=unittest_path
-                            ), shell=True)
+            if qemu_command is None:
+                result = subprocess.call(unittest_path, shell=True)
             else:
-                if qemu_command is None:
-                    result = subprocess.call(unittest_path, shell=True)
-                else:
-                    result = subprocess.call((
-                        '{qemu_command} '
-                        '{unittest_path}'
-                        ).format(
-                            unittest_path=unittest_path,
-                            qemu_command=qemu_command
-                            ), shell=True)
+                result = subprocess.call((
+                    '{qemu_command} '
+                    '{unittest_path}'
+                    ).format(
+                        unittest_path=unittest_path,
+                        qemu_command=qemu_command
+                        ), shell=True)
         if result != 0:
             print('Failed to run unit tests for ' + a)
             sys.exit(1)

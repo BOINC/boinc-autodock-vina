@@ -40,21 +40,6 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Download OpenCppCoverage
-        uses: suisei-cn/actions-download-file@v1
-        if: success()
-        id: DownloadOpenCppCoverage
-        with:
-          url: "https://opencppcoverage.gallerycdn.vsassets.io/extensions/opencppcoverage/opencppcoverageplugin/0.9.7.1/1581265346391/OpenCppCoverage-0.9.7.1.vsix"
-          target: ${{ github.workspace }}\temp\
-
-      - name: Unzip OpenCppCoverage
-        if: success()
-        uses: DuckSoft/extract-7z-action@v1.0
-        with:
-          pathSource: ${{ github.workspace }}\temp\OpenCppCoverage-0.9.7.1.vsix
-          pathTarget: ${{ github.workspace }}\temp\OpenCppCoverage
-
       - name: Setup msbuild
         uses: microsoft/setup-msbuild@v1
 
@@ -77,13 +62,9 @@ jobs:
         if: ${{ success() }}
         run: python3 build.py -nt -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
 
-      - name: Test x64
-        if: ${{ success() && matrix.configuration == 'x64-windows-static' }}
-        run: python3 build.py -nb -occ=${{ github.workspace }}\temp\OpenCppCoverage\OpenCppCoverage-x64\OpenCppCoverage.exe -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
-
-      - name: Test x86
-        if: ${{ success()  && matrix.configuration == 'x86-windows-static' }}
-        run: python3 build.py -nb -occ=${{ github.workspace }}\temp\OpenCppCoverage\OpenCppCoverage-x86\OpenCppCoverage.exe -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
+      - name: Test
+        if: ${{ success() }}
+        run: python3 build.py -nb -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
 
       - name: Upload artifacts
         if: ${{ success()}}
@@ -93,13 +74,6 @@ jobs:
           path: |
             build/${{ matrix.app }}/${{ matrix.configuration }}/Release/boinc-autodock-vina.exe
             build/${{ matrix.app }}/${{ matrix.configuration }}/Release/config-validator.exe
-
-      - name: Upload coverage report
-        if: ${{ success() }}
-        uses: codecov/codecov-action@v2
-        with:
-          fail_ci_if_error: true
-          verbose: false
 
       - name: Upload vcpkg binary cache
         if: ${{ success() }}

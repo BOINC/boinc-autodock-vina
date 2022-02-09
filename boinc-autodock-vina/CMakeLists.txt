@@ -73,13 +73,17 @@ add_library(jsoncons_helper
         ../common/src/jsoncons_helper/jsoncons_helper.cpp
 )
 
-add_executable(boinc-autodock-vina
-    src/boinc-autodock-vina/boinc-autodock-vina.cpp
-)
+if (NOT COVERAGE_REPORT)
+    add_executable(boinc-autodock-vina
+        src/boinc-autodock-vina/boinc-autodock-vina.cpp
+    )
+endif()
 
-add_executable(config-validator
-    src/config-validator/config-validator.cpp
-)
+if (NOT COVERAGE_REPORT)
+    add_executable(config-validator
+        src/config-validator/config-validator.cpp
+    )
+endif()
 
 add_executable(unit-tests
     src/unit-tests/config-tests.cpp
@@ -94,20 +98,26 @@ if (BUILD_WORK_GENERATOR)
     )
 endif()
 
-if (BUILD_WORK_GENERATOR)
+if (BUILD_WORK_GENERATOR AND NOT COVERAGE_REPORT)
     add_executable(work-generator
         src/work-generator/work-generator.cpp
     )
 endif()
 
-if (UNIX AND CMAKE_CXX_COMPILER_ID MATCHES "GCC")
+if (COVERAGE_REPORT)
     target_compile_options(unit-tests PRIVATE -g -O0 --coverage -fprofile-abs-path)
-    target_link_options(unit-tests PRIVATE --coverage)
-endif()
+    target_compile_options(config PRIVATE -g -O0 --coverage -fprofile-abs-path)
+    target_compile_options(input-config PRIVATE -g -O0 --coverage -fprofile-abs-path)
+    target_compile_options(zip-helper PRIVATE -g -O0 --coverage -fprofile-abs-path)
+    target_compile_options(calculate PRIVATE -g -O0 --coverage -fprofile-abs-path)
+    target_compile_options(jsoncons_helper PRIVATE -g -O0 --coverage -fprofile-abs-path)
 
-if (APPLE AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    target_compile_options(unit-tests PRIVATE -g -O0 -fcoverage-mapping -fprofile-instr-generate)
-    target_link_options(unit-tests PRIVATE -fcoverage-mapping -fprofile-instr-generate)
+    target_link_options(unit-tests PRIVATE --coverage)
+    target_link_options(config PRIVATE --coverage)
+    target_link_options(input-config PRIVATE --coverage)
+    target_link_options(zip-helper PRIVATE --coverage)
+    target_link_options(calculate PRIVATE --coverage)
+    target_link_options(jsoncons_helper PRIVATE --coverage)
 endif()
 
 set(BOINC_AUTODOCK_VINA_VERSION "0.1.0")
@@ -115,17 +125,21 @@ if (NOT DEFINED BOINC_APPS_GIT_REVISION)
     set(BOINC_APPS_GIT_REVISION "unknown")
 endif()
 
-target_compile_definitions(boinc-autodock-vina
-    PRIVATE
-        -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
-        -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
-)
+if (NOT COVERAGE_REPORT)
+    target_compile_definitions(boinc-autodock-vina
+        PRIVATE
+            -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
+            -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
+    )
+endif()
 
-target_compile_definitions(config-validator
-    PRIVATE
-        -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
-        -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
-)
+if (NOT COVERAGE_REPORT)
+    target_compile_definitions(config-validator
+        PRIVATE
+            -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
+            -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
+    )
+endif()
 
 target_compile_definitions(unit-tests
     PRIVATE
@@ -133,7 +147,7 @@ target_compile_definitions(unit-tests
         -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
 )
 
-if (BUILD_WORK_GENERATOR)
+if (BUILD_WORK_GENERATOR AND NOT COVERAGE_REPORT)
     target_compile_definitions(work-generator
         PRIVATE
             -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
@@ -167,17 +181,21 @@ target_compile_definitions(jsoncons_helper
         -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
 )
 
-target_include_directories(boinc-autodock-vina
-    PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}/src
-        ${CMAKE_CURRENT_LIST_DIR}/../common/src
-)
+if (NOT COVERAGE_REPORT)
+    target_include_directories(boinc-autodock-vina
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/src
+            ${CMAKE_CURRENT_LIST_DIR}/../common/src
+    )
+endif()
 
-target_include_directories(config-validator
-    PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}/src
-        ${CMAKE_CURRENT_LIST_DIR}/../common/src
-)
+if (NOT COVERAGE_REPORT)
+    target_include_directories(config-validator
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/src
+            ${CMAKE_CURRENT_LIST_DIR}/../common/src
+    )
+endif()
 
 target_include_directories(unit-tests
     PRIVATE
@@ -185,7 +203,7 @@ target_include_directories(unit-tests
         ${CMAKE_CURRENT_LIST_DIR}/../common/src
 )
 
-if (BUILD_WORK_GENERATOR)
+if (BUILD_WORK_GENERATOR AND NOT COVERAGE_REPORT)
     target_include_directories(work-generator
         PRIVATE
             ${CMAKE_CURRENT_LIST_DIR}/src
@@ -224,40 +242,44 @@ target_include_directories(jsoncons_helper
         ${CMAKE_CURRENT_LIST_DIR}/../common/src
 )
 
-target_link_libraries(boinc-autodock-vina
-    PRIVATE
-        config
-        calculate
-        unofficial::boinc::boinc
-        unofficial::boinc::boincapi
-        autodock-vina::autodock-vina::vina
-        autodock-vina::autodock-vina::vina_split
-        OpenSSL::SSL
-        OpenSSL::Crypto
-        Boost::boost
-        Boost::filesystem
-        Boost::log
-        Boost::math_tr1
-        Boost::program_options
-        Boost::random
-        Boost::serialization
-        Boost::thread
-        Boost::timer
-        magic_enum::magic_enum
-        jsoncons
-        jsoncons_helper
-        zip-helper
-        libzip::zip
-)
+if (NOT COVERAGE_REPORT)
+    target_link_libraries(boinc-autodock-vina
+        PRIVATE
+            config
+            calculate
+            unofficial::boinc::boinc
+            unofficial::boinc::boincapi
+            autodock-vina::autodock-vina::vina
+            autodock-vina::autodock-vina::vina_split
+            OpenSSL::SSL
+            OpenSSL::Crypto
+            Boost::boost
+            Boost::filesystem
+            Boost::log
+            Boost::math_tr1
+            Boost::program_options
+            Boost::random
+            Boost::serialization
+            Boost::thread
+            Boost::timer
+            magic_enum::magic_enum
+            jsoncons
+            jsoncons_helper
+            zip-helper
+            libzip::zip
+    )
+endif()
 
-target_link_libraries(config-validator
-    PRIVATE
-        config
-        magic_enum::magic_enum
-        jsoncons
-        jsoncons_helper
-        zip-helper
-)
+if (NOT COVERAGE_REPORT)
+    target_link_libraries(config-validator
+        PRIVATE
+            config
+            magic_enum::magic_enum
+            jsoncons
+            jsoncons_helper
+            zip-helper
+    )
+endif()
 
 set (UNIT_TEST_LINK_LIBRARIES
     config
@@ -294,7 +316,7 @@ target_link_libraries(unit-tests
         ${UNIT_TEST_LINK_LIBRARIES}
 )
 
-if (BUILD_WORK_GENERATOR)
+if (BUILD_WORK_GENERATOR AND NOT COVERAGE_REPORT)
     target_link_libraries(work-generator
         PRIVATE
             config
