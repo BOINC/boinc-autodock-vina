@@ -7,6 +7,11 @@
         "boinc",
         "gtest",
         "jsoncons",
-        "magic-enum"
+        "magic-enum",
+        "boost-process",
+        {
+            "name": "libzip",
+            "default-features": false
+        }
     ]
 }

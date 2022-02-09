@@ -1,6 +1,6 @@
 # This file is part of BOINC.
 # https://boinc.berkeley.edu
-# Copyright (C) 2021 University of California
+# Copyright (C) 2022 University of California
 #
 # BOINC is free software; you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License
@@ -36,7 +36,7 @@ jobs:
     steps:
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '12.2'
+          xcode-version: '12.5.1'
       - uses: actions/checkout@v2
 
       - name: Configure Python
@@ -71,7 +71,6 @@ jobs:
           path: |
             build/${{ matrix.app }}/${{ matrix.configuration }}/boinc-autodock-vina
             build/${{ matrix.app }}/${{ matrix.configuration }}/config-validator
-            build/${{ matrix.app }}/${{ matrix.configuration }}/unit-tests
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v2

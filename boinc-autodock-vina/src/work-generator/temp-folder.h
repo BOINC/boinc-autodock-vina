@@ -18,11 +18,20 @@
 #pragma once
 
 #include <filesystem>
-#include <functional>
 
-#include "common/config.h"
-
-class calculator {
+class temp_folder {
 public:
-    [[nodiscard]] static bool calculate(const config& config, const int& ncpus, const std::function<void(double)>& progress_callback);
+    explicit temp_folder(const std::filesystem::path& working_directory);
+    ~temp_folder();
+    const std::filesystem::path& operator()() const;
+
+    temp_folder(temp_folder&&) = delete;
+    temp_folder& operator=(temp_folder&&) = delete;
+    temp_folder(const temp_folder&) = delete;
+    temp_folder& operator=(const temp_folder&) = delete;
+
+    [[nodiscard]] static std::string get_temp_folder_name();
+
+private:
+    const std::filesystem::path folder;
 };

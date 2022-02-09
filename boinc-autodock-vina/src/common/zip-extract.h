@@ -18,11 +18,8 @@
 #pragma once
 
 #include <filesystem>
-#include <functional>
 
-#include "common/config.h"
-
-class calculator {
+class zip_extract final {
 public:
-    [[nodiscard]] static bool calculate(const config& config, const int& ncpus, const std::function<void(double)>& progress_callback);
+    static bool extract(const std::filesystem::path& zip_file, const std::filesystem::path& target);
 };
