@@ -55,8 +55,8 @@ List of available parameters:
 - `-t` - triplet of the target platform. Available values are shown in the table above (OS Support). Default on linux is `x64-linux-static`, on osx is `x64-osx-static`, on windows is `x64-windows-static`.
 - `-nb` - perform no build (only unit-tests will be executed). If no unit-tests were build, script will fail with an error.
 - `-nt` - run no tests after build.
-- `-occ` - path to the OpenCppCoverage tool. If not specified, script will run unit-tests with no coverage report. This is windows specific option and will be ignored on any other OS.
 - `-qemu` - path to the QEMU tool. If not specified, script will run unit-tests with no QEMU emulation. This is linux and macos specific option and will be ignored on any other OS.
+- `-cr` - include coverage report
 
 ### Examples:
 
