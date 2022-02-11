@@ -40,6 +40,9 @@ comment:
 
 flags:
   # filter the folder(s) you wish to measure by that flag
+  common:
+    paths:
+      - common/src/
   boinc-autodock-vina:
     paths:
       - boinc-autodock-vina/src/
