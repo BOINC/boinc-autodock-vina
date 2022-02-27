@@ -41,7 +41,7 @@ class json_save {
 public:
     virtual ~json_save() = default;
 
-    [[nodiscard]] virtual bool save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const = 0;
+    [[nodiscard]] virtual bool save(json_encoder_helper& json, const std::filesystem::path& working_directory) const = 0;
 };
 
 class input final : public json_load, public json_save {
@@ -53,7 +53,7 @@ public:
     scoring scoring = scoring::vina;
 
     [[nodiscard]] bool load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) override;
-    [[nodiscard]] bool save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const override;
+    [[nodiscard]] bool save(json_encoder_helper& json, const std::filesystem::path& working_directory) const override;
 };
 
 class search_area final : public json_load, public json_save {
@@ -68,7 +68,7 @@ public:
     bool autobox = false;
 
     [[nodiscard]] bool load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) override;
-    [[nodiscard]] bool save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const override;
+    [[nodiscard]] bool save(json_encoder_helper& json, const std::filesystem::path& working_directory) const override;
 };
 
 class output final : public json_load, public json_save {
@@ -78,7 +78,7 @@ public:
     std::string write_maps;
 
     [[nodiscard]] bool load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) override;
-    [[nodiscard]] bool save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const override;
+    [[nodiscard]] bool save(json_encoder_helper& json, const std::filesystem::path& working_directory) const override;
 };
 
 class advanced final : public json_load, public json_save {
@@ -107,7 +107,7 @@ public:
     double weight_glue = 50.000000;
 
     [[nodiscard]] bool load(const jsoncons::basic_json<char>& json, [[maybe_unused]] const std::filesystem::path& working_directory) override;
-    [[nodiscard]] bool save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const override;
+    [[nodiscard]] bool save(json_encoder_helper& json, const std::filesystem::path& working_directory) const override;
 };
 
 class misc final : public json_load, public json_save {
@@ -121,7 +121,7 @@ public:
     double spacing = 0.375;
 
     [[nodiscard]] bool load(const jsoncons::basic_json<char>& json, [[maybe_unused]] const std::filesystem::path& working_directory) override;
-    [[nodiscard]] bool save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const override;
+    [[nodiscard]] bool save(json_encoder_helper& json, const std::filesystem::path& working_directory) const override;
 };
 
 class config {

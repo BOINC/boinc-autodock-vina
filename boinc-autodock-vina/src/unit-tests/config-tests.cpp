@@ -43,7 +43,7 @@ TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_Receptor) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("input");
@@ -55,19 +55,19 @@ TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_Receptor) {
     json_encoder.value("flex", "flex_sample");
     json_encoder.begin_array("ligands");
     json_encoder.value("ligand_sample2");
-    json_encoder.end_array();
+    json_encoder.end_array("ligands");
     json_encoder.begin_array("batch");
     json_encoder.value("batch_sample2");
-    json_encoder.end_array();
-    json_encoder.end_object();
+    json_encoder.end_array("batch");
+    json_encoder.end_object("input");
     json_encoder.begin_object("search_area");
     json_encoder.value("maps", "maps_sample");
-    json_encoder.end_object();
+    json_encoder.end_object("search_area");
     json_encoder.begin_object("output");
     json_encoder.value("out", "out_sample");
     json_encoder.value("dir", "dir_sample");
     json_encoder.value("write_maps", "write_maps_sample");
-    json_encoder.end_object();
+    json_encoder.end_object("output");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -83,7 +83,7 @@ TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_Flex) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("input");
@@ -95,19 +95,19 @@ TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_Flex) {
 #endif
     json_encoder.begin_array("ligands");
     json_encoder.value("ligand_sample2");
-    json_encoder.end_array();
+    json_encoder.end_array("ligands");
     json_encoder.begin_array("batch");
     json_encoder.value("batch_sample2");
-    json_encoder.end_array();
-    json_encoder.end_object();
+    json_encoder.end_array("batch");
+    json_encoder.end_object("input");
     json_encoder.begin_object("search_area");
     json_encoder.value("maps", "maps_sample");
-    json_encoder.end_object();
+    json_encoder.end_object("search_area");
     json_encoder.begin_object("output");
     json_encoder.value("out", "out_sample");
     json_encoder.value("dir", "dir_sample");
     json_encoder.value("write_maps", "write_maps_sample");
-    json_encoder.end_object();
+    json_encoder.end_object("output");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -123,7 +123,7 @@ TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_Ligand) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("input");
@@ -135,19 +135,19 @@ TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_Ligand) {
 #else
     json_encoder.value("/home/test/ligand_sample");
 #endif
-    json_encoder.end_array();
+    json_encoder.end_array("ligands");
     json_encoder.begin_array("batch");
     json_encoder.value("batch_sample2");
-    json_encoder.end_array();
-    json_encoder.end_object();
+    json_encoder.end_array("batch");
+    json_encoder.end_object("input");
     json_encoder.begin_object("search_area");
     json_encoder.value("maps", "maps_sample");
-    json_encoder.end_object();
+    json_encoder.end_object("search_area");
     json_encoder.begin_object("output");
     json_encoder.value("out", "out_sample");
     json_encoder.value("dir", "dir_sample");
     json_encoder.value("write_maps", "write_maps_sample");
-    json_encoder.end_object();
+    json_encoder.end_object("output");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -164,7 +164,7 @@ TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_Batch) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("input");
@@ -172,23 +172,23 @@ TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_Batch) {
     json_encoder.value("flex", "flex_sample");
     json_encoder.begin_array("ligands");
     json_encoder.value("ligand_sample");
-    json_encoder.end_array();
+    json_encoder.end_array("ligands");
     json_encoder.begin_array("batch");
 #ifdef WIN32
     json_encoder.value("C:\\test\\batch_sample");
 #else
     json_encoder.value("/home/test/batch_sample");
 #endif
-    json_encoder.end_array();
-    json_encoder.end_object();
+    json_encoder.end_array("batch");
+    json_encoder.end_object("input");
     json_encoder.begin_object("search_area");
     json_encoder.value("maps", "maps_sample");
-    json_encoder.end_object();
+    json_encoder.end_object("search_area");
     json_encoder.begin_object("output");
     json_encoder.value("out", "out_sample");
     json_encoder.value("dir", "dir_sample");
     json_encoder.value("write_maps", "write_maps_sample");
-    json_encoder.end_object();
+    json_encoder.end_object("output");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -204,7 +204,7 @@ TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_Maps) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("input");
@@ -212,23 +212,23 @@ TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_Maps) {
     json_encoder.value("flex", "flex_sample");
     json_encoder.begin_array("ligands");
     json_encoder.value("ligand_sample");
-    json_encoder.end_array();
+    json_encoder.end_array("ligands");
     json_encoder.begin_array("batch");
     json_encoder.value("batch_sample2");
-    json_encoder.end_array();
-    json_encoder.end_object();
+    json_encoder.end_array("batch");
+    json_encoder.end_object("input");
     json_encoder.begin_object("search_area");
 #ifdef WIN32
     json_encoder.value("maps", "C:\\test\\maps_sample");
 #else
     json_encoder.value("maps", "/home/test/maps_sample");
 #endif
-    json_encoder.end_object();
+    json_encoder.end_object("search_area");
     json_encoder.begin_object("output");
     json_encoder.value("out", "out_sample");
     json_encoder.value("dir", "dir_sample");
     json_encoder.value("write_maps", "write_maps_sample");
-    json_encoder.end_object();
+    json_encoder.end_object("output");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -244,7 +244,7 @@ TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_Out) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("input");
@@ -252,14 +252,14 @@ TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_Out) {
     json_encoder.value("flex", "flex_sample");
     json_encoder.begin_array("ligands");
     json_encoder.value("ligand_sample2");
-    json_encoder.end_array();
+    json_encoder.end_array("ligands");
     json_encoder.begin_array("batch");
     json_encoder.value("batch_sample2");
-    json_encoder.end_array();
-    json_encoder.end_object();
+    json_encoder.end_array("batch");
+    json_encoder.end_object("input");
     json_encoder.begin_object("search_area");
     json_encoder.value("maps", "maps_sample");
-    json_encoder.end_object();
+    json_encoder.end_object("search_area");
     json_encoder.begin_object("output");
 #ifdef WIN32
     json_encoder.value("out", "C:\\test\\out_sample");
@@ -268,7 +268,7 @@ TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_Out) {
 #endif
     json_encoder.value("dir", "dir_sample");
     json_encoder.value("write_maps", "write_maps_sample");
-    json_encoder.end_object();
+    json_encoder.end_object("output");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -284,7 +284,7 @@ TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_Dir) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("input");
@@ -292,14 +292,14 @@ TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_Dir) {
     json_encoder.value("flex", "flex_sample");
     json_encoder.begin_array("ligands");
     json_encoder.value("ligand_sample2");
-    json_encoder.end_array();
+    json_encoder.end_array("ligands");
     json_encoder.begin_array("batch");
     json_encoder.value("batch_sample2");
-    json_encoder.end_array();
-    json_encoder.end_object();
+    json_encoder.end_array("batch");
+    json_encoder.end_object("input");
     json_encoder.begin_object("search_area");
     json_encoder.value("maps", "maps_sample");
-    json_encoder.end_object();
+    json_encoder.end_object("search_area");
     json_encoder.begin_object("output");
     json_encoder.value("out", "out_sample");
 #ifdef WIN32
@@ -308,7 +308,7 @@ TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_Dir) {
     json_encoder.value("dir", "/home/test/dir_sample");
 #endif
     json_encoder.value("write_maps", "write_maps_sample");
-    json_encoder.end_object();
+    json_encoder.end_object("output");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -324,7 +324,7 @@ TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_WriteMaps) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("input");
@@ -332,14 +332,14 @@ TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_WriteMaps) {
     json_encoder.value("flex", "flex_sample");
     json_encoder.begin_array("ligands");
     json_encoder.value("ligand_sample2");
-    json_encoder.end_array();
+    json_encoder.end_array("ligands");
     json_encoder.begin_array("batch");
     json_encoder.value("batch_sample2");
-    json_encoder.end_array();
-    json_encoder.end_object();
+    json_encoder.end_array("batch");
+    json_encoder.end_object("input");
     json_encoder.begin_object("search_area");
     json_encoder.value("maps", "maps_sample");
-    json_encoder.end_object();
+    json_encoder.end_object("search_area");
     json_encoder.begin_object("output");
     json_encoder.value("out", "out_sample");
     json_encoder.value("dir", "dir_sample");
@@ -348,7 +348,7 @@ TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_WriteMaps) {
 #else
     json_encoder.value("write_maps", "/home/test/write_maps_sample");
 #endif
-    json_encoder.end_object();
+    json_encoder.end_object("output");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -363,7 +363,7 @@ TEST_F(Config_UnitTests, LoadValidator) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("input");
@@ -372,13 +372,13 @@ TEST_F(Config_UnitTests, LoadValidator) {
     json_encoder.begin_array("ligands");
     json_encoder.value("ligand_sample1");
     json_encoder.value("ligand_sample2");
-    json_encoder.end_array();
+    json_encoder.end_array("ligands");
     json_encoder.begin_array("batch");
     json_encoder.value("batch_sample1");
     json_encoder.value("batch_sample2");
-    json_encoder.end_array();
+    json_encoder.end_array("batch");
     json_encoder.value("scoring", std::string(magic_enum::enum_name(scoring::vinardo)));
-    json_encoder.end_object();
+    json_encoder.end_object("input");
     json_encoder.begin_object("search_area");
     json_encoder.value("maps", "maps_sample");
     json_encoder.value("center_x", 0.123456);
@@ -388,12 +388,12 @@ TEST_F(Config_UnitTests, LoadValidator) {
     json_encoder.value("size_y", 0.0);
     json_encoder.value("size_z", -0.000135);
     json_encoder.value("autobox", true);
-    json_encoder.end_object();
+    json_encoder.end_object("search_area");
     json_encoder.begin_object("output");
     json_encoder.value("out", "out_sample");
     json_encoder.value("dir", "dir_sample");
     json_encoder.value("write_maps", "write_maps_sample");
-    json_encoder.end_object();
+    json_encoder.end_object("output");
     json_encoder.begin_object("advanced");
     json_encoder.value("score_only", true);
     json_encoder.value("local_only", true);
@@ -417,7 +417,7 @@ TEST_F(Config_UnitTests, LoadValidator) {
     json_encoder.value("weight_ad4_dsolv", -1.064235);
     json_encoder.value("weight_ad4_rot", 1.064235);
     json_encoder.value("weight_glue", 1.024653);
-    json_encoder.end_object();
+    json_encoder.end_object("advanced");
     json_encoder.begin_object("misc");
     json_encoder.value("seed", static_cast<uint64_t>(2ull));
     json_encoder.value("exhaustiveness", static_cast<uint64_t>(3ull));
@@ -426,7 +426,7 @@ TEST_F(Config_UnitTests, LoadValidator) {
     json_encoder.value("min_rmsd", 2.0);
     json_encoder.value("energy_range", -2.0);
     json_encoder.value("spacing", -0.123);
-    json_encoder.end_object();
+    json_encoder.end_object("misc");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -505,15 +505,15 @@ TEST_F(Config_UnitTests, FailOn_output_out_NotSpecified) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("input");
     json_encoder.value("receptor", "receptor_sample");
     json_encoder.begin_array("ligands");
     json_encoder.value("ligand_sample1");
-    json_encoder.end_array();
-    json_encoder.end_object();
+    json_encoder.end_array("ligands");
+    json_encoder.end_object("input");
     json_encoder.begin_object("search_area");
     json_encoder.value("center_x", 0.123456);
     json_encoder.value("center_y", 0.654321);
@@ -521,7 +521,7 @@ TEST_F(Config_UnitTests, FailOn_output_out_NotSpecified) {
     json_encoder.value("size_x", -0.654321);
     json_encoder.value("size_y", 0.0);
     json_encoder.value("size_z", -0.000135);
-    json_encoder.end_object();
+    json_encoder.end_object("search_area");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -542,7 +542,7 @@ TEST_F(Config_UnitTests, CheckThatReceptorAndLigandFilesArePresent) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("input");
@@ -550,8 +550,8 @@ TEST_F(Config_UnitTests, CheckThatReceptorAndLigandFilesArePresent) {
     json_encoder.begin_array("ligands");
     json_encoder.value("ligand_sample1");
     json_encoder.value("ligand_sample2");
-    json_encoder.end_array();
-    json_encoder.end_object();
+    json_encoder.end_array("ligands");
+    json_encoder.end_object("input");
     json_encoder.begin_object("search_area");
     json_encoder.value("center_x", 0.123456);
     json_encoder.value("center_y", 0.654321);
@@ -559,10 +559,10 @@ TEST_F(Config_UnitTests, CheckThatReceptorAndLigandFilesArePresent) {
     json_encoder.value("size_x", -0.654321);
     json_encoder.value("size_y", 0.0);
     json_encoder.value("size_z", -0.000135);
-    json_encoder.end_object();
+    json_encoder.end_object("search_area");
     json_encoder.begin_object("output");
     json_encoder.value("out", "out_sample");
-    json_encoder.end_object();
+    json_encoder.end_object("output");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -601,7 +601,7 @@ TEST_F(Config_UnitTests, CheckThatFlexFileIsPresent) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("input");
@@ -609,8 +609,8 @@ TEST_F(Config_UnitTests, CheckThatFlexFileIsPresent) {
     json_encoder.value("flex", "flex_sample");
     json_encoder.begin_array("ligands");
     json_encoder.value("ligand_sample1");
-    json_encoder.end_array();
-    json_encoder.end_object();
+    json_encoder.end_array("ligands");
+    json_encoder.end_object("input");
     json_encoder.begin_object("search_area");
     json_encoder.value("center_x", 0.123456);
     json_encoder.value("center_y", 0.654321);
@@ -618,10 +618,10 @@ TEST_F(Config_UnitTests, CheckThatFlexFileIsPresent) {
     json_encoder.value("size_x", -0.654321);
     json_encoder.value("size_y", 0.0);
     json_encoder.value("size_z", -0.000135);
-    json_encoder.end_object();
+    json_encoder.end_object("search_area");
     json_encoder.begin_object("output");
     json_encoder.value("out", "out_sample");
-    json_encoder.end_object();
+    json_encoder.end_object("output");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -650,7 +650,7 @@ TEST_F(Config_UnitTests, CheckThatReceptorAndBatchFilesArePresent) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("input");
@@ -658,8 +658,8 @@ TEST_F(Config_UnitTests, CheckThatReceptorAndBatchFilesArePresent) {
     json_encoder.begin_array("batch");
     json_encoder.value("batch_sample1");
     json_encoder.value("batch_sample2");
-    json_encoder.end_array();
-    json_encoder.end_object();
+    json_encoder.end_array("batch");
+    json_encoder.end_object("input");
     json_encoder.begin_object("search_area");
     json_encoder.value("center_x", 0.123456);
     json_encoder.value("center_y", 0.654321);
@@ -667,11 +667,11 @@ TEST_F(Config_UnitTests, CheckThatReceptorAndBatchFilesArePresent) {
     json_encoder.value("size_x", -0.654321);
     json_encoder.value("size_y", 0.0);
     json_encoder.value("size_z", -0.000135);
-    json_encoder.end_object();
+    json_encoder.end_object("search_area");
     json_encoder.begin_object("output");
     json_encoder.value("out", "out_sample");
     json_encoder.value("dir", "dir_sample");
-    json_encoder.end_object();
+    json_encoder.end_object("output");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -710,14 +710,14 @@ TEST_F(Config_UnitTests, CheckThatMapsFilesArePresent) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("input");
     json_encoder.begin_array("ligands");
     json_encoder.value("ligand_sample1");
-    json_encoder.end_array();
-    json_encoder.end_object();
+    json_encoder.end_array("ligands");
+    json_encoder.end_object("input");
     json_encoder.begin_object("search_area");
     json_encoder.value("maps", "receptor_sample");
     json_encoder.value("center_x", 0.123456);
@@ -726,10 +726,10 @@ TEST_F(Config_UnitTests, CheckThatMapsFilesArePresent) {
     json_encoder.value("size_x", -0.654321);
     json_encoder.value("size_y", 0.0);
     json_encoder.value("size_z", -0.000135);
-    json_encoder.end_object();
+    json_encoder.end_object("search_area");
     json_encoder.begin_object("output");
     json_encoder.value("out", "out_sample");
-    json_encoder.end_object();
+    json_encoder.end_object("output");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -790,7 +790,7 @@ TEST_F(Config_UnitTests, TestConfigsEqualAfterReadWrite) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("input");
@@ -799,13 +799,13 @@ TEST_F(Config_UnitTests, TestConfigsEqualAfterReadWrite) {
     json_encoder.begin_array("ligands");
     json_encoder.value("ligand_sample1");
     json_encoder.value("ligand_sample2");
-    json_encoder.end_array();
+    json_encoder.end_array("ligands");
     json_encoder.begin_array("batch");
     json_encoder.value("batch_sample1");
     json_encoder.value("batch_sample2");
-    json_encoder.end_array();
+    json_encoder.end_array("batch");
     json_encoder.value("scoring", std::string(magic_enum::enum_name(scoring::vinardo)));
-    json_encoder.end_object();
+    json_encoder.end_object("input");
     json_encoder.begin_object("search_area");
     json_encoder.value("maps", "maps_sample");
     json_encoder.value("center_x", 0.123456);
@@ -815,12 +815,12 @@ TEST_F(Config_UnitTests, TestConfigsEqualAfterReadWrite) {
     json_encoder.value("size_y", 0.0);
     json_encoder.value("size_z", -0.000135);
     json_encoder.value("autobox", true);
-    json_encoder.end_object();
+    json_encoder.end_object("search_area");
     json_encoder.begin_object("output");
     json_encoder.value("out", "out_sample");
     json_encoder.value("dir", "dir_sample");
     json_encoder.value("write_maps", "write_maps_sample");
-    json_encoder.end_object();
+    json_encoder.end_object("output");
     json_encoder.begin_object("advanced");
     json_encoder.value("score_only", true);
     json_encoder.value("local_only", true);
@@ -844,7 +844,7 @@ TEST_F(Config_UnitTests, TestConfigsEqualAfterReadWrite) {
     json_encoder.value("weight_ad4_dsolv", -1.064235);
     json_encoder.value("weight_ad4_rot", 1.064235);
     json_encoder.value("weight_glue", 1.024653);
-    json_encoder.end_object();
+    json_encoder.end_object("advanced");
     json_encoder.begin_object("misc");
     json_encoder.value("seed", static_cast<uint64_t>(2ull));
     json_encoder.value("exhaustiveness", static_cast<uint64_t>(3ull));
@@ -853,7 +853,7 @@ TEST_F(Config_UnitTests, TestConfigsEqualAfterReadWrite) {
     json_encoder.value("min_rmsd", 2.0);
     json_encoder.value("energy_range", -2.0);
     json_encoder.value("spacing", -0.123);
-    json_encoder.end_object();
+    json_encoder.end_object("misc");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -984,14 +984,14 @@ TEST_F(Config_UnitTests, TestGetOutFiles) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("output");
     json_encoder.value("out", "out_sample");
     json_encoder.value("dir", "dir_sample");
     json_encoder.value("write_maps", "write_maps/sample");
-    json_encoder.end_object();
+    json_encoder.end_object("output");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();

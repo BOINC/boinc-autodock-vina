@@ -34,15 +34,15 @@ TEST_F(InputConfig_UnitTests, TestThatWorkGeneratorIsAbleToProcessAlreadyPrepare
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("input");
     json_encoder.value("receptor", "receptor_sample");
     json_encoder.begin_array("ligands");
     json_encoder.value("ligand_sample1");
-    json_encoder.end_array();
-    json_encoder.end_object();
+    json_encoder.end_array("ligands");
+    json_encoder.end_object("input");
     json_encoder.begin_object("search_area");
     json_encoder.value("center_x", 0.123456);
     json_encoder.value("center_y", 0.654321);
@@ -50,10 +50,10 @@ TEST_F(InputConfig_UnitTests, TestThatWorkGeneratorIsAbleToProcessAlreadyPrepare
     json_encoder.value("size_x", -0.654321);
     json_encoder.value("size_y", 0.0);
     json_encoder.value("size_z", -0.000135);
-    json_encoder.end_object();
+    json_encoder.end_object("search_area");
     json_encoder.begin_object("output");
     json_encoder.value("out", "out_sample");
-    json_encoder.end_object();
+    json_encoder.end_object("output");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -104,15 +104,15 @@ TEST_F(InputConfig_UnitTests, TestThatGeneratorAddsRandomSeedIfNotSet) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("input");
     json_encoder.value("receptor", "receptor_sample");
     json_encoder.begin_array("ligands");
     json_encoder.value("ligand_sample1");
-    json_encoder.end_array();
-    json_encoder.end_object();
+    json_encoder.end_array("ligands");
+    json_encoder.end_object("input");
     json_encoder.begin_object("search_area");
     json_encoder.value("center_x", 0.123456);
     json_encoder.value("center_y", 0.654321);
@@ -120,10 +120,10 @@ TEST_F(InputConfig_UnitTests, TestThatGeneratorAddsRandomSeedIfNotSet) {
     json_encoder.value("size_x", -0.654321);
     json_encoder.value("size_y", 0.0);
     json_encoder.value("size_z", -0.000135);
-    json_encoder.end_object();
+    json_encoder.end_object("search_area");
     json_encoder.begin_object("output");
     json_encoder.value("out", "out_sample");
-    json_encoder.end_object();
+    json_encoder.end_object("output");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -175,15 +175,15 @@ TEST_F(InputConfig_UnitTests, TestThatGeneratorPreservesRandomSeedIfSet) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("input");
     json_encoder.value("receptor", "receptor_sample");
     json_encoder.begin_array("ligands");
     json_encoder.value("ligand_sample1");
-    json_encoder.end_array();
-    json_encoder.end_object();
+    json_encoder.end_array("ligands");
+    json_encoder.end_object("input");
     json_encoder.begin_object("search_area");
     json_encoder.value("center_x", 0.123456);
     json_encoder.value("center_y", 0.654321);
@@ -191,13 +191,13 @@ TEST_F(InputConfig_UnitTests, TestThatGeneratorPreservesRandomSeedIfSet) {
     json_encoder.value("size_x", -0.654321);
     json_encoder.value("size_y", 0.0);
     json_encoder.value("size_z", -0.000135);
-    json_encoder.end_object();
+    json_encoder.end_object("search_area");
     json_encoder.begin_object("output");
     json_encoder.value("out", "out_sample");
-    json_encoder.end_object();
+    json_encoder.end_object("output");
     json_encoder.begin_object("misc");
     json_encoder.value("seed", static_cast<uint64_t>(1234567890ull));
-    json_encoder.end_object();
+    json_encoder.end_object("misc");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -249,15 +249,15 @@ TEST_F(InputConfig_UnitTests, ValidateGetFilesProcessedFunction) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("input");
     json_encoder.value("receptor", "receptor_sample");
     json_encoder.begin_array("ligands");
     json_encoder.value("ligand_sample1");
-    json_encoder.end_array();
-    json_encoder.end_object();
+    json_encoder.end_array("ligands");
+    json_encoder.end_object("input");
     json_encoder.begin_object("search_area");
     json_encoder.value("center_x", 0.123456);
     json_encoder.value("center_y", 0.654321);
@@ -265,10 +265,10 @@ TEST_F(InputConfig_UnitTests, ValidateGetFilesProcessedFunction) {
     json_encoder.value("size_x", -0.654321);
     json_encoder.value("size_y", 0.0);
     json_encoder.value("size_z", -0.000135);
-    json_encoder.end_object();
+    json_encoder.end_object("search_area");
     json_encoder.begin_object("output");
     json_encoder.value("out", "out_sample");
-    json_encoder.end_object();
+    json_encoder.end_object("output");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -341,7 +341,7 @@ TEST_F(InputConfig_UnitTests, FailOnAbsolutePathInReceptors) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("prepare_receptors");
@@ -351,8 +351,8 @@ TEST_F(InputConfig_UnitTests, FailOnAbsolutePathInReceptors) {
 #else
     json_encoder.value("/home/test/receptor_sample");
 #endif
-    json_encoder.end_array();
-    json_encoder.end_object();
+    json_encoder.end_array("receptors");
+    json_encoder.end_object("prepare_receptors");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -371,7 +371,7 @@ TEST_F(InputConfig_UnitTests, CheckThatReceptorFileIsPresent) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("prepare_receptors");
@@ -381,8 +381,8 @@ TEST_F(InputConfig_UnitTests, CheckThatReceptorFileIsPresent) {
 #else
     json_encoder.value("receptor_sample");
 #endif
-    json_encoder.end_array();
-    json_encoder.end_object();
+    json_encoder.end_array("receptors");
+    json_encoder.end_object("prepare_receptors");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -400,20 +400,20 @@ TEST_F(InputConfig_UnitTests, ValidatePrepareReceptorsValues) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("prepare_receptors");
     json_encoder.begin_array("receptors");
     json_encoder.value("receptor_sample");
-    json_encoder.end_array();
+    json_encoder.end_array("receptors");
     json_encoder.value("repair", std::string(magic_enum::enum_name(repair::bonds_hydrogens)));
     json_encoder.begin_array("preserves");
     json_encoder.value("test");
-    json_encoder.end_array();
+    json_encoder.end_array("preserves");
     json_encoder.value("cleanup", std::string(magic_enum::enum_name(cleanup::nonstdres)));
     json_encoder.value("delete_nonstd_residue", true);
-    json_encoder.end_object();
+    json_encoder.end_object("prepare_receptors");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -452,12 +452,12 @@ TEST_F(InputConfig_UnitTests, FailOnNoReceptorSpecidiedWhenStructureIsNotEmpty) 
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("prepare_receptors");
     json_encoder.value("repair", std::string(magic_enum::enum_name(repair::bonds_hydrogens)));
-    json_encoder.end_object();
+    json_encoder.end_object("prepare_receptors");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -476,7 +476,7 @@ TEST_F(InputConfig_UnitTests, FailOnAbsolutePathInLigand) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("prepare_ligands");
@@ -485,7 +485,7 @@ TEST_F(InputConfig_UnitTests, FailOnAbsolutePathInLigand) {
 #else
     json_encoder.value("ligand", "/home/test/ligand_sample");
 #endif
-    json_encoder.end_object();
+    json_encoder.end_object("prepare_ligands");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -504,7 +504,7 @@ TEST_F(InputConfig_UnitTests, FailOnAbsolutePathInSelectedLigands) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("prepare_ligands");
@@ -515,8 +515,8 @@ TEST_F(InputConfig_UnitTests, FailOnAbsolutePathInSelectedLigands) {
 #else
     json_encoder.value("/home/test/ligand_1");
 #endif
-    json_encoder.end_array();
-    json_encoder.end_object();
+    json_encoder.end_array("selected_ligands");
+    json_encoder.end_object("prepare_ligands");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -538,7 +538,7 @@ TEST_F(InputConfig_UnitTests, FailOnNoLigandSpecifiedWhenStructureIsNotEmpty) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("prepare_ligands");
@@ -548,8 +548,8 @@ TEST_F(InputConfig_UnitTests, FailOnNoLigandSpecifiedWhenStructureIsNotEmpty) {
 #else
     json_encoder.value("ligand_1");
 #endif
-    json_encoder.end_array();
-    json_encoder.end_object();
+    json_encoder.end_array("selected_ligands");
+    json_encoder.end_object("prepare_ligands");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -568,12 +568,12 @@ TEST_F(InputConfig_UnitTests, CheckThatLigandFileIsPresent) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("prepare_ligands");
     json_encoder.value("ligand", "ligand_sample");
-    json_encoder.end_object();
+    json_encoder.end_object("prepare_ligands");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -592,15 +592,15 @@ TEST_F(InputConfig_UnitTests, FailWhenRigidityBondsSmartsPresentedWithoutRigidit
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("prepare_ligands");
     json_encoder.value("ligand", "ligand_sample");
     json_encoder.begin_array("rigidity_bonds_smarts");
     json_encoder.value("rbs_sample");
-    json_encoder.end_array();
-    json_encoder.end_object();
+    json_encoder.end_array("rigidity_bonds_smarts");
+    json_encoder.end_object("prepare_ligands");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -619,7 +619,7 @@ TEST_F(InputConfig_UnitTests, FailWhenRigidityBondsIndicesPresentedWithoutRigidi
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("prepare_ligands");
@@ -629,8 +629,8 @@ TEST_F(InputConfig_UnitTests, FailWhenRigidityBondsIndicesPresentedWithoutRigidi
     json_encoder.value(static_cast<uint64_t>(1ull));
     json_encoder.value(static_cast<uint64_t>(2ull));
     json_encoder.end_array();
-    json_encoder.end_array();
-    json_encoder.end_object();
+    json_encoder.end_array("rigidity_bonds_indices");
+    json_encoder.end_object("prepare_ligands");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -649,20 +649,20 @@ TEST_F(InputConfig_UnitTests, FailWhenRigidityBondsIndicesContainsOnlyOneIndex) 
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("prepare_ligands");
     json_encoder.value("ligand", "ligand_sample");
     json_encoder.begin_array("rigidity_bonds_smarts");
     json_encoder.value("rbs_sample");
-    json_encoder.end_array();
+    json_encoder.end_array("rigidity_bonds_smarts");
     json_encoder.begin_array("rigidity_bonds_indices");
     json_encoder.begin_array();
     json_encoder.value(static_cast<uint64_t>(1ull));
     json_encoder.end_array();
-    json_encoder.end_array();
-    json_encoder.end_object();
+    json_encoder.end_array("rigidity_bonds_indices");
+    json_encoder.end_object("prepare_ligands");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -681,14 +681,14 @@ TEST_F(InputConfig_UnitTests, TestThatRigidityBondsSmartsAndRigidityBondsIndices
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("prepare_ligands");
     json_encoder.value("ligand", "ligand_sample");
     json_encoder.begin_array("rigidity_bonds_smarts");
     json_encoder.value("rbs_sample");
-    json_encoder.end_array();
+    json_encoder.end_array("rigidity_bonds_smarts");
     json_encoder.begin_array("rigidity_bonds_indices");
     json_encoder.begin_array();
     json_encoder.value(static_cast<uint64_t>(1ull));
@@ -698,8 +698,8 @@ TEST_F(InputConfig_UnitTests, TestThatRigidityBondsSmartsAndRigidityBondsIndices
     json_encoder.value(static_cast<uint64_t>(1ull));
     json_encoder.value(static_cast<uint64_t>(2ull));
     json_encoder.end_array();
-    json_encoder.end_array();
-    json_encoder.end_object();
+    json_encoder.end_array("rigidity_bonds_indices");
+    json_encoder.end_object("prepare_ligands");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -718,7 +718,7 @@ TEST_F(InputConfig_UnitTests, FailOnAbsolutePathInMultimolPrefix) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("prepare_ligands");
@@ -729,7 +729,7 @@ TEST_F(InputConfig_UnitTests, FailOnAbsolutePathInMultimolPrefix) {
 #else
     json_encoder.value("multimol_prefix", "/home/test/prefix_sample");
 #endif
-    json_encoder.end_object();
+    json_encoder.end_object("prepare_ligands");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -748,7 +748,7 @@ TEST_F(InputConfig_UnitTests, FailOnIllegalSymbolInMultimolPrefix) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("prepare_ligands");
@@ -759,7 +759,7 @@ TEST_F(InputConfig_UnitTests, FailOnIllegalSymbolInMultimolPrefix) {
 #else
     json_encoder.value("multimol_prefix", "prefix/sample");
 #endif
-    json_encoder.end_object();
+    json_encoder.end_object("prepare_ligands");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();
@@ -778,7 +778,7 @@ TEST_F(InputConfig_UnitTests, ValidatePrepareLigandsValues) {
     json.open(dummy_json_file_path);
 
     jsoncons::json_stream_encoder jsoncons_encoder(json());
-    const json_encoder_helper json_encoder(jsoncons_encoder);
+    json_encoder_helper json_encoder(jsoncons_encoder);
 
     json_encoder.begin_object();
     json_encoder.begin_object("prepare_ligands");
@@ -786,7 +786,7 @@ TEST_F(InputConfig_UnitTests, ValidatePrepareLigandsValues) {
     json_encoder.begin_array("selected_ligands");
     json_encoder.value("ligand_1");
     json_encoder.value("ligand_2");
-    json_encoder.end_array();
+    json_encoder.end_array("selected_ligands");
     json_encoder.value("multimol", true);
     json_encoder.value("multimol_prefix", "prefix_");
     json_encoder.value("break_macrocycle", true);
@@ -796,18 +796,18 @@ TEST_F(InputConfig_UnitTests, ValidatePrepareLigandsValues) {
     json_encoder.value("flex", true);
     json_encoder.begin_array("rigidity_bonds_smarts");
     json_encoder.value("smart_1");
-    json_encoder.end_array();
+    json_encoder.end_array("rigidity_bonds_smarts");
     json_encoder.begin_array("rigidity_bonds_indices");
     json_encoder.begin_array();
     json_encoder.value(static_cast<uint64_t>(1ull));
     json_encoder.value(static_cast<uint64_t>(2ull));
     json_encoder.end_array();
-    json_encoder.end_array();
+    json_encoder.end_array("rigidity_bonds_indices");
     json_encoder.value("flexible_amides", true);
     json_encoder.value("double_bond_penalty", 100.0);
     json_encoder.value("remove_index_map", true);
     json_encoder.value("remove_smiles", true);
-    json_encoder.end_object();
+    json_encoder.end_object("prepare_ligands");
     json_encoder.end_object();
 
     jsoncons_encoder.flush();

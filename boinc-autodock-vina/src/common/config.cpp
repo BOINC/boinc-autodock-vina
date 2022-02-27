@@ -80,7 +80,7 @@ bool input::load(const jsoncons::basic_json<char>& json, const std::filesystem::
     return true;
 }
 
-bool input::save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const {
+bool input::save(json_encoder_helper& json, const std::filesystem::path& working_directory) const {
     const auto& filename_from_file = [](const auto& file) -> auto {
         return std::filesystem::path(file).filename().string();
     };
@@ -115,7 +115,7 @@ bool input::save(const json_encoder_helper& json, const std::filesystem::path& w
                 return false;
             }
         }
-        if (!json.end_array()) {
+        if (!json.end_array("ligands")) {
             error_message("ligands");
             return false;
         }
@@ -132,7 +132,7 @@ bool input::save(const json_encoder_helper& json, const std::filesystem::path& w
                 return false;
             }
         }
-        if (!json.end_array()) {
+        if (!json.end_array("batch")) {
             error_message("batch");
             return false;
         }
@@ -180,7 +180,7 @@ bool search_area::load(const jsoncons::basic_json<char>& json, const std::filesy
     return true;
 }
 
-bool search_area::save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const {
+bool search_area::save(json_encoder_helper& json, const std::filesystem::path& working_directory) const {
     const auto& filename_from_file = [](const auto& file) -> auto {
         return std::filesystem::path(file).filename().string();
     };
@@ -264,7 +264,7 @@ bool output::load(const jsoncons::basic_json<char>& json, const std::filesystem:
     return true;
 }
 
-bool output::save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const {
+bool output::save(json_encoder_helper& json, const std::filesystem::path& working_directory) const {
     const auto& filename_from_file = [](const auto& file) -> auto {
         return std::filesystem::path(file).filename().string();
     };
@@ -369,7 +369,7 @@ bool advanced::load(const jsoncons::basic_json<char>& json, [[maybe_unused]] con
     return true;
 }
 
-bool advanced::save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const {
+bool advanced::save(json_encoder_helper& json, const std::filesystem::path& working_directory) const {
     const auto& error_message = [](const auto& value) {
         std::cerr << "Failed to write [" << value << "] value to json file";
         std::cerr << std::endl;
@@ -514,7 +514,7 @@ bool misc::load(const jsoncons::basic_json<char>& json, [[maybe_unused]] const s
     return true;
 }
 
-bool misc::save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const {
+bool misc::save(json_encoder_helper& json, const std::filesystem::path& working_directory) const {
     const auto& error_message = [](const auto& value) {
         std::cerr << "Failed to write [" << value << "] value to json file";
         std::cerr << std::endl;
@@ -700,7 +700,7 @@ bool config::save(const std::filesystem::path& config_file_path) const {
         error_message("input");
         return false;
     }
-    if (!json.end_object()) {
+    if (!json.end_object("input")) {
         error_message("input");
         return false;
     }
@@ -713,7 +713,7 @@ bool config::save(const std::filesystem::path& config_file_path) const {
         error_message("search_area");
         return false;
     }
-    if (!json.end_object()) {
+    if (!json.end_object("search_area")) {
         error_message("search_area");
         return false;
     }
@@ -726,7 +726,7 @@ bool config::save(const std::filesystem::path& config_file_path) const {
         error_message("output");
         return false;
     }
-    if (!json.end_object()) {
+    if (!json.end_object("output")) {
         error_message("output");
         return false;
     }
@@ -739,7 +739,7 @@ bool config::save(const std::filesystem::path& config_file_path) const {
         error_message("advanced");
         return false;
     }
-    if (!json.end_object()) {
+    if (!json.end_object("advanced")) {
         error_message("advanced");
         return false;
     }
@@ -752,7 +752,7 @@ bool config::save(const std::filesystem::path& config_file_path) const {
         error_message("misc");
         return false;
     }
-    if (!json.end_object()) {
+    if (!json.end_object("misc")) {
         error_message("misc");
         return false;
     }

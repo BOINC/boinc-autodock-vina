@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <stack>
 #include <jsoncons/json.hpp>
 
 class json_encoder_helper {
@@ -24,13 +25,19 @@ public:
     explicit json_encoder_helper(jsoncons::json_stream_encoder& json_encoder);
     ~json_encoder_helper() = default;
 
-    bool begin_object() const;
-    bool begin_object(const std::string& key) const;
-    bool end_object() const;
+    bool begin_object();
+    //bool begin_object(const char* key);
+    bool begin_object(const std::string& key);
+    bool end_object();
+    //bool end_object(const char* key);
+    bool end_object(const std::string& key);
 
-    bool begin_array() const;
-    bool begin_array(const std::string& key) const;
-    bool end_array() const;
+    bool begin_array();
+    //bool begin_array(const char* key);
+    bool begin_array(const std::string& key);
+    bool end_array();
+    //bool end_array(const char* key);
+    bool end_array(const std::string& key);
 
     bool value(const std::string& key, const char* value) const;
     bool value(const std::string& key, const std::string& value) const;
@@ -45,6 +52,10 @@ public:
     bool value(const uint64_t& value) const;
     bool value(const int64_t& value) const;
     bool value(const bool& value) const;
+
+    [[nodiscard]] bool is_complete() const;
 private:
     jsoncons::json_stream_encoder& encoder;
+
+    std::stack<std::pair<std::string, std::string>> structure;
 };

@@ -89,6 +89,7 @@ add_executable(unit-tests
     src/unit-tests/config-tests.cpp
     src/unit-tests/dummy-ofstream.h
     src/unit-tests/dummy-ofstream.cpp
+    ../common/src/unit-tests/jsoncons_helper_tests.cpp
 )
 
 if (BUILD_WORK_GENERATOR)

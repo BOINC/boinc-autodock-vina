@@ -18,38 +18,90 @@
 #include "jsoncons_helper.h"
 
 json_encoder_helper::json_encoder_helper(jsoncons::json_stream_encoder& json_encoder) :
-    encoder(json_encoder)
-{
-}
+    encoder(json_encoder) {}
 
-bool json_encoder_helper::begin_object() const {
-    return encoder.begin_object();
-}
-
-bool json_encoder_helper::begin_object(const std::string& key) const {
-    if (encoder.key(key)) {
-        return encoder.begin_object();
+bool json_encoder_helper::begin_object() {
+    if (encoder.begin_object()) {
+        structure.push({ "object", "" });
+        return true;
     }
     return false;
 }
 
-bool json_encoder_helper::end_object() const {
-    return encoder.end_object();
-}
+//bool json_encoder_helper::begin_object(const char* key) {
+//    return begin_object(std::string(key));
+//}
 
-bool json_encoder_helper::begin_array() const {
-    return encoder.begin_array();
-}
-
-bool json_encoder_helper::begin_array(const std::string& key) const {
-    if (encoder.key(key)) {
-        return encoder.begin_array();
+bool json_encoder_helper::begin_object(const std::string& key) {
+    if (encoder.key(key) && encoder.begin_object()) {
+        structure.push({ "object", key });
+        return true;
     }
     return false;
 }
 
-bool json_encoder_helper::end_array() const {
-    return encoder.end_array();
+bool json_encoder_helper::end_object() {
+    const auto& [type, name] = structure.top();
+    if (type == "object" && name.empty() && encoder.end_object()) {
+        structure.pop();
+        return true;
+    }
+    return false;
+}
+
+//bool json_encoder_helper::end_object(const char* key) {
+//    return end_object(std::string(key));
+//}
+
+bool json_encoder_helper::end_object(const std::string& key) {
+    const auto& [type, name] = structure.top();
+    if (type == "object" && name == key && encoder.end_object()) {
+        structure.pop();
+        return true;
+    }
+    return false;
+}
+
+bool json_encoder_helper::begin_array() {
+    if (encoder.begin_array()) {
+        structure.push({ "array", "" });
+        return true;
+    }
+    return false;
+}
+
+//bool json_encoder_helper::begin_array(const char* key) {
+//    return begin_array(std::string(key));
+//}
+
+bool json_encoder_helper::begin_array(const std::string& key) {
+    if (encoder.key(key) && encoder.begin_array()) {
+        structure.push({ "array", key });
+        return true;
+    }
+    return false;
+}
+
+bool json_encoder_helper::end_array() {
+    const auto& [type, name] = structure.top();
+    if (type == "array" && name.empty() && encoder.end_array()) {
+        structure.pop();
+        return true;
+    }
+    return false;
+}
+
+//bool json_encoder_helper::end_array(const char* key) {
+//    return end_array(std::string(key));
+//}
+
+bool json_encoder_helper::end_array(const std::string& key) {
+    const auto& [type, name] = structure.top();
+    if (type == "array" && name == key && encoder.end_array()) {
+        structure.pop();
+        return true;
+    }
+    return false;
 }
 
 bool json_encoder_helper::value(const std::string& key, const char* value) const {
@@ -116,4 +168,8 @@ bool json_encoder_helper::value(const int64_t& value) const {
 
 bool json_encoder_helper::value(const bool& value) const {
     return encoder.bool_value(value);
+}
+
+bool json_encoder_helper::is_complete() const {
+    return structure.empty();
 }
