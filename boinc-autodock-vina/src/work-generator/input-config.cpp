@@ -165,10 +165,6 @@ bool prepare_ligands::load(const jsoncons::basic_json<char>& json, const std::fi
     if (json.contains("keep_nonpolar_hydrogens")) {
         keep_nonpolar_hydrogens = json["keep_nonpolar_hydrogens"].as<bool>();
     }
-    if (json.contains("pH")) {
-        correct_protonation_for_ph = true;
-        pH = json["pH"].as<double>();
-    }
     if (json.contains("flex")) {
         flex = json["flex"].as<bool>();
     }
@@ -341,9 +337,6 @@ bool generator::process(const std::filesystem::path& config_file_path, const std
             }
             if (prepare_ligands.keep_nonpolar_hydrogens) {
                 cmd << "--keep_nonpolar_hydrogens ";
-            }
-            if (prepare_ligands.correct_protonation_for_ph) {
-                cmd << "--pH " << prepare_ligands.pH << " ";
             }
             if (prepare_ligands.flex) {
                 cmd << "-f ";

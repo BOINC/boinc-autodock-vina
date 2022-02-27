@@ -792,7 +792,6 @@ TEST_F(InputConfig_UnitTests, ValidatePrepareLigandsValues) {
     json_encoder.value("break_macrocycle", true);
     json_encoder.value("hydrate", true);
     json_encoder.value("keep_nonpolar_hydrogens", true);
-    json_encoder.value("pH", 1.0);
     json_encoder.value("flex", true);
     json_encoder.begin_array("rigidity_bonds_smarts");
     json_encoder.value("smart_1");
@@ -842,8 +841,6 @@ TEST_F(InputConfig_UnitTests, ValidatePrepareLigandsValues) {
     EXPECT_TRUE(prepare_ligands.break_macrocycle);
     EXPECT_TRUE(prepare_ligands.hydrate);
     EXPECT_TRUE(prepare_ligands.keep_nonpolar_hydrogens);
-    EXPECT_TRUE(prepare_ligands.correct_protonation_for_ph);
-    EXPECT_DOUBLE_EQ(1.0, prepare_ligands.pH);
     EXPECT_TRUE(prepare_ligands.flex);
     ASSERT_EQ(1, prepare_ligands.rigidity_bonds_smarts.size());
     EXPECT_STREQ("smart_1", prepare_ligands.rigidity_bonds_smarts[0].c_str());
