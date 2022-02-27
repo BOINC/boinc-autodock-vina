@@ -49,7 +49,6 @@ This group supports next parameters:
 - `break_macrocycle` - break macrocycle for docking. This is an **optional** `boolean` parameter. Default is **false**.
 - `hydrate` - add water molecules for hydrated docking. This is an **optional** `boolean` parameter. Default is **false**.
 - `keep_nonpolar_hydrogens` - keep non-polar hydrogens. This is an **optional** `boolean` parameter. Default is **false**: merge onto heavy atom.
-- `pH` - correct protonation for pH (default: No correction). This is an optional **double** value.
 - `flex` - prepare as flexible protein residue. This is an **optional** `boolean` parameter. Default is **false**.
 - `rigidity_bonds_smarts` - SMARTS patterns to rigidify bonds. This is an **optional** `list of strings` parameter.
 - `rigidity_bonds_indices` - indices of two atoms (in the SMARTS) that define a bond (start at 1). This is an **optional** `list of integers` parameter.
@@ -196,8 +195,7 @@ More information about specified parameters could be found on the official docum
         ]
     },
     "prepare_ligands": {
-        "ligand": "1iep_ligand.sdf",
-        "pH": 7.4
+        "ligand": "1iep_ligand.sdf"
     },
     "output": {
         "out": "1iep_ligand_vina_out.pdbqt"
@@ -215,8 +213,7 @@ More information about specified parameters could be found on the official docum
         ]
     },
     "prepare_ligands": {
-        "ligand": "1iep_ligand.sdf",
-        "pH": 7.4
+        "ligand": "1iep_ligand.sdf"
     },
     "search_area": {
         "center_x": 15.190,
@@ -248,8 +245,7 @@ From this file `work unit generator` will generate **one** work unit.
         ]
     },
     "prepare_ligands": {
-        "ligand": "1iep_ligand.sdf",
-        "pH": 7.4
+        "ligand": "1iep_ligand.sdf"
     },
     "search_area": {
         "center_x": 15.190,

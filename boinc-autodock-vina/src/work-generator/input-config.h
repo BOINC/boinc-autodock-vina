@@ -64,8 +64,6 @@ public:
     bool break_macrocycle = false;
     bool hydrate = false;
     bool keep_nonpolar_hydrogens = false;
-    bool correct_protonation_for_ph = false;
-    double pH = .0;
     bool flex = false;
     std::vector<std::string> rigidity_bonds_smarts;
     std::vector<std::pair<uint64_t, uint64_t>> rigidity_bonds_indices;
