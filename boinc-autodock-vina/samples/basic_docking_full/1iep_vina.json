@@ -5,8 +5,7 @@
         ]
     },
     "prepare_ligands": {
-        "ligand": "1iep_ligand.sdf",
-        "pH": 7.4
+        "ligand": "1iep_ligand.sdf"
     },
     "search_area": {
         "center_x": 15.190,
