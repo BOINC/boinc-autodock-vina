@@ -26,17 +26,13 @@ public:
     ~json_encoder_helper() = default;
 
     bool begin_object();
-    //bool begin_object(const char* key);
     bool begin_object(const std::string& key);
     bool end_object();
-    //bool end_object(const char* key);
     bool end_object(const std::string& key);
 
     bool begin_array();
-    //bool begin_array(const char* key);
     bool begin_array(const std::string& key);
     bool end_array();
-    //bool end_array(const char* key);
     bool end_array(const std::string& key);
 
     bool value(const std::string& key, const char* value) const;

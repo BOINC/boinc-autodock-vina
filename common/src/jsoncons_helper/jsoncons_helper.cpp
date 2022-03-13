@@ -28,10 +28,6 @@ bool json_encoder_helper::begin_object() {
     return false;
 }
 
-//bool json_encoder_helper::begin_object(const char* key) {
-//    return begin_object(std::string(key));
-//}
-
 bool json_encoder_helper::begin_object(const std::string& key) {
     if (encoder.key(key) && encoder.begin_object()) {
         structure.push({ "object", key });
@@ -48,10 +44,6 @@ bool json_encoder_helper::end_object() {
     }
     return false;
 }
-
-//bool json_encoder_helper::end_object(const char* key) {
-//    return end_object(std::string(key));
-//}
 
 bool json_encoder_helper::end_object(const std::string& key) {
     const auto& [type, name] = structure.top();
@@ -70,10 +62,6 @@ bool json_encoder_helper::begin_array() {
     return false;
 }
 
-//bool json_encoder_helper::begin_array(const char* key) {
-//    return begin_array(std::string(key));
-//}
-
 bool json_encoder_helper::begin_array(const std::string& key) {
     if (encoder.key(key) && encoder.begin_array()) {
         structure.push({ "array", key });
@@ -90,10 +78,6 @@ bool json_encoder_helper::end_array() {
     }
     return false;
 }
-
-//bool json_encoder_helper::end_array(const char* key) {
-//    return end_array(std::string(key));
-//}
 
 bool json_encoder_helper::end_array(const std::string& key) {
     const auto& [type, name] = structure.top();
