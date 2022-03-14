@@ -24,6 +24,11 @@ on:
   schedule:
     - cron:  '0 0 * * *'
 
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_KEY }}
+  AWS_DEFAULT_REGION: us-west-2
+
 jobs:
   build:
     name: ${{ matrix.app }}-${{ matrix.configuration }}-build
@@ -75,31 +80,24 @@ jobs:
           echo "Installing Meeko and Scipy"
           pip3 install -U numpy openbabel meeko rdkit-pypi scipy matplotlib ipython jupyter pandas sympy nose
 
-      - name: Configure Python for vcpkg binary cache
-        if: ${{ success() }}
+      - name: Check if build is running from origin repo
+        if: ${{ success() && env.AWS_ACCESS_KEY_ID != 0 && env.AWS_SECRET_ACCESS_KEY != 0 }}
         run: |
-          pip3 install boto3==1.19.12
+          echo "VCPKG_BINARY_SOURCES=clear;x-aws,s3://vcpkg.cache.boinc-apps/,readwrite" >> $GITHUB_ENV
 
-      - name: Download vcpkg binary cache
-        if: ${{ success() && matrix.configuration != 'coverage-report' }}
+      - name: Check if build is running from fork
+        if: ${{ success() && (env.AWS_ACCESS_KEY_ID == 0 || env.AWS_SECRET_ACCESS_KEY == 0) }}
         run: |
-          python3 ./deploy/manage_vcpkg_archive_cache.py download ${{ github.workspace }}/vcpkgcache/vcpkg/archives ${{ matrix.configuration }} "vcpkg.cache.boinc-apps.${{ matrix.app }}"
-
-      - name: Download vcpkg binary cache for Coverage Report
-        if: ${{ success() && matrix.configuration == 'coverage-report' }}
-        run: |
-          python3 ./deploy/manage_vcpkg_archive_cache.py download ${{ github.workspace }}/vcpkgcache/vcpkg/archives x64-linux-static "vcpkg.cache.boinc-apps.${{ matrix.app }}"
+          echo "VCPKG_BINARY_SOURCES=clear;x-aws,s3://vcpkg.cache.boinc-apps/,read" >> $GITHUB_ENV
 
       - name: Build
         if: ${{ success() && matrix.configuration != 'coverage-report' }}
         run: |
-          export XDG_CACHE_HOME=${{ github.workspace }}/vcpkgcache
           python3 build.py -nt -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
 
       - name: Build for Coverage Report
         if: ${{ success() && matrix.configuration == 'coverage-report' }}
         run: |
-          export XDG_CACHE_HOME=${{ github.workspace }}/vcpkgcache
           python3 build.py -nt -cr -ts=ci -t=x64-linux-static ${{ matrix.app }}
 
       - name: Test x86 and x64
@@ -142,19 +140,3 @@ jobs:
         with:
           fail_ci_if_error: true
           verbose: false
-
-      - name: Upload vcpkg binary cache
-        if: ${{ success() && matrix.configuration != 'coverage-report' }}
-        env:
-          ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
-          SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
-        run: |
-          python3 ./deploy/manage_vcpkg_archive_cache.py upload ${{ github.workspace }}/vcpkgcache/vcpkg/archives ${{ matrix.configuration }} "vcpkg.cache.boinc-apps.${{ matrix.app }}" "$ACCESS_KEY" "$SECRET_KEY"
-
-      - name: Upload vcpkg binary cache for Coverage Report
-        if: ${{ success() && matrix.configuration == 'coverage-report' }}
-        env:
-          ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
-          SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
-        run: |
-          python3 ./deploy/manage_vcpkg_archive_cache.py upload ${{ github.workspace }}/vcpkgcache/vcpkg/archives x64-linux-static "vcpkg.cache.boinc-apps.${{ matrix.app }}" "$ACCESS_KEY" "$SECRET_KEY"

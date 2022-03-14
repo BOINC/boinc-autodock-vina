@@ -24,6 +24,11 @@ on:
   schedule:
     - cron:  '0 0 * * *'
 
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_KEY }}
+  AWS_DEFAULT_REGION: us-west-2
+
 jobs:
   build:
     name: ${{ matrix.app }}-${{ matrix.configuration }}-build
@@ -33,8 +38,6 @@ jobs:
         app: [boinc-autodock-vina]
         configuration: [x64-windows-static, x86-windows-static]
       fail-fast: false
-    env:
-      VCPKG_BINARY_SOURCES: 'clear;files,${{ github.workspace }}\vcpkgcache\,readwrite'
     steps:
       - uses: actions/checkout@v2
         with:
@@ -46,17 +49,15 @@ jobs:
       - name: Fix vcpkg
         run: vcpkg.exe integrate remove
 
-      - name: Configure Python
-        if: ${{ success() }}
-        shell: cmd
+      - name: Check if build is running from origin repo
+        if: ${{ success() && env.AWS_ACCESS_KEY_ID != 0 && env.AWS_SECRET_ACCESS_KEY != 0 }}
         run: |
-          pip3 install boto3
+          echo "VCPKG_BINARY_SOURCES=clear;x-aws,s3://vcpkg.cache.boinc-apps/,readwrite" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
 
-      - name: Download vcpkg binary cache
-        if: ${{ success() }}
-        shell: cmd
+      - name: Check if build is running from fork
+        if: ${{ success() && (env.AWS_ACCESS_KEY_ID == 0 || env.AWS_SECRET_ACCESS_KEY == 0) }}
         run: |
-          python3 deploy\manage_vcpkg_archive_cache.py download ${{ github.workspace }}\vcpkgcache ${{ matrix.configuration }} "vcpkg.cache.boinc-apps.${{ matrix.app }}"
+          echo "VCPKG_BINARY_SOURCES=clear;x-aws,s3://vcpkg.cache.boinc-apps/,read" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
 
       - name: Build
         if: ${{ success() }}
@@ -74,12 +75,3 @@ jobs:
           path: |
             build/${{ matrix.app }}/${{ matrix.configuration }}/Release/boinc-autodock-vina.exe
             build/${{ matrix.app }}/${{ matrix.configuration }}/Release/config-validator.exe
-
-      - name: Upload vcpkg binary cache
-        if: ${{ success() }}
-        shell: cmd
-        env:
-          ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
-          SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
-        run: |
-          python3 deploy\manage_vcpkg_archive_cache.py upload ${{ github.workspace }}\vcpkgcache ${{ matrix.configuration }} "vcpkg.cache.boinc-apps.${{ matrix.app }}" "%ACCESS_KEY%" "%SECRET_KEY%"
