@@ -1,0 +1,73 @@
+# This file is part of BOINC.
+# https://boinc.berkeley.edu
+# Copyright (C) 2022 University of California
+#
+# BOINC is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License
+# as published by the Free Software Foundation,
+# either version 3 of the License, or (at your option) any later version.
+#
+# BOINC is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with BOINC.  If not, see <http://www.gnu.org/licenses/>.
+
+name: "CodeQL"
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  schedule:
+    - cron:  '0 0 * * *'
+
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_KEY }}
+  AWS_DEFAULT_REGION: us-west-2
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [boinc-autodock-vina]
+        configuration: [x64-linux-static]
+        language: [ 'cpp', 'python' ]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v1
+      with:
+        languages: ${{ matrix.language }}
+
+    - name: Check if build is running from origin repo
+      if: ${{ success() && env.AWS_ACCESS_KEY_ID != 0 && env.AWS_SECRET_ACCESS_KEY != 0 }}
+      run: |
+        echo "VCPKG_BINARY_SOURCES=clear;x-aws,s3://vcpkg.cache.boinc-apps/,readwrite" >> $GITHUB_ENV
+
+    - name: Check if build is running from fork
+      if: ${{ success() && (env.AWS_ACCESS_KEY_ID == 0 || env.AWS_SECRET_ACCESS_KEY == 0) }}
+      run: |
+        echo "VCPKG_BINARY_SOURCES=clear;x-aws-config,no-sign-request;x-aws,s3://vcpkg.cache.boinc-apps/,read" >> $GITHUB_ENV
+
+    - name: Build
+      if: ${{ success() && matrix.configuration != 'coverage-report' }}
+      run: |
+        python3 build.py -nt -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v1
