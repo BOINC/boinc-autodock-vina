@@ -57,7 +57,7 @@ jobs:
       - name: Check if build is running from fork
         if: ${{ success() && (env.AWS_ACCESS_KEY_ID == 0 || env.AWS_SECRET_ACCESS_KEY == 0) }}
         run: |
-          echo "VCPKG_BINARY_SOURCES=clear;x-aws,s3://vcpkg.cache.boinc-apps/,read" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
+          echo "VCPKG_BINARY_SOURCES=clear;x-aws-config,no-sign-request;x-aws,s3://vcpkg.cache.boinc-apps/,read" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
 
       - name: Build
         if: ${{ success() }}
