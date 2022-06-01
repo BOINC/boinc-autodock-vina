@@ -18,7 +18,7 @@
 | boinc-autodock-vina | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 ### Linux
 
-| Application | arm64-linux-static | armneon-linux-static | arm-linux-static | x64-linux-static | x86-linux-static |
+| Application | arm64-linux-static | arm-neon-linux-static | arm-linux-static | x64-linux-static | x86-linux-static |
 | --- | --- | --- | --- | --- | --- |
 | boinc-autodock-vina | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 

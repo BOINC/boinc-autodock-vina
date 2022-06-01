@@ -36,7 +36,7 @@ jobs:
     strategy:
       matrix:
         app: [boinc-autodock-vina]
-        configuration: [x64-linux-static, x86-linux-static, arm-linux-static, armneon-linux-static, arm64-linux-static, coverage-report]
+        configuration: [x64-linux-static, x86-linux-static, arm-linux-static, arm-neon-linux-static, arm64-linux-static, coverage-report]
       fail-fast: false
     steps:
       - uses: actions/checkout@v2
