@@ -135,6 +135,8 @@ public:
     [[nodiscard]] bool validate() const;
     [[nodiscard]] bool check_files_exist() const;
     [[nodiscard]] bool load(const std::filesystem::path& config_file_path);
+    [[nodiscard]] bool load(const std::istream& config_stream, const std::filesystem::path& working_directory);
+    [[nodiscard]] bool load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory);
     [[nodiscard]] bool save(const std::filesystem::path& config_file_path) const;
     [[nodiscard]] std::vector<std::string> get_files() const;
     [[nodiscard]] std::vector<std::string> get_files_from_gpf() const;

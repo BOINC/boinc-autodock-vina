@@ -638,37 +638,48 @@ bool config::load(const std::filesystem::path& config_file_path) {
         return false;
     }
 
-    try {
-        const auto& working_directory = config_file_path.has_parent_path() ? config_file_path.parent_path() : std::filesystem::current_path();
+    const auto& working_directory = config_file_path.has_parent_path() ? config_file_path.parent_path() : std::filesystem::current_path();
 
-        const std::ifstream config_file(config_file_path);
+    if (!load(std::ifstream(config_file_path), working_directory)) {
+        std::cerr << "Error happened while processing <" << config_file_path.string() << "> file" << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+bool config::load(const std::istream& config_stream, const std::filesystem::path& working_directory) {
+    try {
         std::stringstream buffer;
-        buffer << config_file.rdbuf();
+        buffer << config_stream.rdbuf();
 
         const auto& json = jsoncons::json::parse(buffer);
-
-        if (json.contains("input") && !input.load(json["input"], working_directory)) {
-            return false;
-        }
-
-        if (json.contains("search_area") && !search_area.load(json["search_area"], working_directory)) {
-            return false;
-        }
-
-        if (json.contains("output") && !output.load(json["output"], working_directory)) {
-            return false;
-        }
-
-        if (json.contains("advanced") && !advanced.load(json["advanced"], working_directory)) {
-            return false;
-        }
-
-        if (json.contains("misc") && !misc.load(json["misc"], working_directory)) {
-            return false;
-        }
+        return load(json, working_directory);        
     }
     catch (const std::exception& ex) {
-        std::cerr << "Error happened while processing <" << config_file_path.string() << "> file: " << ex.what() << std::endl;
+        std::cerr << "Error happened while processing config: " << ex.what() << std::endl;
+        return false;
+    }
+}
+
+bool config::load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) {
+    if (json.contains("input") && !input.load(json["input"], working_directory)) {
+        return false;
+    }
+
+    if (json.contains("search_area") && !search_area.load(json["search_area"], working_directory)) {
+        return false;
+    }
+
+    if (json.contains("output") && !output.load(json["output"], working_directory)) {
+        return false;
+    }
+
+    if (json.contains("advanced") && !advanced.load(json["advanced"], working_directory)) {
+        return false;
+    }
+
+    if (json.contains("misc") && !misc.load(json["misc"], working_directory)) {
         return false;
     }
 
@@ -846,7 +857,7 @@ std::vector<std::string> config::get_out_files() const {
     }
     if (!output.write_maps.empty()) {
         const auto maps = std::filesystem::path(output.write_maps);
-        for (const auto & file : std::filesystem::directory_iterator(maps.parent_path())) {
+        for (const auto& file : std::filesystem::directory_iterator(maps.parent_path())) {
             if (file.path().filename().string().rfind(maps.filename().string(), 0) == 0 && file.is_regular_file()) {
                 files.push_back(file.path().string());
             }

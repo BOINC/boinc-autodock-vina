@@ -30,7 +30,7 @@
 
 void help() {
     std::cout << "Usage:" << std::endl;
-    std::cout << "work-generator OUT_DIR IN_DIR" << std::endl;
+    std::cout << "work-generator OUT_DIR IN_DIR [--]" << std::endl;
 }
 
 inline void header() {
@@ -59,13 +59,15 @@ inline bool process_directory(const std::filesystem::path& directory, const std:
 int main(int argc, char** argv) {
     header();
 
-    if (argc != 3) {
+    if (argc < 3 || argc > 4) {
         help();
         return 1;
     }
 
     std::filesystem::path out_dir(argv[1]);
     const std::filesystem::path in_dir(argv[2]);
+
+    const auto stream_mode = (argc == 4 && std::string(argv[3]) == std::string("--"));
 
     if (!exists(in_dir) || !is_directory(in_dir)) {
         std::cerr << "<" << argv[1] << "> is not a valid directory path." << std::endl;
@@ -85,14 +87,22 @@ int main(int argc, char** argv) {
 
     generator generator;
 
-    const auto& process = [&](const auto& path) {
-        std::cout << "Processing file: <" << path.string() << ">." << std::endl;
-        return generator.process(path, out_dir, uid);
-    };
+    if (stream_mode) {
+        if (!generator.process(std::cin, in_dir, out_dir, uid)) {
+            std::cerr << "Failed to process input config." << std::endl;
+            return 1;
+        }
+    }
+    else {
+        const auto& process = [&](const auto& file_path) {
+            std::cout << "Processing file: <" << file_path.string() << ">." << std::endl;
+            return generator.process(file_path, out_dir, uid);
+        };
 
-    if (!process_directory(in_dir, process)) {
-        std::cerr << "Failed to process input directory <" << in_dir.string() << ">." << std::endl;
-        return 1;
+        if (!process_directory(in_dir, process)) {
+            std::cerr << "Failed to process input directory <" << in_dir.string() << ">." << std::endl;
+            return 1;
+        }
     }
 
     std::cout << "WUs output directory: <" << out_dir.string() << ">." << std::endl;
