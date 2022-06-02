@@ -272,14 +272,22 @@ bool generator::process(const std::filesystem::path& config_file_path, const std
         return false;
     }
 
+    const auto& working_directory = config_file_path.has_parent_path() ? config_file_path.parent_path() : std::filesystem::current_path();
+
+    if (!process(std::ifstream(config_file_path.c_str()), working_directory, out_path, prefix)) {
+        std::cerr << "Error happened while processing <" << config_file_path.string() << "> file" << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+bool generator::process(const std::istream& config_stream, const std::filesystem::path& working_directory, const std::filesystem::path& out_path, const std::string& prefix) {
     try {
-        const std::ifstream config_file(config_file_path.c_str());
         std::stringstream buffer;
-        buffer << config_file.rdbuf();
+        buffer << config_stream.rdbuf();
 
         const auto& json = jsoncons::json::parse(buffer);
-
-        const auto& working_directory = config_file_path.has_parent_path() ? config_file_path.parent_path() : std::filesystem::current_path();
 
         prepare_ligands prepare_ligands;
         if (json.contains("prepare_ligands") && (!prepare_ligands.load(json["prepare_ligands"], working_directory) || !prepare_ligands.validate())) {
@@ -292,7 +300,7 @@ bool generator::process(const std::filesystem::path& config_file_path, const std
         }
 
         config config;
-        if (!config.load(config_file_path)) {
+        if (!config.load(json, working_directory)) {
             return false;
         }
 
@@ -383,7 +391,7 @@ bool generator::process(const std::filesystem::path& config_file_path, const std
 
         if (need_prepare_receptors_step) {
             //TODO: Could run in parallel
-            for (const auto& r : prepare_receptors.receptors) {
+            for ([[maybe_unused]] const auto& r : prepare_receptors.receptors) {
                 std::stringstream cmd;
 #ifdef WIN32
                 const auto source_file = "boinc-autodock-vina\\samples\\basic_docking_full\\1iep_receptor.pdbqt.tmp";
@@ -439,7 +447,7 @@ bool generator::process(const std::filesystem::path& config_file_path, const std
         return true;
     }
     catch (const std::exception& ex) {
-        std::cerr << "Error happened while processing <" << config_file_path.string() << "> file: " << ex.what() << std::endl;
+        std::cerr << "Error happened while processing input config: " << ex.what() << std::endl;
         return false;
     }
 }
