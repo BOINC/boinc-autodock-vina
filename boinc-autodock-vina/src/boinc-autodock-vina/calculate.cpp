@@ -17,8 +17,6 @@
 
 #include "calculate.h"
 
-#include <iostream>
-
 #include <autodock-vina/vina.h>
 #include <magic_enum.hpp>
 

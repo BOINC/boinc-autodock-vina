@@ -43,11 +43,11 @@ bool zip_create::create(const std::filesystem::path& zip_file, const std::vector
         if (is_regular_file(file)) {
             const deleted_unique_ptr<zip_source_t> source(zip_source_file(zip.get(), file.string().data(), 0, 0), [](auto*) {});
             if (!source) {
-                std::cerr << "Failed to open file <" << file.filename().string().data() << ">: " << zip_strerror(zip.get()) << std::endl;
+                std::cerr << "Failed to open file <" << file.filename().string() << ">: " << zip_strerror(zip.get()) << std::endl;
             }
             if (zip_file_add(zip.get(), file.filename().string().data(), source.get(), ZIP_FL_ENC_UTF_8) < 0) {
                 zip_source_free(source.get());
-                std::cerr << "Failed to add file <" << file.filename().string().data() << "> to archive : " << zip_strerror(zip.get()) << std::endl;
+                std::cerr << "Failed to add file <" << file.filename().string() << "> to archive : " << zip_strerror(zip.get()) << std::endl;
                 return false;
             }
         }

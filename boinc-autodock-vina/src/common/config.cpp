@@ -623,7 +623,7 @@ bool config::validate() const {
 bool config::check_files_exist() const {
     for (const auto& file : get_files()) {
         if (!std::filesystem::exists(file) || !std::filesystem::is_regular_file(file)) {
-            std::cerr << "Missing [" << file << "] file specified in config.";
+            std::cerr << "Missing [" << std::filesystem::path(file).filename().string() << "] file specified in config.";
             std::cerr << std::endl;
             return false;
         }
@@ -634,14 +634,14 @@ bool config::check_files_exist() const {
 
 bool config::load(const std::filesystem::path& config_file_path) {
     if (!is_regular_file(config_file_path)) {
-        std::cerr << "Error happened while opening <" << config_file_path.string() << "> file" << std::endl;
+        std::cerr << "Error happened while opening <" << config_file_path.filename().string() << "> file" << std::endl;
         return false;
     }
 
     const auto& working_directory = config_file_path.has_parent_path() ? config_file_path.parent_path() : std::filesystem::current_path();
 
     if (!load(std::ifstream(config_file_path), working_directory)) {
-        std::cerr << "Error happened while processing <" << config_file_path.string() << "> file" << std::endl;
+        std::cerr << "Error happened while processing <" << config_file_path.filename().string() << "> file" << std::endl;
         return false;
     }
 
@@ -654,7 +654,7 @@ bool config::load(const std::istream& config_stream, const std::filesystem::path
         buffer << config_stream.rdbuf();
 
         const auto& json = jsoncons::json::parse(buffer);
-        return load(json, working_directory);        
+        return load(json, working_directory);
     }
     catch (const std::exception& ex) {
         std::cerr << "Error happened while processing config: " << ex.what() << std::endl;
@@ -698,7 +698,7 @@ bool config::save(const std::filesystem::path& config_file_path) const {
     json_encoder_helper json(encoder);
 
     if (!json.begin_object()) {
-        std::cerr << "Failed to write [" << config_file_path.string() << "] file";
+        std::cerr << "Failed to write [" << config_file_path.filename().string() << "] file";
         std::cerr << std::endl;
         return false;
     }
@@ -769,7 +769,7 @@ bool config::save(const std::filesystem::path& config_file_path) const {
     }
 
     if (!json.end_object()) {
-        std::cerr << "Failed to write [" << config_file_path.string() << "] file";
+        std::cerr << "Failed to write [" << config_file_path.filename().string() << "] file";
         std::cerr << std::endl;
         return false;
     }
@@ -815,7 +815,7 @@ std::vector<std::string> config::get_files_from_gpf() const {
 
 std::vector<std::string> config::get_files_from_gpf(const std::filesystem::path& maps) {
     if (!exists(maps) || !is_regular_file(maps)) {
-        std::cerr << "Failed to find maps file <" << maps.string() << ">." << std::endl;
+        std::cerr << "Failed to find maps file <" << maps.filename().string() << ">." << std::endl;
         return {};
     }
 
