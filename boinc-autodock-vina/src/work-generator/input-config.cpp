@@ -108,7 +108,7 @@ bool prepare_receptors::validate() const {
 
     for (const auto& r : receptors) {
         if (!std::filesystem::exists(r) || !std::filesystem::is_regular_file(r)) {
-            std::cerr << "Receptor file <" << r << "> is not found." << std::endl;
+            std::cerr << "Receptor file <" << std::filesystem::path(r).filename().string() << "> is not found." << std::endl;
             return false;
         }
     }
@@ -216,7 +216,7 @@ bool prepare_ligands::validate() const {
     }
 
     if (!std::filesystem::exists(ligand) || !std::filesystem::is_regular_file(ligand)) {
-        std::cerr << "Ligand file <" << ligand << "> is not found." << std::endl;
+        std::cerr << "Ligand file <" << std::filesystem::path(ligand).filename().string() << "> is not found." << std::endl;
         return false;
     }
     if (rigidity_bonds_smarts.size() != rigidity_bonds_indices.size()) {
@@ -235,7 +235,7 @@ bool generator::save_config(const config& config, const std::filesystem::path& w
 
     for (const auto& file : config.get_files()) {
         if (!copy_file(file, temp_path() / std::filesystem::path(file).filename())) {
-            std::cerr << "Cannot copy <" << file << "> to <" << temp_path().string() << ">" << std::endl;
+            std::cerr << "Cannot copy <" << std::filesystem::path(file).filename().string() << "> file" << std::endl;
             return false;
         }
     }
@@ -268,14 +268,14 @@ bool generator::process(const std::filesystem::path& config_file_path, const std
 #endif
 
     if (!exists(config_file_path) || !is_regular_file(config_file_path)) {
-        std::cerr << "Error happened while opening <" << config_file_path.string() << "> file" << std::endl;
+        std::cerr << "Error happened while opening <" << config_file_path.filename().string() << "> file" << std::endl;
         return false;
     }
 
     const auto& working_directory = config_file_path.has_parent_path() ? config_file_path.parent_path() : std::filesystem::current_path();
 
     if (!process(std::ifstream(config_file_path.c_str()), working_directory, out_path, prefix)) {
-        std::cerr << "Error happened while processing <" << config_file_path.string() << "> file" << std::endl;
+        std::cerr << "Error happened while processing <" << config_file_path.filename().string() << "> file" << std::endl;
         return false;
     }
 
@@ -380,7 +380,7 @@ bool generator::process(const std::istream& config_stream, const std::filesystem
             boost::process::child prepare_ligand(cmd.str());
             prepare_ligand.wait();
             if (prepare_ligand.exit_code() != 0) {
-                std::cerr << "Failed to prepare ligand(s): <" << cmd.str() << ">" << std::endl;
+                std::cerr << "Failed to prepare ligand(s): <" << std::filesystem::path(cmd.str()).filename().string() << ">" << std::endl;
                 return false;
             }
 
@@ -429,7 +429,7 @@ bool generator::process(const std::istream& config_stream, const std::filesystem
                 boost::process::child prepare_receptor(cmd.str());
                 prepare_receptor.wait();
                 if (prepare_receptor.exit_code() != 0) {
-                    std::cerr << "Failed to prepare receptors: <" << cmd.str() << ">" << std::endl;
+                    std::cerr << "Failed to prepare receptors: <" << std::filesystem::path(cmd.str()).filename().string() << ">" << std::endl;
                     return false;
                 }
 

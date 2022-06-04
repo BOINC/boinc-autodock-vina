@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
         config config;
 
         if (!config.load(json_path)) {
-            std::cout << "Failed to load '" << argv[1] << "' file";
+            std::cout << "Failed to load file";
             remove_all(data_path);
             return 1;
         }
@@ -113,7 +113,7 @@ int main(int argc, char **argv) {
         std::cout << "Validation passed" << std::endl;
         remove_all(data_path);
     } catch(const std::exception& ex) {
-        std::cout << "Failed to validate '" << argv[1] << "' file: " << ex.what() << std::endl;
+        std::cout << "Failed to validate file: " << ex.what() << std::endl;
         return 1;
     }
 

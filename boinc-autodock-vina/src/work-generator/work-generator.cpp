@@ -42,13 +42,13 @@ inline bool process_directory(const std::filesystem::path& directory, const std:
     for (const auto& e : std::filesystem::directory_iterator(directory)) {
         if (e.is_directory()) {
             if (!process_directory(e.path(), process)) {
-                std::cerr << "Failed to process directory <" << e.path().string() << ">." << std::endl;
+                std::cerr << "Failed to process directory <" << e.path().filename().string() << ">." << std::endl;
                 return false;
             }
         }
         else if (e.is_regular_file() && e.path().extension() == ".json") {
             if (!process(e.path())) {
-                std::cerr << "Failed to process <" << e.path().string() << ">." << std::endl;
+                std::cerr << "Failed to process <" << e.path().filename().string() << ">." << std::endl;
                 return false;
             }
         }
@@ -95,17 +95,17 @@ int main(int argc, char** argv) {
     }
     else {
         const auto& process = [&](const auto& file_path) {
-            std::cout << "Processing file: <" << file_path.string() << ">." << std::endl;
+            std::cout << "Processing file: <" << file_path.filename().string() << ">." << std::endl;
             return generator.process(file_path, out_dir, uid);
         };
 
         if (!process_directory(in_dir, process)) {
-            std::cerr << "Failed to process input directory <" << in_dir.string() << ">." << std::endl;
+            std::cerr << "Failed to process input directory <" << in_dir.filename().string() << ">." << std::endl;
             return 1;
         }
     }
 
-    std::cout << "WUs output directory: <" << out_dir.string() << ">." << std::endl;
+    std::cout << "WUs output directory: <" << out_dir.filename().string() << ">." << std::endl;
     std::cout << "WUs generated: " << generator.get_files_processed() << std::endl;
 
     return 0;
