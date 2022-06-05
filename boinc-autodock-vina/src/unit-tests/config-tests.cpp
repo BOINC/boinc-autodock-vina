@@ -356,6 +356,33 @@ TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_WriteMaps) {
     EXPECT_FALSE(config.load(dummy_json_file_path));
 }
 
+TEST_F(Config_UnitTests, CheckForDeaultValueInConfig_Out) {
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+    config config;
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.begin_object("input");
+    json_encoder.value("receptor", "receptor_sample");
+    json_encoder.begin_array("ligands");
+    json_encoder.value("ligand_sample2");
+    json_encoder.end_array();
+    json_encoder.end_object();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+    ASSERT_TRUE(config.load(dummy_json_file_path));
+
+    const auto out_sample = std::filesystem::current_path() /= "result.pdbqt";
+    EXPECT_STREQ(out_sample.string().c_str(), config.output.out.c_str());
+}
+
 TEST_F(Config_UnitTests, LoadValidator) {
     const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
 

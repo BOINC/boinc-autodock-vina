@@ -84,7 +84,7 @@ This group supports next parameters:
 
 This group supports next parameters:
 
-- `out` - path to output model file (PDBQT). This file should not have absolute path. This is an **required** `string` parameter when: (1) `input.batch` parameter is specified, (2) `input.ligands` parameter is specified and contains only 1 file and `advanced.score_only` is not specified, otherwise it is **optional**.
+- `out` - path to output model file (PDBQT). This file should not have absolute path. This is an **optional** parameter.
 - `dir` - path to output directory when: (1) in batch mode, (2) `input.ligands` parameter is specified and contains more than 1 file and `advanced.score_only` is not specified. This directory should not have absolute path. This is an **optional** `string` parameter.
 - `write_maps` - output filename (directory + prefix name) for maps. Parameter `advanced.force_even_voxels` may be needed to comply with map format. This is an **optional** `string` parameter. E.g. for the folder with maps `.\maps\1iep_receptor.A.map` and `.\maps\1iep_receptor.C.map` should be provided as `maps\1iep_receptor`.
 
@@ -149,14 +149,11 @@ More information about specified parameters could be found on the official docum
         "ligands": [
             "1iep_ligand.pdbqt"
         ]
-    },
-    "output": {
-        "out": "1iep_ligand_vina_out.pdbqt"
     }
 }
 ```
 
-### JSON file with search area and exhaustiveness specified
+### JSON file with search area, exhaustiveness and output specified
 
 ```json
 {
@@ -183,9 +180,9 @@ More information about specified parameters could be found on the official docum
 }
 ```
 
-## Example of JSON files that contains information to prepare receiptor and ligands
+## Example of JSON files that contains information to prepare receptor and ligands
 
-### Minimal JSON file with one receiptor and one ligand
+### Minimal JSON file with one receptor and one ligand
 
 ```json
 {
@@ -196,14 +193,11 @@ More information about specified parameters could be found on the official docum
     },
     "prepare_ligands": {
         "ligand": "1iep_ligand.sdf"
-    },
-    "output": {
-        "out": "1iep_ligand_vina_out.pdbqt"
     }
 }
 ```
 
-### JSON file with one receiptor and one ligand with with search area and exhaustiveness specified
+### JSON file with one receptor and one ligand with with search area, exhaustiveness and output specified
 
 ```json
 {
@@ -234,7 +228,7 @@ More information about specified parameters could be found on the official docum
 
 From this file `work unit generator` will generate **one** work unit.
 
-### JSON file with two receiptors and one ligand with with search area and exhaustiveness specified
+### JSON file with two receptors and one ligand with with search area and exhaustiveness specified
 
 ```json
 {
@@ -257,9 +251,6 @@ From this file `work unit generator` will generate **one** work unit.
     },
     "misc": {
         "exhaustiveness": 4
-    },
-    "output": {
-        "out": "1iep_ligand_vina_out.pdbqt"
     }
 }
 ```

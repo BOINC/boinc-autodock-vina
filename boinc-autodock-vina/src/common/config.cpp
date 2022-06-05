@@ -682,6 +682,10 @@ bool config::load(const jsoncons::basic_json<char>& json, const std::filesystem:
     if (json.contains("misc") && !misc.load(json["misc"], working_directory)) {
         return false;
     }
+    
+    if (output.out.empty()) {
+        output.out = std::filesystem::path(working_directory / "result.pdbqt").string();
+    }
 
     return true;
 }
