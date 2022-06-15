@@ -41,6 +41,8 @@ public:
     virtual ~data_validate() = default;
 
     [[nodiscard]] virtual bool validate() const = 0;
+    [[nodiscard]] virtual bool is_prepare_needed() const = 0;
+    [[nodiscard]] static bool compare_extension(const std::filesystem::path& file, const std::string& extension);
 };
 
 class prepare_receptors final : public json_load, public data_validate {
@@ -53,11 +55,12 @@ public:
 
     [[nodiscard]] bool load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) override;
     [[nodiscard]] bool validate() const override;
+    [[nodiscard]] bool is_prepare_needed() const override;
 };
 
 class prepare_ligands final : public json_load, public data_validate {
 public:
-    std::string ligand;
+    std::vector<std::string> ligands;
     std::vector<std::string> selected_ligands;
     bool multimol = false;
     std::string multimol_prefix;
@@ -75,6 +78,7 @@ public:
 
     [[nodiscard]] bool load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) override;
     [[nodiscard]] bool validate() const override;
+    [[nodiscard]] bool is_prepare_needed() const override;
 };
 
 class generator {
@@ -87,4 +91,5 @@ public:
 
 private:
     uint64_t current_wu_number = 0;
+
 };
