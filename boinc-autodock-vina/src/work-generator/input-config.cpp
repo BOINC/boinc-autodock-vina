@@ -28,10 +28,30 @@
 
 #include "temp-folder.h"
 
+bool data_validate::compare_extension(const std::filesystem::path& file, const std::string& extension) {
+    auto file_extension = file.extension().string();
+    std::transform(file_extension.cbegin(), file_extension.cend(), file_extension.begin(), [](const auto& c) {return std::tolower(c); });
+    std::string lower_extension = extension;
+    std::transform(extension.cbegin(), extension.cend(), lower_extension.begin(), [](const auto& c) {return std::tolower(c); });
+    return file_extension == lower_extension;
+}
+
+
 bool prepare_receptors::load(const jsoncons::basic_json<char>& json, [[maybe_unused]] const std::filesystem::path& working_directory) {
-    if (json.contains("receptors")) {
-        for (const auto& r : json["receptors"].array_range()) {
-            const auto& value = std::filesystem::path(r.as<std::string>());
+    const std::string receptor_field_name = json.contains("receptors") ? "receptors" : json.contains("receptor") ? "receptor" : "";
+    if (!receptor_field_name.empty()) {
+        if (json[receptor_field_name].is_array()) {
+            for (const auto& r : json[receptor_field_name].array_range()) {
+                const auto& value = std::filesystem::path(r.as<std::string>());
+                if (value.is_absolute()) {
+                    std::cerr << "Config should not contain absolute paths" << std::endl;
+                    return false;
+                }
+                receptors.emplace_back(std::filesystem::path(working_directory / value).string());
+            }
+        }
+        else {
+            const auto& value = std::filesystem::path(json[receptor_field_name].as<std::string>());
             if (value.is_absolute()) {
                 std::cerr << "Config should not contain absolute paths" << std::endl;
                 return false;
@@ -115,14 +135,43 @@ bool prepare_receptors::validate() const {
     return true;
 }
 
-bool prepare_ligands::load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) {
-    if (json.contains("ligand")) {
-        const auto& value = std::filesystem::path(json["ligand"].as<std::string>());
-        if (value.is_absolute()) {
-            std::cerr << "Config should not contain absolute paths" << std::endl;
-            return false;
+bool prepare_receptors::is_prepare_needed() const {
+    for (const auto& r : receptors) {
+        if (!compare_extension(r, ".pdbqt")) {
+            return true;
         }
-        ligand = std::filesystem::path(working_directory / value).string();
+    }
+
+    return (
+        repair != repair::None ||
+        !preserves.empty() ||
+        cleanup != cleanup::none ||
+        delete_nonstd_residue != false
+        );
+}
+
+
+bool prepare_ligands::load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) {
+    const std::string ligand_field_name = json.contains("ligands") ? "ligands" : json.contains("ligand") ? "ligand" : "";
+    if (!ligand_field_name.empty()) {
+        if (json[ligand_field_name].is_array()) {
+            for (const auto& r : json[ligand_field_name].array_range()) {
+                const auto& value = std::filesystem::path(r.as<std::string>());
+                if (value.is_absolute()) {
+                    std::cerr << "Config should not contain absolute paths" << std::endl;
+                    return false;
+                }
+                ligands.emplace_back(std::filesystem::path(working_directory / value).string());
+            }
+        }
+        else {
+            const auto& value = std::filesystem::path(json[ligand_field_name].as<std::string>());
+            if (value.is_absolute()) {
+                std::cerr << "Config should not contain absolute paths" << std::endl;
+                return false;
+            }
+            ligands.emplace_back(std::filesystem::path(working_directory / value).string());
+        }
     }
     if (json.contains("selected_ligands")) {
         for (const auto& l : json["selected_ligands"].array_range()) {
@@ -210,21 +259,50 @@ bool prepare_ligands::load(const jsoncons::basic_json<char>& json, const std::fi
 }
 
 bool prepare_ligands::validate() const {
-    if (ligand.empty()) {
+    if (ligands.empty()) {
         std::cerr << "No ligand file specified." << std::endl;
         return false;
     }
 
-    if (!std::filesystem::exists(ligand) || !std::filesystem::is_regular_file(ligand)) {
-        std::cerr << "Ligand file <" << std::filesystem::path(ligand).filename().string() << "> is not found." << std::endl;
-        return false;
+    for (const auto& l : ligands) {
+        if (!std::filesystem::exists(l) || !std::filesystem::is_regular_file(l)) {
+            std::cerr << "Ligand file <" << std::filesystem::path(l).filename().string() << "> is not found." << std::endl;
+            return false;
+        }
     }
+
     if (rigidity_bonds_smarts.size() != rigidity_bonds_indices.size()) {
         std::cerr << "Count of Rigidity Bonds indices pairs should be equal to Rigidity Bonds SMARTS count." << std::endl;
         return false;
     }
+
     return true;
 }
+
+bool prepare_ligands::is_prepare_needed() const {
+    for (const auto& l : ligands) {
+        if (!compare_extension(l, ".pdbqt")) {
+            return true;
+        }
+    }
+
+    return (
+        multimol != false ||
+        !multimol_prefix.empty() ||
+        break_macrocycle != false ||
+        hydrate != false ||
+        keep_nonpolar_hydrogens != false ||
+        flex != false ||
+        !rigidity_bonds_smarts.empty() ||
+        !rigidity_bonds_indices.empty() ||
+        flexible_amides != false ||
+        apply_double_bond_penalty != false ||
+        double_bond_penalty != .0 ||
+        remove_index_map != false ||
+        remove_smiles != false
+        );
+}
+
 
 bool generator::save_config(const config& config, const std::filesystem::path& working_directory, const std::filesystem::path& out_path, const std::string& prefix) {
     const temp_folder temp_path(working_directory);
@@ -290,12 +368,12 @@ bool generator::process(const std::istream& config_stream, const std::filesystem
         const auto& json = jsoncons::json::parse(buffer);
 
         prepare_ligands prepare_ligands;
-        if (json.contains("prepare_ligands") && (!prepare_ligands.load(json["prepare_ligands"], working_directory) || !prepare_ligands.validate())) {
+        if (!prepare_ligands.load(json, working_directory) || !prepare_ligands.validate()) {
             return false;
         }
 
         prepare_receptors prepare_receptors;
-        if (json.contains("prepare_receptors") && (!prepare_receptors.load(json["prepare_receptors"], working_directory) || !prepare_receptors.validate())) {
+        if (!prepare_receptors.load(json, working_directory) || !prepare_receptors.validate()) {
             return false;
         }
 
@@ -311,31 +389,41 @@ bool generator::process(const std::istream& config_stream, const std::filesystem
             config.misc.seed = dist(mt);
         }
 
-        const auto need_prepare_receptors_step = !prepare_receptors.receptors.empty();
-        const auto need_prepare_ligand_step = !prepare_ligands.ligand.empty();
-
-        if (!need_prepare_receptors_step && !need_prepare_ligand_step) {
+        if (!prepare_receptors.is_prepare_needed() && !prepare_ligands.is_prepare_needed()) {
             if (config.validate()) {
                 return save_config(config, working_directory, out_path, prefix);
             }
         }
 
-        if (need_prepare_ligand_step) {
+        std::vector<std::string> prepared_receptors;
+        std::vector<std::string> prepared_ligands;
+
+        for (const auto& l : prepare_ligands.ligands) {
             std::stringstream cmd;
 #ifdef WIN32
+            if (!std::filesystem::path(l).has_extension() || std::filesystem::path(l).extension().string() == ".pdbqt") {
+                continue;
+            }
             const auto source_file = "boinc-autodock-vina\\samples\\basic_docking_full\\1iep_ligand.pdbqt.tmp";
             const auto target_file = "boinc-autodock-vina\\samples\\basic_docking_full\\1iep_ligand.pdbqt";
             cmd << "cmd /c copy " << source_file << " " << target_file;
-            config.input.ligands.emplace_back((std::filesystem::current_path() / target_file).string());
+            prepared_ligands.emplace_back((std::filesystem::current_path() / target_file).string());
 #else
             cmd << "mk_prepare_ligand.py ";
-            cmd << "-i " << prepare_ligands.ligand << " ";
+            cmd << "-i " << l << " ";
 
             if (!prepare_ligands.multimol || prepare_ligands.multimol_prefix.empty() || prepare_ligands.selected_ligands.empty()) {
-                std::filesystem::path output(prepare_ligands.ligand);
+                std::filesystem::path output(l);
+
+                if (data_validate::compare_extension(output, ".pdbqt")) {
+                    prepared_ligands.emplace_back(output.string());
+                    continue;
+                }
+
                 output.replace_extension("pdbqt");
                 cmd << "-o " << output.string() << " ";
-                config.input.ligands.emplace_back(output.string());
+
+                prepared_ligands.emplace_back(output.string());
             }
             if (prepare_ligands.break_macrocycle) {
                 cmd << "-m ";
@@ -383,54 +471,74 @@ bool generator::process(const std::istream& config_stream, const std::filesystem
                 std::cerr << "Failed to prepare ligand(s): <" << std::filesystem::path(cmd.str()).filename().string() << ">" << std::endl;
                 return false;
             }
+        }
 
-            for (const auto& l : prepare_ligands.selected_ligands) {
-                config.input.ligands.emplace_back(l);
+        for (const auto& l : prepare_ligands.selected_ligands) {
+            prepared_ligands.emplace_back(l);
+        }
+
+        //TODO: Could run in parallel
+        for ([[maybe_unused]] const auto& r : prepare_receptors.receptors) {
+            std::stringstream cmd;
+#ifdef WIN32
+            if (!std::filesystem::path(r).has_extension() || std::filesystem::path(r).extension().string() == ".pdbqt") {
+                continue;
+            }
+            const auto source_file = "boinc-autodock-vina\\samples\\basic_docking_full\\1iep_receptor.pdbqt.tmp";
+            const auto target_file = "boinc-autodock-vina\\samples\\basic_docking_full\\1iep_receptor.pdbqt";
+            cmd << "cmd /c copy " << source_file << " " << target_file;
+            prepared_receptors.emplace_back((std::filesystem::current_path() / target_file).string());
+
+#else
+            std::filesystem::path output(r);
+
+            if (data_validate::compare_extension(output, ".pdbqt")) {
+                prepared_ligands.emplace_back(output.string());
+                continue;
+            }
+
+            output.replace_extension("pdbqt");
+            prepared_receptors.emplace_back(output.string());
+
+            cmd << "prepare_receptor ";
+            cmd << "-r " << r << " ";
+            cmd << "-o " << output.string() << " ";
+
+            if (prepare_receptors.repair != repair::None) {
+                cmd << "- A " << magic_enum::enum_name(prepare_receptors.repair) << " ";
+            }
+            for (const auto& p : prepare_receptors.preserves) {
+                if (p == "all") {
+                    cmd << "-C ";
+                }
+                else {
+                    cmd << "-p " << p << " ";
+                }
+            }
+            if (prepare_receptors.cleanup != cleanup::none) {
+                cmd << "-U " << magic_enum::enum_name(prepare_receptors.cleanup) << " ";
+            }
+            if (prepare_receptors.delete_nonstd_residue) {
+                cmd << "-e ";
+            }
+#endif
+
+            boost::process::child prepare_receptor(cmd.str());
+            prepare_receptor.wait();
+            if (prepare_receptor.exit_code() != 0) {
+                std::cerr << "Failed to prepare receptors: <" << std::filesystem::path(cmd.str()).filename().string() << ">" << std::endl;
+                return false;
             }
         }
 
-        if (need_prepare_receptors_step) {
-            //TODO: Could run in parallel
-            for ([[maybe_unused]] const auto& r : prepare_receptors.receptors) {
-                std::stringstream cmd;
-#ifdef WIN32
-                const auto source_file = "boinc-autodock-vina\\samples\\basic_docking_full\\1iep_receptor.pdbqt.tmp";
-                const auto target_file = "boinc-autodock-vina\\samples\\basic_docking_full\\1iep_receptor.pdbqt";
-                cmd << "cmd /c copy " << source_file << " " << target_file;
-                config.input.receptor = (std::filesystem::current_path() / target_file).string();
-#else
-                cmd << "prepare_receptor ";
-                cmd << "-r " << r << " ";
+        if (!prepared_receptors.empty()) {
+            for (const auto& receptor : prepared_receptors) {
+                config.input.receptors.clear();
+                config.input.receptors.emplace_back(receptor);
 
-                std::filesystem::path output(r);
-                output.replace_extension("pdbqt");
-                config.input.receptor = output.string();
-                cmd << "-o " << config.input.receptor << " ";
-
-                if (prepare_receptors.repair != repair::None) {
-                    cmd << "- A " << magic_enum::enum_name(prepare_receptors.repair) << " ";
-                }
-                for (const auto& p : prepare_receptors.preserves) {
-                    if (p == "all") {
-                        cmd << "-C ";
-                    }
-                    else {
-                        cmd << "-p " << p << " ";
-                    }
-                }
-                if (prepare_receptors.cleanup != cleanup::none) {
-                    cmd << "-U " << magic_enum::enum_name(prepare_receptors.cleanup) << " ";
-                }
-                if (prepare_receptors.delete_nonstd_residue) {
-                    cmd << "-e ";
-                }
-#endif
-
-                boost::process::child prepare_receptor(cmd.str());
-                prepare_receptor.wait();
-                if (prepare_receptor.exit_code() != 0) {
-                    std::cerr << "Failed to prepare receptors: <" << std::filesystem::path(cmd.str()).filename().string() << ">" << std::endl;
-                    return false;
+                for (const auto& ligand : prepared_ligands) {
+                    config.input.ligands.clear();
+                    config.input.ligands.emplace_back(ligand);
                 }
 
                 if (!config.validate()) {
@@ -441,6 +549,31 @@ bool generator::process(const std::istream& config_stream, const std::filesystem
                     std::cerr << "Failed to save generated config." << std::endl;
                     return false;
                 }
+            }
+        }
+        else if (!prepared_ligands.empty()) {
+            for (const auto& ligand : prepared_ligands) {
+                config.input.ligands.clear();
+                config.input.ligands.emplace_back(ligand);
+            }
+
+            if (!config.validate()) {
+                std::cerr << "Failed to validate generated config." << std::endl;
+                return false;
+            }
+            if (!save_config(config, working_directory, out_path, prefix)) {
+                std::cerr << "Failed to save generated config." << std::endl;
+                return false;
+            }
+        }
+        else {
+            if (!config.validate()) {
+                std::cerr << "Failed to validate generated config." << std::endl;
+                return false;
+            }
+            if (!save_config(config, working_directory, out_path, prefix)) {
+                std::cerr << "Failed to save generated config." << std::endl;
+                return false;
             }
         }
 
