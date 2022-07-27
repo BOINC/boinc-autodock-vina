@@ -67,7 +67,7 @@ def get_arch_from_triplet(triplet):
     return arch
 
 def install_android_ndk(build_path, app, triplet):
-    ndk_version = 'r23b'
+    ndk_version = 'r23c'
     ndk_path = os.path.join(build_path, app, triplet)
 
     if (not os.path.exists(ndk_path)):
@@ -244,6 +244,8 @@ def build_android_specific_init_params(arch, tc_path):
     return build_specific_init_params(CC, CXX, LD, CFLAGS, CXXFLAGS, LDFLAGS)
 
 def fix_path_for_android(arch, android_tc_path):
+    os.environ['ANDROID_NDK_HOME'] = android_tc_path
+
     tc_binaries = os.path.join(android_tc_path, 'toolchains', 'llvm', 'prebuilt', 'linux-x86_64', 'bin')
 
     tc_includes = None
