@@ -49,15 +49,45 @@ jobs:
       - name: Fix vcpkg
         run: vcpkg.exe integrate remove
 
-      - name: Check if build is running from origin repo
-        if: ${{ success() && env.AWS_ACCESS_KEY_ID != 0 && env.AWS_SECRET_ACCESS_KEY != 0 }}
-        run: |
-          echo "VCPKG_BINARY_SOURCES=clear;x-aws,s3://vcpkg.cache.boinc-apps/,readwrite" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
+      # - name: Check if build is running from origin repo
+      #   if: ${{ success() && env.AWS_ACCESS_KEY_ID != 0 && env.AWS_SECRET_ACCESS_KEY != 0 }}
+      #   run: |
+      #     echo "VCPKG_BINARY_SOURCES=clear;x-aws,s3://vcpkg.cache.boinc-apps/,readwrite" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
 
-      - name: Check if build is running from fork
-        if: ${{ success() && (env.AWS_ACCESS_KEY_ID == 0 || env.AWS_SECRET_ACCESS_KEY == 0) }}
+      # - name: Check if build is running from fork
+      #   if: ${{ success() && (env.AWS_ACCESS_KEY_ID == 0 || env.AWS_SECRET_ACCESS_KEY == 0) }}
+      #   run: |
+      #     echo "VCPKG_BINARY_SOURCES=clear;x-aws-config,no-sign-request;x-aws,s3://vcpkg.cache.boinc-apps/,read" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
+
+      - name: Workaround
         run: |
-          echo "VCPKG_BINARY_SOURCES=clear;x-aws-config,no-sign-request;x-aws,s3://vcpkg.cache.boinc-apps/,read" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
+          Set-Location "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
+          $InstallPath = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
+          $componentsToRemove= @(
+            "Microsoft.VisualStudio.Component.VC.14.32.17.2.ARM"
+            "Microsoft.VisualStudio.Component.VC.14.32.17.2.ARM.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.32.17.2.ARM64"
+            "Microsoft.VisualStudio.Component.VC.14.32.17.2.ARM64.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.32.17.2.x86.x64"
+            "Microsoft.VisualStudio.Component.VC.14.32.17.2.x86.x64.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.32.17.2.ATL"
+            "Microsoft.VisualStudio.Component.VC.14.32.17.2.ATL.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.32.17.2.ATL.ARM"
+            "Microsoft.VisualStudio.Component.VC.14.32.17.2.ATL.ARM.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.32.17.2.ATL.ARM64"
+            "Microsoft.VisualStudio.Component.VC.14.32.17.2.ATL.ARM64.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.32.17.2.MFC"
+            "Microsoft.VisualStudio.Component.VC.14.32.17.2.MFC.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.32.17.2.MFC.ARM"
+            "Microsoft.VisualStudio.Component.VC.14.32.17.2.MFC.ARM.Spectre"
+            "Microsoft.VisualStudio.Component.VC.14.32.17.2.MFC.ARM64"
+            "Microsoft.VisualStudio.Component.VC.14.32.17.2.MFC.ARM64.Spectre"
+          )
+          [string]$workloadArgs = $componentsToRemove | ForEach-Object {" --remove " +  $_}
+          $Arguments = ('/c', "vs_installer.exe", 'modify', '--installPath', "`"$InstallPath`"",$workloadArgs, '--quiet', '--norestart', '--nocache')
+          # should be run twice
+          $process = Start-Process -FilePath cmd.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
+          $process = Start-Process -FilePath cmd.exe -ArgumentList $Arguments -Wait -PassThru -WindowStyle Hidden
 
       - name: Build
         if: ${{ success() }}
