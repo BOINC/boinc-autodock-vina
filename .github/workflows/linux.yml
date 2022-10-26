@@ -39,7 +39,7 @@ jobs:
         configuration: [x64-linux-static, x86-linux-static, arm-linux-static, armneon-linux-static, arm64-linux-static, coverage-report]
       fail-fast: false
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 2
 
@@ -122,7 +122,7 @@ jobs:
 
       - name: Upload boinc-autodock-vina artifacts
         if: ${{ success() && matrix.app == 'boinc-autodock-vina' && matrix.configuration != 'coverage-report' }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.app }}-${{ matrix.configuration }}-${{ github.event.pull_request.head.sha }}
           path: |
@@ -135,7 +135,7 @@ jobs:
         run: bash -c "find . -type f -name '*.gcno' -exec gcov -pb {} +" || true
 
       - name: Upload coverage report
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         if: ${{ success() && matrix.configuration == 'coverage-report' }}
         with:
           fail_ci_if_error: true

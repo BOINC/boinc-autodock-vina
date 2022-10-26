@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Coverity Scan
-        uses: vapier/coverity-scan-action@v0
+        uses: vapier/coverity-scan-action@v1
         with:
           project: 'BOINC/boinc-apps'
           token: ${{ secrets.COVERITY_SCAN_TOKEN }}
