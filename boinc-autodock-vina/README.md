@@ -41,7 +41,7 @@ This file supports next parameters:
 - `remove_smiles` - do not write smiles as remark to PDBQT. This is an **optional** `boolean` parameter. Default is **false**.
 - `flex` - path to PDBQT file with flexible side chains, if any. This file should not have absolute path. This is an **optional** `string` parameter for `vina` and `vinardo` scoring functions. This parameter is **required** for `ad4` scoring function.
 - `ligands` - paths to PDBQT files with ligands. This file should not have absolute path. This is an **optional** `list of string` parameters. Either `ligands` or `batch` parameter should be specified.
-- `batch` - paths to PDBQT files with batch ligands. This file should not have absolute path. This is an **optional** `list of string` parameters. Either `input.ligands` or `input.batch` parameter should be specified.
+- `batch` - paths to PDBQT files with batch ligands. This file should not have absolute path. This is an **optional** `list of string` parameters. Either `ligands` or `batch` parameter should be specified.
 - `scoring` - scoring function (`ad4`, `vina` or `vinardo`). This is an **optional** `string` parameter. Default function is `vina`.
 - `maps` - path to the folder with affinity maps **including prefix**. This is an **optional** `string` parameter. E.g. for the folder with maps `.\maps\1iep_receptor.A.map` and `.\maps\1iep_receptor.C.map` should be provided as `maps\1iep_receptor`. If this parameter is not specified, then `center_x`, `center_y`, `center_z` and `size_x`, `size_y`, `size_x` parameters should be specified to generate affinity maps. Can't be used together with `receptor` parameter. Either `receptor` or `maps` **should be specified** for `vina` and `vinardo` scoring function. This parameter is **required** for `ad4` scoring function.
 - `center_x` - X coordinate of the center (Angstrom). This `double` parameter is ignored when `maps` parameter is specified.
@@ -122,7 +122,7 @@ More information about specified parameters could be found on the official docum
     "out": "1iep_ligand_vina_out.pdbqt"
 }
 ```
-### JSON file with two receptors and one ligand with with search area and exhaustiveness specified
+### JSON file with two receptors and two ligands with search area and exhaustiveness specified
 
 ```json
 {
