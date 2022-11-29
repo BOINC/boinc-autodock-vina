@@ -77,12 +77,24 @@ if (NOT COVERAGE_REPORT)
     add_executable(boinc-autodock-vina
         src/boinc-autodock-vina/boinc-autodock-vina.cpp
     )
+    if (NOT MSVC AND STRIP_BINARIES)
+        add_custom_command(TARGET boinc-autodock-vina POST_BUILD
+            COMMAND ${CMAKE_STRIP}
+            ARGS $<TARGET_FILE:boinc-autodock-vina>
+        )
+    endif()
 endif()
 
 if (NOT COVERAGE_REPORT)
     add_executable(config-validator
         src/config-validator/config-validator.cpp
     )
+    if (NOT MSVC AND STRIP_BINARIES)
+        add_custom_command(TARGET config-validator POST_BUILD
+            COMMAND ${CMAKE_STRIP}
+            ARGS $<TARGET_FILE:config-validator>
+            )
+    endif()
 endif()
 
 add_executable(unit-tests
@@ -102,6 +114,12 @@ if (BUILD_WORK_GENERATOR AND NOT COVERAGE_REPORT)
     add_executable(work-generator
         src/work-generator/work-generator.cpp
     )
+    if (NOT MSVC AND STRIP_BINARIES)
+        add_custom_command(TARGET work-generator POST_BUILD
+            COMMAND ${CMAKE_STRIP}
+            ARGS $<TARGET_FILE:work-generator>
+            )
+    endif()
 endif()
 
 if (COVERAGE_REPORT)
