@@ -402,7 +402,8 @@ for a in apps_to_build:
             '-DVCPKG_OVERLAY_TRIPLETS={vcpkg_overlay_triplets} '
             '-DVCPKG_TARGET_TRIPLET={vcpkg_overlay_triplet} '
             '-DVCPKG_INSTALL_OPTIONS=--clean-after-build '
-            '-DBOINC_APPS_GIT_REVISION={boinc_apps_git_revision}'
+            '-DBOINC_APPS_GIT_REVISION={boinc_apps_git_revision} '
+            '-DSTRIP_BINARIES=ON'
             ).format(
                 a=a,
                 build_dir=build_dir,
