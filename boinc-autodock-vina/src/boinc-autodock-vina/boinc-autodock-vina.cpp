@@ -88,9 +88,7 @@ int perform_docking(const std::string& in_zip, const std::string& out_zip) noexc
             return res;
         }
 
-        APP_INIT_DATA app_data;
-        boinc_get_init_data(app_data);
-        const int ncpus = static_cast<int>(ceil(app_data.ncpus));
+        constexpr int ncpus = 1;
 
         std::atomic result(false);
 
@@ -104,7 +102,7 @@ int perform_docking(const std::string& in_zip, const std::string& out_zip) noexc
         }
 
         std::filesystem::path json_path;
-        bool json_found = false;
+        auto json_found = false;
         for (const auto& file : std::filesystem::directory_iterator(data_path)) {
             if (file.path().extension() == ".json") {
                 if (json_found) {
@@ -166,7 +164,7 @@ int perform_docking(const std::string& in_zip, const std::string& out_zip) noexc
 
         std::vector<std::filesystem::path> out_files;
         for (const auto& file : conf.get_out_files()) {
-            out_files.emplace_back(std::filesystem::path(file));
+            out_files.emplace_back(file);
         }
 
         if (!zip_create::create(out_zip_path, out_files)) {
