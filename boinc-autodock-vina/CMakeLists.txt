@@ -138,7 +138,7 @@ if (COVERAGE_REPORT)
     target_link_options(jsoncons_helper PRIVATE --coverage)
 endif()
 
-set(BOINC_AUTODOCK_VINA_VERSION "1.1")
+set(BOINC_AUTODOCK_VINA_VERSION "1.2")
 if (NOT DEFINED BOINC_APPS_GIT_REVISION)
     set(BOINC_APPS_GIT_REVISION "unknown")
 endif()
