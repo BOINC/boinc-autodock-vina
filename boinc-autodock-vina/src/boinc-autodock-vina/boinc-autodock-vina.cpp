@@ -198,8 +198,16 @@ int main(int argc, char** argv) {
             return 1;
         }
 
-        const std::string in_zip(argv[1]);
-        const std::string out_zip(argv[2]);
+        std::string in_zip;
+		if (boinc_resolve_filename_s(argv[1], in_zip)) {
+			std::cerr << "Failed to resolve input ZIP file name" << std::endl;
+			return 1;
+		}
+        std::string out_zip;
+		if (boinc_resolve_filename_s(argv[2], out_zip)) {
+			std::cerr << "Failed to resolve output ZIP file name" << std::endl;
+			return 1;
+		}
 
         return perform_docking(in_zip, out_zip);
     }
