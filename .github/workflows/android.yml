@@ -58,11 +58,11 @@ jobs:
         run: |
           python3 build.py -nt -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
 
-      - name: print logs
-        if: ${{ failure() }}
-        run: |
-          cat /home/runner/work/boinc-apps/boinc-apps/vcpkg/buildtrees/openssl/config-arm-android-static-rel-out.log
-          cat /home/runner/work/boinc-apps/boinc-apps/vcpkg/buildtrees/openssl/config-arm-android-static-rel-err.log
+      # - name: print logs
+      #   if: ${{ failure() }}
+      #   run: |
+      #     cat /home/runner/work/boinc-apps/boinc-apps/vcpkg/buildtrees/openssl/config-arm-android-static-rel-out.log
+      #     cat /home/runner/work/boinc-apps/boinc-apps/vcpkg/buildtrees/openssl/config-arm-android-static-rel-err.log
 
 
       - name: Upload boinc-autodock-vina artifacts

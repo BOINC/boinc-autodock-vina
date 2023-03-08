@@ -332,9 +332,13 @@ vcpkg_bootstrap_file = 'bootstrap-vcpkg.bat' if os.name == 'nt' else 'bootstrap-
 
 if run_build:
     if not os.path.isfile('vcpkg/'+vcpkg_bootstrap_file):
-        result = subprocess.call('git clone https://github.com/microsoft/vcpkg.git', shell=True)
+        result = subprocess.call('git clone https://github.com/dg0yt/vcpkg.git', shell=True)
         if result != 0:
             print('Failed to clone vcpkg')
+            sys.exit(1)
+        result = subprocess.call('git -C vcpkg checkout --track origin/openssl', shell=True)
+        if result != 0:
+            print('Failed to checkout to the openssl branch')
             sys.exit(1)
 
     result = subprocess.call('git -C vcpkg pull', shell=True)
