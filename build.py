@@ -274,7 +274,6 @@ qemu_command = None
 run_build = True
 run_tests = True
 
-force_build_work_generator = False
 coverage_report = False
 
 for a in sys.argv[1:]:
@@ -285,8 +284,6 @@ for a in sys.argv[1:]:
             run_build = False
         elif (a == '-nt'):
             run_tests = False
-        elif (a == '-wg'):
-            force_build_work_generator = True
         elif (a == '-cr'):
             coverage_report = True
         else:
@@ -373,8 +370,6 @@ if (get_target_os_from_triplet(vcpkg_overlay_triplet) == 'linux'):
     if (get_arch_from_triplet(vcpkg_overlay_triplet) == '64'):
         build_work_generator_param = '-DBUILD_WORK_GENERATOR=ON'
 
-if (force_build_work_generator):
-    build_work_generator_param = '-DBUILD_WORK_GENERATOR=ON'
 if (coverage_report):
     coverage_report_param = '-DCOVERAGE_REPORT=ON'
 

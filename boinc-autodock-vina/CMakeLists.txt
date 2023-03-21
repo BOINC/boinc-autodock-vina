@@ -51,16 +51,6 @@ add_library(zip-helper
         src/common/zip-create.cpp
 )
 
-if (BUILD_WORK_GENERATOR)
-    add_library(input-config
-        STATIC
-            src/work-generator/input-config.h
-            src/work-generator/input-config.cpp
-            src/work-generator/temp-folder.h
-            src/work-generator/temp-folder.cpp
-    )
-endif()
-
 add_library(calculate
     STATIC
         src/boinc-autodock-vina/calculate.h
@@ -85,54 +75,21 @@ if (NOT COVERAGE_REPORT)
     endif()
 endif()
 
-if (NOT COVERAGE_REPORT)
-    add_executable(config-validator
-        src/config-validator/config-validator.cpp
-    )
-    if (NOT MSVC AND STRIP_BINARIES)
-        add_custom_command(TARGET config-validator POST_BUILD
-            COMMAND ${CMAKE_STRIP}
-            ARGS $<TARGET_FILE:config-validator>
-            )
-    endif()
-endif()
-
 add_executable(unit-tests
     src/unit-tests/config-tests.cpp
     src/unit-tests/dummy-ofstream.h
     src/unit-tests/dummy-ofstream.cpp
 )
 
-if (BUILD_WORK_GENERATOR)
-    target_sources(unit-tests
-        PRIVATE
-            src/unit-tests/input-config-tests.cpp
-    )
-endif()
-
-if (BUILD_WORK_GENERATOR AND NOT COVERAGE_REPORT)
-    add_executable(work-generator
-        src/work-generator/work-generator.cpp
-    )
-    if (NOT MSVC AND STRIP_BINARIES)
-        add_custom_command(TARGET work-generator POST_BUILD
-            COMMAND ${CMAKE_STRIP}
-            ARGS $<TARGET_FILE:work-generator>
-            )
-    endif()
-endif()
-
 if (COVERAGE_REPORT)
     target_compile_options(unit-tests PRIVATE -g -O0 --coverage -fprofile-abs-path)
     target_compile_options(config PRIVATE -g -O0 --coverage -fprofile-abs-path)
-    target_compile_options(input-config PRIVATE -g -O0 --coverage -fprofile-abs-path)
     target_compile_options(zip-helper PRIVATE -g -O0 --coverage -fprofile-abs-path)
     target_compile_options(calculate PRIVATE -g -O0 --coverage -fprofile-abs-path)
     target_compile_options(jsoncons_helper PRIVATE -g -O0 --coverage -fprofile-abs-path)
 
     target_link_options(unit-tests PRIVATE --coverage)
     target_link_options(config PRIVATE --coverage)
-    target_link_options(input-config PRIVATE --coverage)
     target_link_options(zip-helper PRIVATE --coverage)
     target_link_options(calculate PRIVATE --coverage)
     target_link_options(jsoncons_helper PRIVATE --coverage)
@@ -151,41 +108,17 @@ if (NOT COVERAGE_REPORT)
     )
 endif()
 
-if (NOT COVERAGE_REPORT)
-    target_compile_definitions(config-validator
-        PRIVATE
-            -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
-            -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
-    )
-endif()
-
 target_compile_definitions(unit-tests
     PRIVATE
         -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
         -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
 )
 
-if (BUILD_WORK_GENERATOR AND NOT COVERAGE_REPORT)
-    target_compile_definitions(work-generator
-        PRIVATE
-            -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
-            -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
-    )
-endif()
-
 target_compile_definitions(config
     PRIVATE
         -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
         -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
 )
-
-if (BUILD_WORK_GENERATOR)
-    target_compile_definitions(input-config
-        PRIVATE
-            -DBOINC_AUTODOCK_VINA_VERSION="${BOINC_AUTODOCK_VINA_VERSION}"
-            -DBOINC_APPS_GIT_REVISION="${BOINC_APPS_GIT_REVISION}"
-    )
-endif()
 
 target_compile_definitions(calculate
     PRIVATE
@@ -207,27 +140,11 @@ if (NOT COVERAGE_REPORT)
     )
 endif()
 
-if (NOT COVERAGE_REPORT)
-    target_include_directories(config-validator
-        PRIVATE
-            ${CMAKE_CURRENT_LIST_DIR}/src
-            ${CMAKE_CURRENT_LIST_DIR}/../common/src
-    )
-endif()
-
 target_include_directories(unit-tests
     PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/src
         ${CMAKE_CURRENT_LIST_DIR}/../common/src
 )
-
-if (BUILD_WORK_GENERATOR AND NOT COVERAGE_REPORT)
-    target_include_directories(work-generator
-        PRIVATE
-            ${CMAKE_CURRENT_LIST_DIR}/src
-            ${CMAKE_CURRENT_LIST_DIR}/../common/src
-    )
-endif()
 
 target_include_directories(config
     PRIVATE
@@ -240,14 +157,6 @@ target_include_directories(zip-helper
         ${CMAKE_CURRENT_LIST_DIR}/src
         ${CMAKE_CURRENT_LIST_DIR}/../common/src
 )
-
-if (BUILD_WORK_GENERATOR)
-    target_include_directories(input-config
-        PRIVATE
-            ${CMAKE_CURRENT_LIST_DIR}/src
-            ${CMAKE_CURRENT_LIST_DIR}/../common/src
-    )
-endif()
 
 target_include_directories(calculate
     PRIVATE
@@ -288,17 +197,6 @@ if (NOT COVERAGE_REPORT)
     )
 endif()
 
-if (NOT COVERAGE_REPORT)
-    target_link_libraries(config-validator
-        PRIVATE
-            config
-            magic_enum::magic_enum
-            jsoncons
-            jsoncons_helper
-            zip-helper
-    )
-endif()
-
 set (UNIT_TEST_LINK_LIBRARIES
     config
     calculate
@@ -322,30 +220,10 @@ set (UNIT_TEST_LINK_LIBRARIES
     libzip::zip
 )
 
-if (BUILD_WORK_GENERATOR)
-    set (UNIT_TEST_LINK_LIBRARIES
-        ${UNIT_TEST_LINK_LIBRARIES}
-        input-config
-    )
-endif()
-
 target_link_libraries(unit-tests
     PRIVATE
         ${UNIT_TEST_LINK_LIBRARIES}
 )
-
-if (BUILD_WORK_GENERATOR AND NOT COVERAGE_REPORT)
-    target_link_libraries(work-generator
-        PRIVATE
-            config
-            input-config
-            jsoncons_helper
-            magic_enum::magic_enum
-            jsoncons
-            libzip::zip
-            Boost::filesystem
-    )
-endif()
 
 target_link_libraries(config
     PRIVATE
@@ -357,16 +235,6 @@ target_link_libraries(zip-helper
     PRIVATE
         libzip::zip
 )
-
-if (BUILD_WORK_GENERATOR)
-    target_link_libraries(input-config
-        PRIVATE
-            config
-            jsoncons
-            zip-helper
-            libzip::zip
-    )
-endif()
 
 target_link_libraries(calculate
     PRIVATE

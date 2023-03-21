@@ -52,7 +52,6 @@ server_app_name = sys.argv[4]
 release_dir = os.path.join(current_dir, app + '-release-'+ release)
 server_release_dir_without_version = os.path.join(current_dir, server_app_name)
 server_release_dir = os.path.join(server_release_dir_without_version, release)
-wu_generator_release_dir = os.path.join(current_dir, app + '-wu-generator-release-'+ release)
 
 for root, dirs, files in os.walk(current_dir):
     for file in files:
@@ -72,17 +71,11 @@ for root, dirs, files in os.walk(current_dir):
                 if is_windows(current_platform):
                     new_file += '.exe'
                 os.rename(extracted_file, new_file)
-            if current_platform == 'x64-linux':
-                os.makedirs(wu_generator_release_dir, exist_ok=True)
-                unzip(full_path, wu_generator_release_dir, 'work-generator')
-                unzip(full_path, wu_generator_release_dir, 'config-validator')
             os.remove(full_path)
     break
 
 zip(release_dir, os.path.join(current_dir, app + '-release-'+ release + '.zip'))
 zip(server_release_dir_without_version, os.path.join(current_dir, app + '-v'+ release + '.zip'))
-zip(wu_generator_release_dir, os.path.join(current_dir, app + '-wu-generator-release-'+ release + '.zip'))
 
 shutil.rmtree(release_dir)
 shutil.rmtree(server_release_dir_without_version)
-shutil.rmtree(wu_generator_release_dir)
