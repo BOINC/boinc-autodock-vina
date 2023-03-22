@@ -130,7 +130,7 @@ int perform_docking(const std::string& in_zip, const std::string& out_zip) noexc
             return 1;
         }
 
-        if (!conf.validate(true)) {
+        if (!conf.validate()) {
             std::cerr << boinc_msg_prefix(buf, sizeof(buf)) << "Config validation failed, cannot proceed further" << std::endl;
             boinc_finish(1);
             return 1;

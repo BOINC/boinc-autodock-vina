@@ -46,7 +46,7 @@ public:
 
 class input final : public json_load, public json_save {
 public:
-    std::vector<std::string> receptors;
+    std::string receptor;
     std::string flex;
     std::vector<std::string> ligands;
     std::vector<std::string> batch;
@@ -132,7 +132,7 @@ public:
     advanced advanced;
     misc misc;
 
-    [[nodiscard]] bool validate(bool single_pair_allowed = false) const;
+    [[nodiscard]] bool validate() const;
     [[nodiscard]] bool check_files_exist() const;
     [[nodiscard]] bool load(const std::filesystem::path& config_file_path);
     [[nodiscard]] bool load(const std::istream& config_stream, const std::filesystem::path& working_directory);

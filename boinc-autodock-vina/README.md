@@ -6,7 +6,7 @@ This application works with ZIP archive that contains data to be calculated. Inp
 
 This file supports next parameters:
 
-- `receptor` - list of paths to receptors to be processed. This is a **optional** `list of strings` parameter. Only PDBQT format is supported. This file should not have absolute path. Can't be used together with `maps` parameter. Either `receptor` or `maps` **should be specified** for `vina` and `vinardo` scoring function. This parameter is **not allowed** for `ad4` scoring function.
+- `receptor` - paths to receptor to be processed. This is a **optional** `strings` parameter. Only PDBQT format is supported. This file should not have absolute path. Can't be used together with `maps` parameter. Either `receptor` or `maps` **should be specified** for `vina` and `vinardo` scoring function. This parameter is **not allowed** for `ad4` scoring function.
 - `ligand` - list of paths to ligands to be processed. This is an **optional** `list of strings` parameter. Either `ligand` or `batch` parameter should be specified.
 - `flex` - path to PDBQT file with flexible side chains, if any. This file should not have absolute path. This is an **optional** `string` parameter for `vina` and `vinardo` scoring functions. This parameter is **required** for `ad4` scoring function.
 - `batch` - paths to PDBQT files with batch ligands. This file should not have absolute path. This is an **optional** `list of string` parameters. Either `ligand` or `batch` parameter should be specified.
