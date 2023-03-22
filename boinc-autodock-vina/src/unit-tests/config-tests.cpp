@@ -405,8 +405,7 @@ TEST_F(Config_UnitTests, LoadValidator) {
     ASSERT_TRUE(res);
 
     const auto receptor_sample = std::filesystem::current_path() /= "receptor_sample";
-    ASSERT_EQ(1, config.input.receptors.size());
-    EXPECT_STREQ(receptor_sample.string().c_str(), config.input.receptors.front().c_str());
+    EXPECT_STREQ(receptor_sample.string().c_str(), config.input.receptor.c_str());
     const auto flex_sample = std::filesystem::current_path() /= "flex_sample";
     EXPECT_STREQ(flex_sample.string().c_str(), config.input.flex.c_str());
     ASSERT_EQ(2, config.input.ligands.size());
@@ -799,9 +798,7 @@ TEST_F(Config_UnitTests, TestConfigsEqualAfterReadWrite) {
 
     ASSERT_TRUE(config_copy.load(dummy_copy_json_file_path));
 
-    ASSERT_EQ(1, config.input.receptors.size());
-    ASSERT_EQ(config.input.receptors.size(), config_copy.input.receptors.size());
-    EXPECT_STREQ(config.input.receptors.front().c_str(), config_copy.input.receptors.front().c_str());
+    EXPECT_STREQ(config.input.receptor.c_str(), config_copy.input.receptor.c_str());
     EXPECT_STREQ(config.input.flex.c_str(), config_copy.input.flex.c_str());
     ASSERT_EQ(config.input.ligands.size(), config_copy.input.ligands.size());
     EXPECT_STREQ(config.input.ligands[0].c_str(), config_copy.input.ligands[0].c_str());

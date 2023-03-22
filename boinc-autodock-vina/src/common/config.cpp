@@ -24,26 +24,13 @@
 #include "config.h"
 
 bool input::load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) {
-    const std::string receptor_field_name = json.contains("receptors") ? "receptors" : json.contains("receptor") ? "receptor" : "";
-    if (!receptor_field_name.empty()) {
-        if (json[receptor_field_name].is_array()) {
-            for (const auto& r : json[receptor_field_name].array_range()) {
-                const auto& value = std::filesystem::path(r.as<std::string>());
-                if (value.is_absolute()) {
-                    std::cerr << "Config should not contain absolute paths" << std::endl;
-                    return false;
-                }
-                receptors.emplace_back(std::filesystem::path(working_directory / value).string());
-            }
+    if (json.contains("receptor")) {
+        const auto& value = std::filesystem::path(json["receptor"].as<std::string>());
+        if (value.is_absolute()) {
+            std::cerr << "Config should not contain absolute paths" << std::endl;
+            return false;
         }
-        else {
-            const auto& value = std::filesystem::path(json[receptor_field_name].as<std::string>());
-            if (value.is_absolute()) {
-                std::cerr << "Config should not contain absolute paths" << std::endl;
-                return false;
-            }
-            receptors.emplace_back(std::filesystem::path(working_directory / value).string());
-        }
+        receptor = std::filesystem::path(working_directory / value).string();
     }
     if (json.contains("flex")) {
         const auto& value = std::filesystem::path(json["flex"].as<std::string>());
@@ -114,28 +101,10 @@ bool input::save(const json_encoder_helper& json, const std::filesystem::path& w
         std::cerr << std::endl;
     };
 
-    if (!receptors.empty()) {
-        if (receptors.size() > 1) {
-            if (!json.begin_array("receptors")) {
-                error_message("receptors");
-                return false;
-            }
-            for (const auto& receptor : receptors) {
-                if (!json.value(filename_from_file(receptor))) {
-                    error_message("receptor");
-                    return false;
-                }
-            }
-            if (!json.end_array()) {
-                error_message("receptors");
-                return false;
-            }
-        }
-        else {
-            if (!json.value("receptor", filename_from_file(receptors.front()))) {
-                error_message("receptor");
-                return false;
-            }
+    if (!receptor.empty()) {
+        if (!json.value("receptor", filename_from_file(receptor))) {
+            error_message("receptor");
+            return false;
         }
     }
 
@@ -608,29 +577,29 @@ bool misc::save(const json_encoder_helper& json, const std::filesystem::path& wo
     return true;
 }
 
-bool config::validate(bool single_pair_allowed) const {
-    if (!input.receptors.empty() && !search_area.maps.empty()) {
-        std::cerr << "Cannot specify both Input.receptor and SearchArea.maps at the same time,";
-        std::cerr << "Input.flex parameter is allowed with Input.receptor or SearchArea.maps";
+bool config::validate() const {
+    if (!input.receptor.empty() && !search_area.maps.empty()) {
+        std::cerr << "Cannot specify both receptor and maps at the same time,";
+        std::cerr << "flex parameter is allowed with receptor or maps";
         std::cerr << std::endl;
         return false;
     }
 
     if (input.scoring == scoring::vina || input.scoring == scoring::vinardo) {
-        if (input.receptors.empty() && search_area.maps.empty()) {
-            std::cerr << "The Input.receptor or SearchArea.maps must be specified.";
+        if (input.receptor.empty() && search_area.maps.empty()) {
+            std::cerr << "The receptor or maps must be specified.";
             std::cerr << std::endl;
             return false;
         }
     }
     else if (input.scoring == scoring::ad4) {
-        if (!input.receptors.empty()) {
-            std::cerr << "No Input.receptor allowed, only Input.flex parameter with the AD4 scoring function.";
+        if (!input.receptor.empty()) {
+            std::cerr << "No receptor allowed, only flex parameter with the AD4 scoring function.";
             std::cerr << std::endl;
             return false;
         }
         if (search_area.maps.empty()) {
-            std::cerr << "SearchArea.maps are missing.";
+            std::cerr << "maps are missing.";
             std::cerr << std::endl;
             return false;
         }
@@ -648,7 +617,7 @@ bool config::validate(bool single_pair_allowed) const {
     }
 
     if (!input.ligands.empty() && !input.batch.empty()) {
-        std::cerr << "Can't use both Input.ligands and Input.batch parameters simultaneously.";
+        std::cerr << "Can't use both ligands and batch parameters simultaneously.";
         std::cerr << std::endl;
         return false;
     }
@@ -665,13 +634,6 @@ bool config::validate(bool single_pair_allowed) const {
             std::cerr << std::endl;
             return false;
         }
-    }
-
-    if (single_pair_allowed && (input.receptors.size() > 1 || input.ligands.size() > 1))
-    {
-        std::cerr << "Only single pair of receptor-ligand is allowed.";
-        std::cerr << std::endl;
-        return false;
     }
 
     return check_files_exist();
@@ -801,9 +763,8 @@ bool config::save(const std::filesystem::path& config_file_path) const {
 std::vector<std::string> config::get_files() const {
     std::vector<std::string> files;
 
-    if (!input.receptors.empty()) {
-        for (const auto& receptor : input.receptors)
-        files.push_back(receptor);
+    if (!input.receptor.empty()) {
+        files.push_back(input.receptor);
     }
 
     if (!input.ligands.empty()) {

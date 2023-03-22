@@ -27,8 +27,8 @@ bool calculator::calculate(const config& config, const int& ncpus, const std::fu
         config.misc.seed, vina_verbosity, config.advanced.no_refine,
         const_cast<std::function<void(double)>*>(&progress_callback));
 
-    if (!config.input.receptors.empty() || !config.input.flex.empty()) {
-        vina.set_receptor(config.input.receptors.front(), config.input.flex);
+    if (!config.input.receptor.empty() || !config.input.flex.empty()) {
+        vina.set_receptor(config.input.receptor, config.input.flex);
     }
 
     if (config.input.scoring == scoring::vina) {
@@ -53,7 +53,7 @@ bool calculator::calculate(const config& config, const int& ncpus, const std::fu
     }
 
     if (!config.input.ligands.empty()) {
-        vina.set_ligand_from_file(config.input.ligands.front());
+        vina.set_ligand_from_file(config.input.ligands);
 
         if (config.input.scoring == scoring::vina || config.input.scoring == scoring::vinardo) {
             if (!config.search_area.maps.empty()) {
@@ -114,7 +114,7 @@ bool calculator::calculate(const config& config, const int& ncpus, const std::fu
         for (const auto& b : config.input.batch) {
             vina.set_ligand_from_file(b);
 
-            const auto& out_name = b;
+            const auto& out_name = (std::filesystem::path(config.output.dir) / b).string();
 
             if (config.advanced.randomize_only) {
                 vina.randomize();
