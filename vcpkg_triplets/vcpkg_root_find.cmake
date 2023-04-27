@@ -15,8 +15,21 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BOINC.  If not, see <http://www.gnu.org/licenses/>.
 
-include(${CMAKE_CURRENT_LIST_DIR}/../vcpkg_root_find.cmake)
-include(${VCPKG_ROOT}/triplets/community/arm-android.cmake)
+if(DEFINED VCPKG_ROOT)
+  message(STATUS "vcpkg root directory already defined")
+elseif(DEFINED VCPKG_ROOT_DIR)
+  set(VCPKG_ROOT ${VCPKG_ROOT_DIR} CACHE PATH "vcpkg root")
+elseif(CMAKE_TOOLCHAIN_FILE)
+  get_filename_component(VCPKG_ROOT ${CMAKE_TOOLCHAIN_FILE} DIRECTORY)
+  get_filename_component(VCPKG_ROOT ${VCPKG_ROOT} DIRECTORY)
+elseif(DEFINED ENV{VCPKG_ROOT})
+  set(VCPKG_ROOT $ENV{VCPKG_ROOT} CACHE PATH "vcpkg root")
+elseif(DEFINED ENV{USERPROFILE})
+  set(VCPKG_ROOT "$ENV{USERPROFILE}/vcpkg" CACHE PATH "vcpkg root")
+elseif(DEFINED ENV{HOME})
+  set(VCPKG_ROOT "$ENV{HOME}/vcpkg" CACHE PATH "vcpkg root")
+else()
+  message(FATAL_ERROR "Could not find vcpkg root directory")
+endif()
 
-set(VCPKG_CMAKE_SYSTEM_VERSION 21)
-set(VCPKG_MAKE_BUILD_TRIPLET -host=arm-linux)
+message(STATUS "vcpkg root directory: ${VCPKG_ROOT}")

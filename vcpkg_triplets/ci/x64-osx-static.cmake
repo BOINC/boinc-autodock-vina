@@ -1,6 +1,6 @@
 # This file is part of BOINC.
 # https://boinc.berkeley.edu
-# Copyright (C) 2021 University of California
+# Copyright (C) 2023 University of California
 #
 # BOINC is free software; you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License
@@ -15,9 +15,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BOINC.  If not, see <http://www.gnu.org/licenses/>.
 
-set(VCPKG_TARGET_ARCHITECTURE x64)
-set(VCPKG_CRT_LINKAGE dynamic)
-set(VCPKG_LIBRARY_LINKAGE static)
-set(VCPKG_CMAKE_SYSTEM_NAME Darwin)
-set(VCPKG_OSX_ARCHITECTURES x86_64)
+include(${CMAKE_CURRENT_LIST_DIR}/../default/x64-osx-static.cmake)
+
 set(VCPKG_BUILD_TYPE release)
