@@ -1,6 +1,6 @@
 # This file is part of BOINC.
 # https://boinc.berkeley.edu
-# Copyright (C) 2022 University of California
+# Copyright (C) 2023 University of California
 #
 # BOINC is free software; you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License
@@ -43,12 +43,12 @@ add_library(config
         src/common/config.cpp
 )
 
-add_library(zip-helper
+add_library(zip_helper
     STATIC
-        src/common/zip-extract.h
-        src/common/zip-extract.cpp
-        src/common/zip-create.h
-        src/common/zip-create.cpp
+        ../common/src/zip_helper/zip-extract.h
+        ../common/src/zip_helper/zip-extract.cpp
+        ../common/src/zip_helper/zip-create.h
+        ../common/src/zip_helper/zip-create.cpp
 )
 
 add_library(calculate
@@ -84,13 +84,13 @@ add_executable(unit-tests
 if (COVERAGE_REPORT)
     target_compile_options(unit-tests PRIVATE -g -O0 --coverage -fprofile-abs-path)
     target_compile_options(config PRIVATE -g -O0 --coverage -fprofile-abs-path)
-    target_compile_options(zip-helper PRIVATE -g -O0 --coverage -fprofile-abs-path)
+    target_compile_options(zip_helper PRIVATE -g -O0 --coverage -fprofile-abs-path)
     target_compile_options(calculate PRIVATE -g -O0 --coverage -fprofile-abs-path)
     target_compile_options(jsoncons_helper PRIVATE -g -O0 --coverage -fprofile-abs-path)
 
     target_link_options(unit-tests PRIVATE --coverage)
     target_link_options(config PRIVATE --coverage)
-    target_link_options(zip-helper PRIVATE --coverage)
+    target_link_options(zip_helper PRIVATE --coverage)
     target_link_options(calculate PRIVATE --coverage)
     target_link_options(jsoncons_helper PRIVATE --coverage)
 endif()
@@ -152,9 +152,8 @@ target_include_directories(config
         ${CMAKE_CURRENT_LIST_DIR}/../common/src
 )
 
-target_include_directories(zip-helper
+target_include_directories(zip_helper
     PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}/src
         ${CMAKE_CURRENT_LIST_DIR}/../common/src
 )
 
@@ -192,7 +191,7 @@ if (NOT COVERAGE_REPORT)
             magic_enum::magic_enum
             jsoncons
             jsoncons_helper
-            zip-helper
+            zip_helper
             libzip::zip
     )
 endif()
@@ -216,7 +215,7 @@ set (UNIT_TEST_LINK_LIBRARIES
     Boost::timer
     magic_enum::magic_enum
     jsoncons
-    zip-helper
+    zip_helper
     libzip::zip
 )
 
@@ -231,7 +230,7 @@ target_link_libraries(config
        jsoncons_helper
 )
 
-target_link_libraries(zip-helper
+target_link_libraries(zip_helper
     PRIVATE
         libzip::zip
 )
