@@ -1,6 +1,6 @@
 // This file is part of BOINC.
 // https://boinc.berkeley.edu
-// Copyright (C) 2022 University of California
+// Copyright (C) 2023 University of California
 //
 // BOINC is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License
@@ -22,8 +22,8 @@
 #include <cmath>
 
 #include <boinc/boinc_api.h>
-#include <common/zip-extract.h>
-#include <common/zip-create.h>
+#include <zip_helper/zip-extract.h>
+#include <zip_helper/zip-create.h>
 
 #include "calculate.h"
 
