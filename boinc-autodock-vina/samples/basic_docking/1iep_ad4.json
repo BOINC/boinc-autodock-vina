@@ -1,0 +1,7 @@
+{
+    "scoring": "ad4",
+    "maps": "1iep_receptor",
+    "ligand": "1iep_ligand.pdbqt",
+    "exhaustiveness": 4,
+    "out": "1iep_ligand_ad4_out.pdbqt"
+}

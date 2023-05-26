@@ -1,0 +1,13 @@
+{
+    "scoring": "vinardo",
+    "receptor": "1iep_receptor.pdbqt",
+    "ligand": "1iep_ligand.pdbqt",
+    "center_x": 15.190,
+    "center_y": 53.903,
+    "center_z": 16.917,
+    "size_x": 20.0,
+    "size_y": 20.0,
+    "size_z": 20.0,
+    "exhaustiveness": 4,
+    "out": "1iep_ligand_vinardo_out.pdbqt"
+}
