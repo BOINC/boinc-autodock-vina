@@ -965,3 +965,23 @@ TEST_F(Config_UnitTests, TestSimpleVinaScenario) {
     EXPECT_TRUE(res);
     std::filesystem::remove(std::filesystem::current_path() / "boinc-autodock-vina/samples/basic_docking/1iep_ligand_vina_out.pdbqt");
 }
+
+TEST_F(Config_UnitTests, TestSimpleVinardoScenario) {
+    const auto& json_file = std::filesystem::current_path() / "boinc-autodock-vina/samples/basic_docking/1iep_vinardo.json";
+    config config;
+    ASSERT_TRUE(config.load(json_file));
+    ASSERT_TRUE(config.validate());
+    const auto res = calculator::calculate(config, 0, [](double) {});
+    EXPECT_TRUE(res);
+    std::filesystem::remove(std::filesystem::current_path() / "boinc-autodock-vina/samples/basic_docking/1iep_ligand_vinardo_out.pdbqt");
+}
+
+TEST_F(Config_UnitTests, TestSimpleAd4Scenario) {
+    const auto& json_file = std::filesystem::current_path() / "boinc-autodock-vina/samples/basic_docking/1iep_ad4.json";
+    config config;
+    ASSERT_TRUE(config.load(json_file));
+    ASSERT_TRUE(config.validate());
+    const auto res = calculator::calculate(config, 0, [](double) {});
+    EXPECT_TRUE(res);
+    std::filesystem::remove(std::filesystem::current_path() / "boinc-autodock-vina/samples/basic_docking/1iep_ligand_ad4_out.pdbqt");
+}
