@@ -1,6 +1,6 @@
 // This file is part of BOINC.
 // https://boinc.berkeley.edu
-// Copyright (C) 2022 University of California
+// Copyright (C) 2023 University of California
 //
 // BOINC is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License
@@ -361,15 +361,11 @@ TEST_F(Config_UnitTests, LoadValidator) {
     json_encoder.value("size_x", -0.654321);
     json_encoder.value("size_y", 0.0);
     json_encoder.value("size_z", -0.000135);
-    json_encoder.value("autobox", true);
     json_encoder.value("out", "out_sample");
     json_encoder.value("dir", "dir_sample");
     json_encoder.value("write_maps", "write_maps_sample");
-    json_encoder.value("score_only", true);
-    json_encoder.value("local_only", true);
     json_encoder.value("no_refine", true);
     json_encoder.value("force_even_voxels", true);
-    json_encoder.value("randomize_only", true);
     json_encoder.value("weight_gauss1", 0.123456);
     json_encoder.value("weight_gauss2", -0.123456);
     json_encoder.value("weight_repulsion", 0.654321);
@@ -427,18 +423,14 @@ TEST_F(Config_UnitTests, LoadValidator) {
     EXPECT_DOUBLE_EQ(-0.654321, config.search_area.size_x);
     EXPECT_DOUBLE_EQ(0.0, config.search_area.size_y);
     EXPECT_DOUBLE_EQ(-0.000135, config.search_area.size_z);
-    EXPECT_TRUE(config.search_area.autobox);
     const auto out_sample = std::filesystem::current_path() /= "out_sample";
     EXPECT_STREQ(out_sample.string().c_str(), config.output.out.c_str());
     const auto dir_sample = std::filesystem::current_path() /= "dir_sample";
     EXPECT_STREQ(dir_sample.string().c_str(), config.output.dir.c_str());
     const auto write_maps_sample = std::filesystem::current_path() /= "write_maps_sample";
     EXPECT_STREQ(write_maps_sample.string().c_str(), config.output.write_maps.c_str());
-    EXPECT_TRUE(config.advanced.score_only);
-    EXPECT_TRUE(config.advanced.local_only);
     EXPECT_TRUE(config.advanced.no_refine);
     EXPECT_TRUE(config.advanced.force_even_voxels);
-    EXPECT_TRUE(config.advanced.randomize_only);
     EXPECT_DOUBLE_EQ(0.123456, config.advanced.weight_gauss1);
     EXPECT_DOUBLE_EQ(-0.123456, config.advanced.weight_gauss2);
     EXPECT_DOUBLE_EQ(0.654321, config.advanced.weight_repulsion);
@@ -750,15 +742,11 @@ TEST_F(Config_UnitTests, TestConfigsEqualAfterReadWrite) {
     json_encoder.value("size_x", -0.654321);
     json_encoder.value("size_y", 0.0);
     json_encoder.value("size_z", -0.000135);
-    json_encoder.value("autobox", true);
     json_encoder.value("out", "out_sample");
     json_encoder.value("dir", "dir_sample");
     json_encoder.value("write_maps", "write_maps_sample");
-    json_encoder.value("score_only", true);
-    json_encoder.value("local_only", true);
     json_encoder.value("no_refine", true);
     json_encoder.value("force_even_voxels", true);
-    json_encoder.value("randomize_only", true);
     json_encoder.value("weight_gauss1", 0.123456);
     json_encoder.value("weight_gauss2", -0.123456);
     json_encoder.value("weight_repulsion", 0.654321);
@@ -814,15 +802,11 @@ TEST_F(Config_UnitTests, TestConfigsEqualAfterReadWrite) {
     EXPECT_DOUBLE_EQ(config.search_area.size_x, config_copy.search_area.size_x);
     EXPECT_DOUBLE_EQ(config.search_area.size_y, config_copy.search_area.size_y);
     EXPECT_DOUBLE_EQ(config.search_area.size_z, config_copy.search_area.size_z);
-    EXPECT_EQ(config.search_area.autobox, config_copy.search_area.autobox);
     EXPECT_STREQ(config.output.out.c_str(), config_copy.output.out.c_str());
     EXPECT_STREQ(config.output.dir.c_str(), config_copy.output.dir.c_str());
     EXPECT_STREQ(config.output.write_maps.c_str(), config_copy.output.write_maps.c_str());
-    EXPECT_EQ(config.advanced.score_only, config_copy.advanced.score_only);
-    EXPECT_EQ(config.advanced.local_only, config_copy.advanced.local_only);
     EXPECT_EQ(config.advanced.no_refine, config_copy.advanced.no_refine);
     EXPECT_EQ(config.advanced.force_even_voxels, config_copy.advanced.force_even_voxels);
-    EXPECT_EQ(config.advanced.randomize_only, config_copy.advanced.randomize_only);
     EXPECT_DOUBLE_EQ(config.advanced.weight_gauss1, config_copy.advanced.weight_gauss1);
     EXPECT_DOUBLE_EQ(config.advanced.weight_gauss2, config_copy.advanced.weight_gauss2);
     EXPECT_DOUBLE_EQ(config.advanced.weight_repulsion, config_copy.advanced.weight_repulsion);

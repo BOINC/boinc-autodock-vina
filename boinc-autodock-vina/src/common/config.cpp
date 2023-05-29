@@ -1,6 +1,6 @@
 // This file is part of BOINC.
 // https://boinc.berkeley.edu
-// Copyright (C) 2022 University of California
+// Copyright (C) 2023 University of California
 //
 // BOINC is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License
@@ -192,9 +192,6 @@ bool search_area::load(const jsoncons::basic_json<char>& json, const std::filesy
     if (json.contains("size_z")) {
         size_z = json["size_z"].as<double>();
     }
-    if (json.contains("autobox")) {
-        autobox = json["autobox"].as<bool>();
-    }
 
     return true;
 }
@@ -243,11 +240,6 @@ bool search_area::save(const json_encoder_helper& json, const std::filesystem::p
 
     if (!json.value("size_z", size_z)) {
         error_message("size_z");
-        return false;
-    }
-
-    if (!json.value("autobox", autobox)) {
-        error_message("autobox");
         return false;
     }
 
@@ -318,20 +310,11 @@ bool output::save(const json_encoder_helper& json, const std::filesystem::path& 
 }
 
 bool advanced::load(const jsoncons::basic_json<char>& json, [[maybe_unused]] const std::filesystem::path& working_directory) {
-    if (json.contains("score_only")) {
-        score_only = json["score_only"].as<bool>();
-    }
-    if (json.contains("local_only")) {
-        local_only = json["local_only"].as<bool>();
-    }
     if (json.contains("no_refine")) {
         no_refine = json["no_refine"].as<bool>();
     }
     if (json.contains("force_even_voxels")) {
         force_even_voxels = json["force_even_voxels"].as<bool>();
-    }
-    if (json.contains("randomize_only")) {
-        randomize_only = json["randomize_only"].as<bool>();
     }
     if (json.contains("weight_gauss1")) {
         weight_gauss1 = json["weight_gauss1"].as<double>();
@@ -394,16 +377,6 @@ bool advanced::save(const json_encoder_helper& json, const std::filesystem::path
         std::cerr << std::endl;
     };
 
-    if (!json.value("score_only", score_only)) {
-        error_message("score_only");
-        return false;
-    }
-
-    if (!json.value("local_only", local_only)) {
-        error_message("local_only");
-        return false;
-    }
-
     if (!json.value("no_refine", no_refine)) {
         error_message("no_refine");
         return false;
@@ -411,11 +384,6 @@ bool advanced::save(const json_encoder_helper& json, const std::filesystem::path
 
     if (!json.value("force_even_voxels", force_even_voxels)) {
         error_message("force_even_voxels");
-        return false;
-    }
-
-    if (!json.value("randomize_only", randomize_only)) {
-        error_message("randomize_only");
         return false;
     }
 
@@ -599,7 +567,7 @@ bool config::validate() const {
             return false;
         }
         if (search_area.maps.empty()) {
-            std::cerr << "maps are missing.";
+            std::cerr << "Maps are missing.";
             std::cerr << std::endl;
             return false;
         }
@@ -628,12 +596,10 @@ bool config::validate() const {
         return false;
     }
 
-    if (!advanced.score_only) {
-        if (!input.ligands.empty() && output.out.empty()) {
-            std::cerr << "Need to specify an output.out parameter";
-            std::cerr << std::endl;
-            return false;
-        }
+    if (output.out.empty()) {
+        std::cerr << "Need to specify an output.out parameter";
+        std::cerr << std::endl;
+        return false;
     }
 
     return check_files_exist();

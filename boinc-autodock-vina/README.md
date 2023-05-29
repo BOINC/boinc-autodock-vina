@@ -18,15 +18,11 @@ This file supports next parameters:
 - `size_x` - size in the X dimension (Angstrom). This `double` parameter is ignored when `maps` parameter is specified.
 - `size_y` - size in the Y dimension (Angstrom). This `double` parameter is ignored when `maps` parameter is specified.
 - `size_z` - size in the Z dimension (Angstrom). This `double` parameter is ignored when `maps` parameter is specified.
-- `autobox` - sets maps dimensions based on input ligand(s). This parameter is used when `score_only` or `local_only` parameter is specified. This is an **optional** `boolean` parameter. Default value is `false`.
 - `out` - path to output model file (PDBQT). This file should not have absolute path. This is an **optional** parameter.
-- `dir` - path to output directory when: (1) in batch mode, (2) `ligand` parameter is specified and contains more than 1 file and `score_only` is not specified. This directory should not have absolute path. This is an **optional** `string` parameter.
+- `dir` - path to output directory when: (1) in batch mode, (2) `ligand` parameter is specified and contains more than 1 file. This directory should not have absolute path. This is an **optional** `string` parameter.
 - `write_maps` - output filename (directory + prefix name) for maps. Parameter `force_even_voxels` may be needed to comply with map format. This is an **optional** `string` parameter. E.g. for the folder with maps `.\maps\1iep_receptor.A.map` and `.\maps\1iep_receptor.C.map` should be provided as `maps\1iep_receptor`.
-- `score_only` - search space can be omitted. This is an **optional** `boolean` parameter. Default value is `false`.
-- `local_only` - do local search only. This is an **optional** `boolean` parameter. Default value is `false`.
-- `no_refine` - when `receptor` is provided, do not use explicit receptor atoms (instead of precalculated grids) for: (1) local optimization and scoring after docking, (2) `local_only` jobs, and (3) `score_only` jobs. This is an **optional** `boolean` parameter. Default value is `false`.
+- `no_refine` - when `receptor` is provided, do not use explicit receptor atoms (instead of precalculated grids) for local optimization and scoring after docking. This is an **optional** `boolean` parameter. Default value is `false`.
 - `force_even_voxels` - calculated grid maps will have an even number of voxels (intervals) in each dimension (odd number of grid points). This is an **optional** `boolean` parameter. Default value is `false`.
-- `randomize_only` - randomize input, attempting to avoid clashes. This is an **optional** `boolean` parameter. Default value is `false`.
 - `weight_glue` - macrocycle glue weight. This is an optional `double` parameter. Default value is `50.000000`.
 - `seed` - explicit random seed. This is a **required** `integer` parameter.
 - `exhaustiveness` - exhaustiveness of the global search (roughly proportional to time): 1+. This is an **optional** `integer` parameter. Default value is `8`.
