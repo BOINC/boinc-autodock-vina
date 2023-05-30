@@ -1,6 +1,6 @@
 // This file is part of BOINC.
 // https://boinc.berkeley.edu
-// Copyright (C) 2022 University of California
+// Copyright (C) 2023 University of California
 //
 // BOINC is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License
@@ -65,7 +65,6 @@ public:
     double size_x = .0;
     double size_y = .0;
     double size_z = .0;
-    bool autobox = false;
 
     [[nodiscard]] bool load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) override;
     [[nodiscard]] bool save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const override;
@@ -83,11 +82,8 @@ public:
 
 class advanced final : public json_load, public json_save {
 public:
-    bool score_only = false;
-    bool local_only = false;
     bool no_refine = false;
     bool force_even_voxels = false;
-    bool randomize_only = false;
     double weight_gauss1 = -0.035579;
     double weight_gauss2 = -0.005156;
     double weight_repulsion = 0.840245;
