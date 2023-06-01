@@ -23,80 +23,80 @@
 bool calculator::calculate(const config& config, const int& ncpus, const std::function<void(double)>& progress_callback) {
     constexpr int vina_verbosity = 1;
 
-    Vina vina(std::string(magic_enum::enum_name(config.input.scoring)), ncpus,
-        config.misc.seed, vina_verbosity, config.advanced.no_refine,
+    Vina vina(std::string(magic_enum::enum_name(config.scoring)), ncpus,
+        config.seed, vina_verbosity, config.no_refine,
         const_cast<std::function<void(double)>*>(&progress_callback));
 
-    if (!config.input.receptor.empty() || !config.input.flex.empty()) {
-        vina.set_receptor(config.input.receptor, config.input.flex);
+    if (!config.receptor.empty() || !config.flex.empty()) {
+        vina.set_receptor(config.receptor, config.flex);
     }
 
-    if (config.input.scoring == scoring::vina) {
-        vina.set_vina_weights(config.advanced.weight_gauss1, config.advanced.weight_gauss2,
-            config.advanced.weight_repulsion, config.advanced.weight_hydrophobic, config.advanced.weight_hydrogen,
-            config.advanced.weight_glue, config.advanced.weight_rot);
+    if (config.scoring == scoring::vina) {
+        vina.set_vina_weights(config.weight_gauss1, config.weight_gauss2,
+            config.weight_repulsion, config.weight_hydrophobic, config.weight_hydrogen,
+            config.weight_glue, config.weight_rot);
     }
-    else if (config.input.scoring == scoring::vinardo) {
-        vina.set_vinardo_weights(config.advanced.weight_vinardo_gauss1, config.advanced.weight_vinardo_repulsion,
-            config.advanced.weight_vinardo_hydrophobic, config.advanced.weight_vinardo_hydrogen,
-            config.advanced.weight_glue, config.advanced.weight_vinardo_rot);
+    else if (config.scoring == scoring::vinardo) {
+        vina.set_vinardo_weights(config.weight_vinardo_gauss1, config.weight_vinardo_repulsion,
+            config.weight_vinardo_hydrophobic, config.weight_vinardo_hydrogen,
+            config.weight_glue, config.weight_vinardo_rot);
     }
-    else if (config.input.scoring == scoring::ad4) {
-        vina.set_ad4_weights(config.advanced.weight_ad4_vdw, config.advanced.weight_ad4_hb,
-            config.advanced.weight_ad4_elec, config.advanced.weight_ad4_dsolv, config.advanced.weight_glue,
-            config.advanced.weight_ad4_rot);
-        vina.load_maps(config.search_area.maps);
+    else if (config.scoring == scoring::ad4) {
+        vina.set_ad4_weights(config.weight_ad4_vdw, config.weight_ad4_hb,
+            config.weight_ad4_elec, config.weight_ad4_dsolv, config.weight_glue,
+            config.weight_ad4_rot);
+        vina.load_maps(config.maps);
 
-        if (!config.output.write_maps.empty()) {
-            vina.write_maps(config.output.write_maps);
+        if (!config.write_maps.empty()) {
+            vina.write_maps(config.write_maps);
         }
     }
 
-    if (!config.input.ligands.empty()) {
-        vina.set_ligand_from_file(config.input.ligands);
+    if (!config.ligands.empty()) {
+        vina.set_ligand_from_file(config.ligands);
 
-        if (config.input.scoring == scoring::vina || config.input.scoring == scoring::vinardo) {
-            if (!config.search_area.maps.empty()) {
-                vina.load_maps(config.search_area.maps);
+        if (config.scoring == scoring::vina || config.scoring == scoring::vinardo) {
+            if (!config.maps.empty()) {
+                vina.load_maps(config.maps);
             }
             else {
-                vina.compute_vina_maps(config.search_area.center_x, config.search_area.center_y,
-                    config.search_area.center_z, config.search_area.size_x, config.search_area.size_y,
-                    config.search_area.size_z, config.misc.spacing,
-                    config.advanced.force_even_voxels);
+                vina.compute_vina_maps(config.center_x, config.center_y,
+                    config.center_z, config.size_x, config.size_y,
+                    config.size_z, config.spacing,
+                    config.force_even_voxels);
 
-                if (!config.output.write_maps.empty())
-                    vina.write_maps(config.output.write_maps);
+                if (!config.write_maps.empty())
+                    vina.write_maps(config.write_maps);
             }
         }
 
-        vina.global_search(config.misc.exhaustiveness, config.misc.num_modes, config.misc.min_rmsd,
-            config.misc.max_evals);
-        vina.write_poses(config.output.out, config.misc.num_modes, config.misc.energy_range);
+        vina.global_search(config.exhaustiveness, config.num_modes, config.min_rmsd,
+            config.max_evals);
+        vina.write_poses(config.out, config.num_modes, config.energy_range);
     }
-    else if (!config.input.batch.empty()) {
-        if (config.input.scoring == scoring::vina) {
-            if (!config.search_area.maps.empty()) {
-                vina.load_maps(config.search_area.maps);
+    else if (!config.batch.empty()) {
+        if (config.scoring == scoring::vina) {
+            if (!config.maps.empty()) {
+                vina.load_maps(config.maps);
             }
             else {
-                vina.compute_vina_maps(config.search_area.center_x, config.search_area.center_y,
-                    config.search_area.center_z, config.search_area.size_x, config.search_area.size_y,
-                    config.search_area.size_z, config.misc.spacing);
+                vina.compute_vina_maps(config.center_x, config.center_y,
+                    config.center_z, config.size_x, config.size_y,
+                    config.size_z, config.spacing);
 
-                if (!config.output.write_maps.empty())
-                    vina.write_maps(config.output.write_maps);
+                if (!config.write_maps.empty())
+                    vina.write_maps(config.write_maps);
             }
         }
 
-        for (const auto& b : config.input.batch) {
+        for (const auto& b : config.batch) {
             vina.set_ligand_from_file(b);
 
-            const auto& out_name = (std::filesystem::path(config.output.dir) / b).string();
+            const auto& out_name = (std::filesystem::path(config.dir) / b).string();
 
-            vina.global_search(config.misc.exhaustiveness, config.misc.num_modes, config.misc.min_rmsd,
-                config.misc.max_evals);
-            vina.write_poses(out_name, config.misc.num_modes, config.misc.energy_range);
+            vina.global_search(config.exhaustiveness, config.num_modes, config.min_rmsd,
+                config.max_evals);
+            vina.write_poses(out_name, config.num_modes, config.energy_range);
         }
     }
 

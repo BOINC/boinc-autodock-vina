@@ -21,9 +21,113 @@
 
 #include <magic_enum.hpp>
 
+#include "jsoncons_helper/jsoncons_helper.h"
+
 #include "config.h"
 
-bool input::load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) {
+bool config::validate() const {
+    if (!receptor.empty() && !maps.empty()) {
+        std::cerr << "Cannot specify both receptor and maps at the same time,";
+        std::cerr << "flex parameter is allowed with receptor or maps";
+        std::cerr << std::endl;
+        return false;
+    }
+
+    if (scoring == scoring::vina || scoring == scoring::vinardo) {
+        if (receptor.empty() && maps.empty()) {
+            std::cerr << "The receptor or maps must be specified.";
+            std::cerr << std::endl;
+            return false;
+        }
+    }
+    else if (scoring == scoring::ad4) {
+        if (!receptor.empty()) {
+            std::cerr << "No receptor allowed, only flex parameter with the AD4 scoring function.";
+            std::cerr << std::endl;
+            return false;
+        }
+        if (maps.empty()) {
+            std::cerr << "Maps are missing.";
+            std::cerr << std::endl;
+            return false;
+        }
+    }
+    else {
+        std::cerr << "Unknown scoring function.";
+        std::cerr << std::endl;
+        return false;
+    }
+
+    if (ligands.empty() && batch.empty()) {
+        std::cerr << "Missing ligand(s).";
+        std::cerr << std::endl;
+        return false;
+    }
+
+    if (!ligands.empty() && !batch.empty()) {
+        std::cerr << "Can't use both ligands and batch parameters simultaneously.";
+        std::cerr << std::endl;
+        return false;
+    }
+
+    if (!batch.empty() && dir.empty()) {
+        std::cerr << "Need to specify an output directory for batch mode.";
+        std::cerr << std::endl;
+        return false;
+    }
+
+    if (out.empty()) {
+        std::cerr << "Need to specify an output.out parameter";
+        std::cerr << std::endl;
+        return false;
+    }
+
+    return check_files_exist();
+}
+
+bool config::check_files_exist() const {
+    for (const auto& file : get_files()) {
+        if (!std::filesystem::exists(file) || !std::filesystem::is_regular_file(file)) {
+            std::cerr << "Missing [" << std::filesystem::path(file).filename().string() << "] file specified in config.";
+            std::cerr << std::endl;
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool config::load(const std::filesystem::path& config_file_path) {
+    if (!is_regular_file(config_file_path)) {
+        std::cerr << "Error happened while opening <" << config_file_path.filename().string() << "> file" << std::endl;
+        return false;
+    }
+
+    const auto& working_directory = config_file_path.has_parent_path() ? config_file_path.parent_path() : std::filesystem::current_path();
+
+    if (!load(std::ifstream(config_file_path), working_directory)) {
+        std::cerr << "Error happened while processing <" << config_file_path.filename().string() << "> file" << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+bool config::load(const std::istream& config_stream, const std::filesystem::path& working_directory) {
+    try {
+        std::stringstream buffer;
+        buffer << config_stream.rdbuf();
+
+        const auto& json = jsoncons::json::parse(buffer);
+        return load(json, working_directory);
+    }
+    catch (const std::exception& ex) {
+        std::cerr << "Error happened while processing config: " << ex.what() << std::endl;
+        return false;
+    }
+}
+
+bool config::load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) {
     if (json.contains("receptor")) {
         const auto& value = std::filesystem::path(json["receptor"].as<std::string>());
         if (value.is_absolute()) {
@@ -88,17 +192,165 @@ bool input::load(const jsoncons::basic_json<char>& json, const std::filesystem::
             return false;
         }
     }
+
+    if (json.contains("maps")) {
+        const auto& value = std::filesystem::path(json["maps"].as<std::string>());
+        if (value.is_absolute()) {
+            std::cerr << "Config should not contain absolute paths" << std::endl;
+            return false;
+        }
+        maps = std::filesystem::path(working_directory / value).string();
+    }
+    if (json.contains("center_x")) {
+        center_x = json["center_x"].as<double>();
+    }
+    if (json.contains("center_y")) {
+        center_y = json["center_y"].as<double>();
+    }
+    if (json.contains("center_z")) {
+        center_z = json["center_z"].as<double>();
+    }
+    if (json.contains("size_x")) {
+        size_x = json["size_x"].as<double>();
+    }
+    if (json.contains("size_y")) {
+        size_y = json["size_y"].as<double>();
+    }
+    if (json.contains("size_z")) {
+        size_z = json["size_z"].as<double>();
+    }
+
+    if (json.contains("out")) {
+        const auto& value = std::filesystem::path(json["out"].as<std::string>());
+        if (value.is_absolute()) {
+            std::cerr << "Config should not contain absolute paths" << std::endl;
+            return false;
+        }
+        out = std::filesystem::path(working_directory / value).string();
+    }
+    if (json.contains("dir")) {
+        const auto& value = std::filesystem::path(json["dir"].as<std::string>());
+        if (value.is_absolute()) {
+            std::cerr << "Config should not contain absolute paths" << std::endl;
+            return false;
+        }
+        dir = std::filesystem::path(working_directory / value).string();
+    }
+    if (json.contains("write_maps")) {
+        const auto& value = std::filesystem::path(json["write_maps"].as<std::string>());
+        if (value.is_absolute()) {
+            std::cerr << "Config should not contain absolute paths" << std::endl;
+            return false;
+        }
+        write_maps = std::filesystem::path(working_directory / value).string();
+    }
+
+    if (json.contains("no_refine")) {
+        no_refine = json["no_refine"].as<bool>();
+    }
+    if (json.contains("force_even_voxels")) {
+        force_even_voxels = json["force_even_voxels"].as<bool>();
+    }
+    if (json.contains("weight_gauss1")) {
+        weight_gauss1 = json["weight_gauss1"].as<double>();
+    }
+    if (json.contains("weight_gauss2")) {
+        weight_gauss2 = json["weight_gauss2"].as<double>();
+    }
+    if (json.contains("weight_repulsion")) {
+        weight_repulsion = json["weight_repulsion"].as<double>();
+    }
+    if (json.contains("weight_hydrophobic")) {
+        weight_hydrophobic = json["weight_hydrophobic"].as<double>();
+    }
+    if (json.contains("weight_hydrogen")) {
+        weight_hydrogen = json["weight_hydrogen"].as<double>();
+    }
+    if (json.contains("weight_rot")) {
+        weight_rot = json["weight_rot"].as<double>();
+    }
+    if (json.contains("weight_vinardo_gauss1")) {
+        weight_vinardo_gauss1 = json["weight_vinardo_gauss1"].as<double>();
+    }
+    if (json.contains("weight_vinardo_repulsion")) {
+        weight_vinardo_repulsion = json["weight_vinardo_repulsion"].as<double>();
+    }
+    if (json.contains("weight_vinardo_hydrophobic")) {
+        weight_vinardo_hydrophobic = json["weight_vinardo_hydrophobic"].as<double>();
+    }
+    if (json.contains("weight_vinardo_hydrogen")) {
+        weight_vinardo_hydrogen = json["weight_vinardo_hydrogen"].as<double>();
+    }
+    if (json.contains("weight_vinardo_rot")) {
+        weight_vinardo_rot = json["weight_vinardo_rot"].as<double>();
+    }
+    if (json.contains("weight_ad4_vdw")) {
+        weight_ad4_vdw = json["weight_ad4_vdw"].as<double>();
+    }
+    if (json.contains("weight_ad4_hb")) {
+        weight_ad4_hb = json["weight_ad4_hb"].as<double>();
+    }
+    if (json.contains("weight_ad4_elec")) {
+        weight_ad4_elec = json["weight_ad4_elec"].as<double>();
+    }
+    if (json.contains("weight_ad4_dsolv")) {
+        weight_ad4_dsolv = json["weight_ad4_dsolv"].as<double>();
+    }
+    if (json.contains("weight_ad4_rot")) {
+        weight_ad4_rot = json["weight_ad4_rot"].as<double>();
+    }
+    if (json.contains("weight_glue")) {
+        weight_glue = json["weight_glue"].as<double>();
+    }
+
+    if (json.contains("seed")) {
+        seed = json["seed"].as<int>();
+    }
+    if (json.contains("exhaustiveness")) {
+        exhaustiveness = json["exhaustiveness"].as<int64_t>();
+    }
+    if (json.contains("max_evals")) {
+        max_evals = json["max_evals"].as<int64_t>();
+    }
+    if (json.contains("num_modes")) {
+        num_modes = json["num_modes"].as<int64_t>();
+    }
+    if (json.contains("min_rmsd")) {
+        min_rmsd = json["min_rmsd"].as<double>();
+    }
+    if (json.contains("energy_range")) {
+        energy_range = json["energy_range"].as<double>();
+    }
+    if (json.contains("spacing")) {
+        spacing = json["spacing"].as<double>();
+    }
+
+    if (out.empty()) {
+        out = std::filesystem::path(working_directory / "result.pdbqt").string();
+    }
+
     return true;
 }
 
-bool input::save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const {
-    const auto& filename_from_file = [](const auto& file) -> auto {
-        return std::filesystem::path(file).filename().string();
-    };
-
+bool config::save(const std::filesystem::path& config_file_path) const {
     const auto& error_message = [](const auto& value) {
         std::cerr << "Failed to write [" << value << "] value to json file";
         std::cerr << std::endl;
+    };
+
+    std::ofstream stream;
+    stream.open(config_file_path);
+    jsoncons::json_stream_encoder encoder(stream);
+    json_encoder_helper json(encoder);
+
+    if (!json.begin_object()) {
+        std::cerr << "Failed to write [" << config_file_path.filename().string() << "] file";
+        std::cerr << std::endl;
+        return false;
+    }
+
+    const auto& filename_from_file = [](const auto& file) -> auto {
+        return std::filesystem::path(file).filename().string();
     };
 
     if (!receptor.empty()) {
@@ -162,50 +414,6 @@ bool input::save(const json_encoder_helper& json, const std::filesystem::path& w
         return false;
     }
 
-    return true;
-}
-
-bool search_area::load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) {
-    if (json.contains("maps")) {
-        const auto& value = std::filesystem::path(json["maps"].as<std::string>());
-        if (value.is_absolute()) {
-            std::cerr << "Config should not contain absolute paths" << std::endl;
-            return false;
-        }
-        maps = std::filesystem::path(working_directory / value).string();
-    }
-    if (json.contains("center_x")) {
-        center_x = json["center_x"].as<double>();
-    }
-    if (json.contains("center_y")) {
-        center_y = json["center_y"].as<double>();
-    }
-    if (json.contains("center_z")) {
-        center_z = json["center_z"].as<double>();
-    }
-    if (json.contains("size_x")) {
-        size_x = json["size_x"].as<double>();
-    }
-    if (json.contains("size_y")) {
-        size_y = json["size_y"].as<double>();
-    }
-    if (json.contains("size_z")) {
-        size_z = json["size_z"].as<double>();
-    }
-
-    return true;
-}
-
-bool search_area::save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const {
-    const auto& filename_from_file = [](const auto& file) -> auto {
-        return std::filesystem::path(file).filename().string();
-    };
-
-    const auto& error_message = [](const auto& value) {
-        std::cerr << "Failed to write [" << value << "] value to json file";
-        std::cerr << std::endl;
-    };
-
     if (!maps.empty()) {
         if (!json.value("maps", filename_from_file(maps))) {
             error_message("maps");
@@ -243,48 +451,6 @@ bool search_area::save(const json_encoder_helper& json, const std::filesystem::p
         return false;
     }
 
-    return true;
-}
-
-bool output::load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) {
-    if (json.contains("out")) {
-        const auto& value = std::filesystem::path(json["out"].as<std::string>());
-        if (value.is_absolute()) {
-            std::cerr << "Config should not contain absolute paths" << std::endl;
-            return false;
-        }
-        out = std::filesystem::path(working_directory / value).string();
-    }
-    if (json.contains("dir")) {
-        const auto& value = std::filesystem::path(json["dir"].as<std::string>());
-        if (value.is_absolute()) {
-            std::cerr << "Config should not contain absolute paths" << std::endl;
-            return false;
-        }
-        dir = std::filesystem::path(working_directory / value).string();
-    }
-    if (json.contains("write_maps")) {
-        const auto& value = std::filesystem::path(json["write_maps"].as<std::string>());
-        if (value.is_absolute()) {
-            std::cerr << "Config should not contain absolute paths" << std::endl;
-            return false;
-        }
-        write_maps = std::filesystem::path(working_directory / value).string();
-    }
-
-    return true;
-}
-
-bool output::save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const {
-    const auto& filename_from_file = [](const auto& file) -> auto {
-        return std::filesystem::path(file).filename().string();
-    };
-
-    const auto& error_message = [](const auto& value) {
-        std::cerr << "Failed to write [" << value << "] value to json file";
-        std::cerr << std::endl;
-    };
-
     if (!out.empty()) {
         if (!json.value("out", filename_from_file(out))) {
             error_message("out");
@@ -305,77 +471,6 @@ bool output::save(const json_encoder_helper& json, const std::filesystem::path& 
             return false;
         }
     }
-
-    return true;
-}
-
-bool advanced::load(const jsoncons::basic_json<char>& json, [[maybe_unused]] const std::filesystem::path& working_directory) {
-    if (json.contains("no_refine")) {
-        no_refine = json["no_refine"].as<bool>();
-    }
-    if (json.contains("force_even_voxels")) {
-        force_even_voxels = json["force_even_voxels"].as<bool>();
-    }
-    if (json.contains("weight_gauss1")) {
-        weight_gauss1 = json["weight_gauss1"].as<double>();
-    }
-    if (json.contains("weight_gauss2")) {
-        weight_gauss2 = json["weight_gauss2"].as<double>();
-    }
-    if (json.contains("weight_repulsion")) {
-        weight_repulsion = json["weight_repulsion"].as<double>();
-    }
-    if (json.contains("weight_hydrophobic")) {
-        weight_hydrophobic = json["weight_hydrophobic"].as<double>();
-    }
-    if (json.contains("weight_hydrogen")) {
-        weight_hydrogen = json["weight_hydrogen"].as<double>();
-    }
-    if (json.contains("weight_rot")) {
-        weight_rot = json["weight_rot"].as<double>();
-    }
-    if (json.contains("weight_vinardo_gauss1")) {
-        weight_vinardo_gauss1 = json["weight_vinardo_gauss1"].as<double>();
-    }
-    if (json.contains("weight_vinardo_repulsion")) {
-        weight_vinardo_repulsion = json["weight_vinardo_repulsion"].as<double>();
-    }
-    if (json.contains("weight_vinardo_hydrophobic")) {
-        weight_vinardo_hydrophobic = json["weight_vinardo_hydrophobic"].as<double>();
-    }
-    if (json.contains("weight_vinardo_hydrogen")) {
-        weight_vinardo_hydrogen = json["weight_vinardo_hydrogen"].as<double>();
-    }
-    if (json.contains("weight_vinardo_rot")) {
-        weight_vinardo_rot = json["weight_vinardo_rot"].as<double>();
-    }
-    if (json.contains("weight_ad4_vdw")) {
-        weight_ad4_vdw = json["weight_ad4_vdw"].as<double>();
-    }
-    if (json.contains("weight_ad4_hb")) {
-        weight_ad4_hb = json["weight_ad4_hb"].as<double>();
-    }
-    if (json.contains("weight_ad4_elec")) {
-        weight_ad4_elec = json["weight_ad4_elec"].as<double>();
-    }
-    if (json.contains("weight_ad4_dsolv")) {
-        weight_ad4_dsolv = json["weight_ad4_dsolv"].as<double>();
-    }
-    if (json.contains("weight_ad4_rot")) {
-        weight_ad4_rot = json["weight_ad4_rot"].as<double>();
-    }
-    if (json.contains("weight_glue")) {
-        weight_glue = json["weight_glue"].as<double>();
-    }
-
-    return true;
-}
-
-bool advanced::save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const {
-    const auto& error_message = [](const auto& value) {
-        std::cerr << "Failed to write [" << value << "] value to json file";
-        std::cerr << std::endl;
-    };
 
     if (!json.value("no_refine", no_refine)) {
         error_message("no_refine");
@@ -472,41 +567,6 @@ bool advanced::save(const json_encoder_helper& json, const std::filesystem::path
         return false;
     }
 
-    return true;
-}
-
-bool misc::load(const jsoncons::basic_json<char>& json, [[maybe_unused]] const std::filesystem::path& working_directory) {
-    if (json.contains("seed")) {
-        seed = json["seed"].as<int>();
-    }
-    if (json.contains("exhaustiveness")) {
-        exhaustiveness = json["exhaustiveness"].as<int64_t>();
-    }
-    if (json.contains("max_evals")) {
-        max_evals = json["max_evals"].as<int64_t>();
-    }
-    if (json.contains("num_modes")) {
-        num_modes = json["num_modes"].as<int64_t>();
-    }
-    if (json.contains("min_rmsd")) {
-        min_rmsd = json["min_rmsd"].as<double>();
-    }
-    if (json.contains("energy_range")) {
-        energy_range = json["energy_range"].as<double>();
-    }
-    if (json.contains("spacing")) {
-        spacing = json["spacing"].as<double>();
-    }
-
-    return true;
-}
-
-bool misc::save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const {
-    const auto& error_message = [](const auto& value) {
-        std::cerr << "Failed to write [" << value << "] value to json file";
-        std::cerr << std::endl;
-    };
-
     if (!json.value("seed", seed)) {
         error_message("seed");
         return false;
@@ -542,181 +602,6 @@ bool misc::save(const json_encoder_helper& json, const std::filesystem::path& wo
         return false;
     }
 
-    return true;
-}
-
-bool config::validate() const {
-    if (!input.receptor.empty() && !search_area.maps.empty()) {
-        std::cerr << "Cannot specify both receptor and maps at the same time,";
-        std::cerr << "flex parameter is allowed with receptor or maps";
-        std::cerr << std::endl;
-        return false;
-    }
-
-    if (input.scoring == scoring::vina || input.scoring == scoring::vinardo) {
-        if (input.receptor.empty() && search_area.maps.empty()) {
-            std::cerr << "The receptor or maps must be specified.";
-            std::cerr << std::endl;
-            return false;
-        }
-    }
-    else if (input.scoring == scoring::ad4) {
-        if (!input.receptor.empty()) {
-            std::cerr << "No receptor allowed, only flex parameter with the AD4 scoring function.";
-            std::cerr << std::endl;
-            return false;
-        }
-        if (search_area.maps.empty()) {
-            std::cerr << "Maps are missing.";
-            std::cerr << std::endl;
-            return false;
-        }
-    }
-    else {
-        std::cerr << "Unknown scoring function.";
-        std::cerr << std::endl;
-        return false;
-    }
-
-    if (input.ligands.empty() && input.batch.empty()) {
-        std::cerr << "Missing ligand(s).";
-        std::cerr << std::endl;
-        return false;
-    }
-
-    if (!input.ligands.empty() && !input.batch.empty()) {
-        std::cerr << "Can't use both ligands and batch parameters simultaneously.";
-        std::cerr << std::endl;
-        return false;
-    }
-
-    if (!input.batch.empty() && output.dir.empty()) {
-        std::cerr << "Need to specify an output directory for batch mode.";
-        std::cerr << std::endl;
-        return false;
-    }
-
-    if (output.out.empty()) {
-        std::cerr << "Need to specify an output.out parameter";
-        std::cerr << std::endl;
-        return false;
-    }
-
-    return check_files_exist();
-}
-
-bool config::check_files_exist() const {
-    for (const auto& file : get_files()) {
-        if (!std::filesystem::exists(file) || !std::filesystem::is_regular_file(file)) {
-            std::cerr << "Missing [" << std::filesystem::path(file).filename().string() << "] file specified in config.";
-            std::cerr << std::endl;
-            return false;
-        }
-    }
-
-    return true;
-}
-
-bool config::load(const std::filesystem::path& config_file_path) {
-    if (!is_regular_file(config_file_path)) {
-        std::cerr << "Error happened while opening <" << config_file_path.filename().string() << "> file" << std::endl;
-        return false;
-    }
-
-    const auto& working_directory = config_file_path.has_parent_path() ? config_file_path.parent_path() : std::filesystem::current_path();
-
-    if (!load(std::ifstream(config_file_path), working_directory)) {
-        std::cerr << "Error happened while processing <" << config_file_path.filename().string() << "> file" << std::endl;
-        return false;
-    }
-
-    return true;
-}
-
-bool config::load(const std::istream& config_stream, const std::filesystem::path& working_directory) {
-    try {
-        std::stringstream buffer;
-        buffer << config_stream.rdbuf();
-
-        const auto& json = jsoncons::json::parse(buffer);
-        return load(json, working_directory);
-    }
-    catch (const std::exception& ex) {
-        std::cerr << "Error happened while processing config: " << ex.what() << std::endl;
-        return false;
-    }
-}
-
-bool config::load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) {
-    if (!input.load(json, working_directory)) {
-        return false;
-    }
-
-    if (!search_area.load(json, working_directory)) {
-        return false;
-    }
-
-    if (!output.load(json, working_directory)) {
-        return false;
-    }
-
-    if (!advanced.load(json, working_directory)) {
-        return false;
-    }
-
-    if (!misc.load(json, working_directory)) {
-        return false;
-    }
-
-    if (output.out.empty()) {
-        output.out = std::filesystem::path(working_directory / "result.pdbqt").string();
-    }
-
-    return true;
-}
-
-bool config::save(const std::filesystem::path& config_file_path) const {
-    const auto& error_message = [](const auto& value) {
-        std::cerr << "Failed to write [" << value << "] value to json file";
-        std::cerr << std::endl;
-    };
-
-    std::ofstream stream;
-    stream.open(config_file_path);
-    jsoncons::json_stream_encoder encoder(stream);
-    json_encoder_helper json(encoder);
-
-    if (!json.begin_object()) {
-        std::cerr << "Failed to write [" << config_file_path.filename().string() << "] file";
-        std::cerr << std::endl;
-        return false;
-    }
-
-    if (!input.save(json, config_file_path.parent_path())) {
-        error_message("input");
-        return false;
-    }
-
-    if (!search_area.save(json, config_file_path.parent_path())) {
-        error_message("search_area");
-        return false;
-    }
-
-    if (!output.save(json, config_file_path.parent_path())) {
-        error_message("output");
-        return false;
-    }
-
-    if (!advanced.save(json, config_file_path.parent_path())) {
-        error_message("advanced");
-        return false;
-    }
-
-    if (!misc.save(json, config_file_path.parent_path())) {
-        error_message("misc");
-        return false;
-    }
-
     if (!json.end_object()) {
         std::cerr << "Failed to write [" << config_file_path.filename().string() << "] file";
         std::cerr << std::endl;
@@ -729,30 +614,30 @@ bool config::save(const std::filesystem::path& config_file_path) const {
 std::vector<std::string> config::get_files() const {
     std::vector<std::string> files;
 
-    if (!input.receptor.empty()) {
-        files.push_back(input.receptor);
+    if (!receptor.empty()) {
+        files.push_back(receptor);
     }
 
-    if (!input.ligands.empty()) {
-        for (const auto& ligand : input.ligands) {
+    if (!ligands.empty()) {
+        for (const auto& ligand : ligands) {
             files.push_back(ligand);
         }
     }
 
-    if (!input.flex.empty()) {
-        files.push_back(input.flex);
+    if (!flex.empty()) {
+        files.push_back(flex);
     }
 
-    if (!input.batch.empty()) {
-        for (const auto& batch : input.batch) {
-            files.push_back(batch);
+    if (!batch.empty()) {
+        for (const auto& b : batch) {
+            files.push_back(b);
         }
     }
 
-    if (!search_area.maps.empty()) {
+    if (!maps.empty()) {
         files.emplace_back(get_gpf_filename().string());
-        const auto& maps = get_files_from_gpf();
-        files.insert(files.end(), maps.cbegin(), maps.cend());
+        const auto& gpf_files = get_files_from_gpf();
+        files.insert(files.end(), gpf_files.cbegin(), gpf_files.cend());
     }
 
     return files;
@@ -788,26 +673,26 @@ std::vector<std::string> config::get_files_from_gpf(const std::filesystem::path&
 }
 
 std::filesystem::path config::get_gpf_filename() const {
-    return std::filesystem::path(search_area.maps).replace_extension("gpf");
+    return std::filesystem::path(maps).replace_extension("gpf");
 }
 
 std::vector<std::string> config::get_out_files() const {
     std::vector<std::string> files;
 
-    if (!output.out.empty()) {
-        files.push_back(output.out);
+    if (!out.empty()) {
+        files.push_back(out);
     }
-    if (!output.dir.empty()) {
-        for (const auto& file : std::filesystem::directory_iterator(output.dir)) {
+    if (!dir.empty()) {
+        for (const auto& file : std::filesystem::directory_iterator(dir)) {
             if (file.is_regular_file()) {
                 files.push_back(file.path().string());
             }
         }
     }
-    if (!output.write_maps.empty()) {
-        const auto maps = std::filesystem::path(output.write_maps);
-        for (const auto& file : std::filesystem::directory_iterator(maps.parent_path())) {
-            if (file.path().filename().string().rfind(maps.filename().string(), 0) == 0 && file.is_regular_file()) {
+    if (!write_maps.empty()) {
+        const auto m = std::filesystem::path(write_maps);
+        for (const auto& file : std::filesystem::directory_iterator(m.parent_path())) {
+            if (file.path().filename().string().rfind(m.filename().string(), 0) == 0 && file.is_regular_file()) {
                 files.push_back(file.path().string());
             }
         }

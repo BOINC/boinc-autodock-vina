@@ -330,7 +330,7 @@ TEST_F(Config_UnitTests, CheckForDeaultValueInConfig_Out) {
     ASSERT_TRUE(config.load(dummy_json_file_path));
 
     const auto out_sample = std::filesystem::current_path() /= "result.pdbqt";
-    EXPECT_STREQ(out_sample.string().c_str(), config.output.out.c_str());
+    EXPECT_STREQ(out_sample.string().c_str(), config.out.c_str());
 }
 
 TEST_F(Config_UnitTests, LoadValidator) {
@@ -401,60 +401,60 @@ TEST_F(Config_UnitTests, LoadValidator) {
     ASSERT_TRUE(res);
 
     const auto receptor_sample = std::filesystem::current_path() /= "receptor_sample";
-    EXPECT_STREQ(receptor_sample.string().c_str(), config.input.receptor.c_str());
+    EXPECT_STREQ(receptor_sample.string().c_str(), config.receptor.c_str());
     const auto flex_sample = std::filesystem::current_path() /= "flex_sample";
-    EXPECT_STREQ(flex_sample.string().c_str(), config.input.flex.c_str());
-    ASSERT_EQ(2, config.input.ligands.size());
+    EXPECT_STREQ(flex_sample.string().c_str(), config.flex.c_str());
+    ASSERT_EQ(2, config.ligands.size());
     const auto ligand_sample1 = std::filesystem::current_path() /= "ligand_sample1";
-    EXPECT_STREQ(ligand_sample1.string().c_str(), config.input.ligands[0].c_str());
+    EXPECT_STREQ(ligand_sample1.string().c_str(), config.ligands[0].c_str());
     const auto ligand_sample2 = std::filesystem::current_path() /= "ligand_sample2";
-    EXPECT_STREQ(ligand_sample2.string().c_str(), config.input.ligands[1].c_str());
-    ASSERT_EQ(2, config.input.batch.size());
+    EXPECT_STREQ(ligand_sample2.string().c_str(), config.ligands[1].c_str());
+    ASSERT_EQ(2, config.batch.size());
     const auto batch_sample1 = std::filesystem::current_path() /= "batch_sample1";
-    EXPECT_STREQ(batch_sample1.string().c_str(), config.input.batch[0].c_str());
+    EXPECT_STREQ(batch_sample1.string().c_str(), config.batch[0].c_str());
     const auto batch_sample2 = std::filesystem::current_path() /= "batch_sample2";
-    EXPECT_STREQ(batch_sample2.string().c_str(), config.input.batch[1].c_str());
-    EXPECT_EQ(scoring::vinardo, config.input.scoring);
+    EXPECT_STREQ(batch_sample2.string().c_str(), config.batch[1].c_str());
+    EXPECT_EQ(scoring::vinardo, config.scoring);
     const auto maps_sample = std::filesystem::current_path() /= "maps_sample";
-    EXPECT_STREQ(maps_sample.string().c_str(), config.search_area.maps.c_str());
-    EXPECT_DOUBLE_EQ(0.123456, config.search_area.center_x);
-    EXPECT_DOUBLE_EQ(0.654321, config.search_area.center_y);
-    EXPECT_DOUBLE_EQ(-0.123456, config.search_area.center_z);
-    EXPECT_DOUBLE_EQ(-0.654321, config.search_area.size_x);
-    EXPECT_DOUBLE_EQ(0.0, config.search_area.size_y);
-    EXPECT_DOUBLE_EQ(-0.000135, config.search_area.size_z);
+    EXPECT_STREQ(maps_sample.string().c_str(), config.maps.c_str());
+    EXPECT_DOUBLE_EQ(0.123456, config.center_x);
+    EXPECT_DOUBLE_EQ(0.654321, config.center_y);
+    EXPECT_DOUBLE_EQ(-0.123456, config.center_z);
+    EXPECT_DOUBLE_EQ(-0.654321, config.size_x);
+    EXPECT_DOUBLE_EQ(0.0, config.size_y);
+    EXPECT_DOUBLE_EQ(-0.000135, config.size_z);
     const auto out_sample = std::filesystem::current_path() /= "out_sample";
-    EXPECT_STREQ(out_sample.string().c_str(), config.output.out.c_str());
+    EXPECT_STREQ(out_sample.string().c_str(), config.out.c_str());
     const auto dir_sample = std::filesystem::current_path() /= "dir_sample";
-    EXPECT_STREQ(dir_sample.string().c_str(), config.output.dir.c_str());
+    EXPECT_STREQ(dir_sample.string().c_str(), config.dir.c_str());
     const auto write_maps_sample = std::filesystem::current_path() /= "write_maps_sample";
-    EXPECT_STREQ(write_maps_sample.string().c_str(), config.output.write_maps.c_str());
-    EXPECT_TRUE(config.advanced.no_refine);
-    EXPECT_TRUE(config.advanced.force_even_voxels);
-    EXPECT_DOUBLE_EQ(0.123456, config.advanced.weight_gauss1);
-    EXPECT_DOUBLE_EQ(-0.123456, config.advanced.weight_gauss2);
-    EXPECT_DOUBLE_EQ(0.654321, config.advanced.weight_repulsion);
-    EXPECT_DOUBLE_EQ(-0.654321, config.advanced.weight_hydrophobic);
-    EXPECT_DOUBLE_EQ(0.135246, config.advanced.weight_hydrogen);
-    EXPECT_DOUBLE_EQ(-0.135246, config.advanced.weight_rot);
-    EXPECT_DOUBLE_EQ(-0.642531, config.advanced.weight_vinardo_gauss1);
-    EXPECT_DOUBLE_EQ(0.642531, config.advanced.weight_vinardo_repulsion);
-    EXPECT_DOUBLE_EQ(-0.010011, config.advanced.weight_vinardo_hydrophobic);
-    EXPECT_DOUBLE_EQ(0.010011, config.advanced.weight_vinardo_hydrogen);
-    EXPECT_DOUBLE_EQ(-1.023456, config.advanced.weight_vinardo_rot);
-    EXPECT_DOUBLE_EQ(1.023456, config.advanced.weight_ad4_vdw);
-    EXPECT_DOUBLE_EQ(-1.654320, config.advanced.weight_ad4_hb);
-    EXPECT_DOUBLE_EQ(1.065432, config.advanced.weight_ad4_elec);
-    EXPECT_DOUBLE_EQ(-1.064235, config.advanced.weight_ad4_dsolv);
-    EXPECT_DOUBLE_EQ(1.064235, config.advanced.weight_ad4_rot);
-    EXPECT_DOUBLE_EQ(1.024653, config.advanced.weight_glue);
-    EXPECT_EQ(2, config.misc.seed);
-    EXPECT_EQ(3, config.misc.exhaustiveness);
-    EXPECT_EQ(4, config.misc.max_evals);
-    EXPECT_EQ(5, config.misc.num_modes);
-    EXPECT_DOUBLE_EQ(2.0, config.misc.min_rmsd);
-    EXPECT_DOUBLE_EQ(-2.0, config.misc.energy_range);
-    EXPECT_DOUBLE_EQ(-0.123, config.misc.spacing);
+    EXPECT_STREQ(write_maps_sample.string().c_str(), config.write_maps.c_str());
+    EXPECT_TRUE(config.no_refine);
+    EXPECT_TRUE(config.force_even_voxels);
+    EXPECT_DOUBLE_EQ(0.123456, config.weight_gauss1);
+    EXPECT_DOUBLE_EQ(-0.123456, config.weight_gauss2);
+    EXPECT_DOUBLE_EQ(0.654321, config.weight_repulsion);
+    EXPECT_DOUBLE_EQ(-0.654321, config.weight_hydrophobic);
+    EXPECT_DOUBLE_EQ(0.135246, config.weight_hydrogen);
+    EXPECT_DOUBLE_EQ(-0.135246, config.weight_rot);
+    EXPECT_DOUBLE_EQ(-0.642531, config.weight_vinardo_gauss1);
+    EXPECT_DOUBLE_EQ(0.642531, config.weight_vinardo_repulsion);
+    EXPECT_DOUBLE_EQ(-0.010011, config.weight_vinardo_hydrophobic);
+    EXPECT_DOUBLE_EQ(0.010011, config.weight_vinardo_hydrogen);
+    EXPECT_DOUBLE_EQ(-1.023456, config.weight_vinardo_rot);
+    EXPECT_DOUBLE_EQ(1.023456, config.weight_ad4_vdw);
+    EXPECT_DOUBLE_EQ(-1.654320, config.weight_ad4_hb);
+    EXPECT_DOUBLE_EQ(1.065432, config.weight_ad4_elec);
+    EXPECT_DOUBLE_EQ(-1.064235, config.weight_ad4_dsolv);
+    EXPECT_DOUBLE_EQ(1.064235, config.weight_ad4_rot);
+    EXPECT_DOUBLE_EQ(1.024653, config.weight_glue);
+    EXPECT_EQ(2, config.seed);
+    EXPECT_EQ(3, config.exhaustiveness);
+    EXPECT_EQ(4, config.max_evals);
+    EXPECT_EQ(5, config.num_modes);
+    EXPECT_DOUBLE_EQ(2.0, config.min_rmsd);
+    EXPECT_DOUBLE_EQ(-2.0, config.energy_range);
+    EXPECT_DOUBLE_EQ(-0.123, config.spacing);
 }
 
 TEST_F(Config_UnitTests, FailOn_output_out_NotSpecified) {
@@ -786,58 +786,58 @@ TEST_F(Config_UnitTests, TestConfigsEqualAfterReadWrite) {
 
     ASSERT_TRUE(config_copy.load(dummy_copy_json_file_path));
 
-    EXPECT_STREQ(config.input.receptor.c_str(), config_copy.input.receptor.c_str());
-    EXPECT_STREQ(config.input.flex.c_str(), config_copy.input.flex.c_str());
-    ASSERT_EQ(config.input.ligands.size(), config_copy.input.ligands.size());
-    EXPECT_STREQ(config.input.ligands[0].c_str(), config_copy.input.ligands[0].c_str());
-    EXPECT_STREQ(config.input.ligands[1].c_str(), config_copy.input.ligands[1].c_str());
-    ASSERT_EQ(config.input.batch.size(), config_copy.input.batch.size());
-    EXPECT_STREQ(config.input.batch[0].c_str(), config_copy.input.batch[0].c_str());
-    EXPECT_STREQ(config.input.batch[1].c_str(), config_copy.input.batch[1].c_str());
-    EXPECT_EQ(config.input.scoring, config_copy.input.scoring);
-    EXPECT_STREQ(config.search_area.maps.c_str(), config_copy.search_area.maps.c_str());
-    EXPECT_DOUBLE_EQ(config.search_area.center_x, config_copy.search_area.center_x);
-    EXPECT_DOUBLE_EQ(config.search_area.center_y, config_copy.search_area.center_y);
-    EXPECT_DOUBLE_EQ(config.search_area.center_z, config_copy.search_area.center_z);
-    EXPECT_DOUBLE_EQ(config.search_area.size_x, config_copy.search_area.size_x);
-    EXPECT_DOUBLE_EQ(config.search_area.size_y, config_copy.search_area.size_y);
-    EXPECT_DOUBLE_EQ(config.search_area.size_z, config_copy.search_area.size_z);
-    EXPECT_STREQ(config.output.out.c_str(), config_copy.output.out.c_str());
-    EXPECT_STREQ(config.output.dir.c_str(), config_copy.output.dir.c_str());
-    EXPECT_STREQ(config.output.write_maps.c_str(), config_copy.output.write_maps.c_str());
-    EXPECT_EQ(config.advanced.no_refine, config_copy.advanced.no_refine);
-    EXPECT_EQ(config.advanced.force_even_voxels, config_copy.advanced.force_even_voxels);
-    EXPECT_DOUBLE_EQ(config.advanced.weight_gauss1, config_copy.advanced.weight_gauss1);
-    EXPECT_DOUBLE_EQ(config.advanced.weight_gauss2, config_copy.advanced.weight_gauss2);
-    EXPECT_DOUBLE_EQ(config.advanced.weight_repulsion, config_copy.advanced.weight_repulsion);
-    EXPECT_DOUBLE_EQ(config.advanced.weight_hydrophobic, config_copy.advanced.weight_hydrophobic);
-    EXPECT_DOUBLE_EQ(config.advanced.weight_hydrogen, config_copy.advanced.weight_hydrogen);
-    EXPECT_DOUBLE_EQ(config.advanced.weight_rot, config_copy.advanced.weight_rot);
-    EXPECT_DOUBLE_EQ(config.advanced.weight_vinardo_gauss1, config_copy.advanced.weight_vinardo_gauss1);
-    EXPECT_DOUBLE_EQ(config.advanced.weight_vinardo_repulsion, config_copy.advanced.weight_vinardo_repulsion);
-    EXPECT_DOUBLE_EQ(config.advanced.weight_vinardo_hydrophobic, config_copy.advanced.weight_vinardo_hydrophobic);
-    EXPECT_DOUBLE_EQ(config.advanced.weight_vinardo_hydrogen, config_copy.advanced.weight_vinardo_hydrogen);
-    EXPECT_DOUBLE_EQ(config.advanced.weight_vinardo_rot, config_copy.advanced.weight_vinardo_rot);
-    EXPECT_DOUBLE_EQ(config.advanced.weight_ad4_vdw, config_copy.advanced.weight_ad4_vdw);
-    EXPECT_DOUBLE_EQ(config.advanced.weight_ad4_hb, config_copy.advanced.weight_ad4_hb);
-    EXPECT_DOUBLE_EQ(config.advanced.weight_ad4_elec, config_copy.advanced.weight_ad4_elec);
-    EXPECT_DOUBLE_EQ(config.advanced.weight_ad4_dsolv, config_copy.advanced.weight_ad4_dsolv);
-    EXPECT_DOUBLE_EQ(config.advanced.weight_ad4_rot, config_copy.advanced.weight_ad4_rot);
-    EXPECT_DOUBLE_EQ(config.advanced.weight_glue, config_copy.advanced.weight_glue);
-    EXPECT_EQ(config.misc.seed, config_copy.misc.seed);
-    EXPECT_EQ(config.misc.exhaustiveness, config_copy.misc.exhaustiveness);
-    EXPECT_EQ(config.misc.max_evals, config_copy.misc.max_evals);
-    EXPECT_EQ(config.misc.num_modes, config_copy.misc.num_modes);
-    EXPECT_DOUBLE_EQ(config.misc.min_rmsd, config_copy.misc.min_rmsd);
-    EXPECT_DOUBLE_EQ(config.misc.energy_range, config_copy.misc.energy_range);
-    EXPECT_DOUBLE_EQ(config.misc.spacing, config_copy.misc.spacing);
+    EXPECT_STREQ(config.receptor.c_str(), config_copy.receptor.c_str());
+    EXPECT_STREQ(config.flex.c_str(), config_copy.flex.c_str());
+    ASSERT_EQ(config.ligands.size(), config_copy.ligands.size());
+    EXPECT_STREQ(config.ligands[0].c_str(), config_copy.ligands[0].c_str());
+    EXPECT_STREQ(config.ligands[1].c_str(), config_copy.ligands[1].c_str());
+    ASSERT_EQ(config.batch.size(), config_copy.batch.size());
+    EXPECT_STREQ(config.batch[0].c_str(), config_copy.batch[0].c_str());
+    EXPECT_STREQ(config.batch[1].c_str(), config_copy.batch[1].c_str());
+    EXPECT_EQ(config.scoring, config_copy.scoring);
+    EXPECT_STREQ(config.maps.c_str(), config_copy.maps.c_str());
+    EXPECT_DOUBLE_EQ(config.center_x, config_copy.center_x);
+    EXPECT_DOUBLE_EQ(config.center_y, config_copy.center_y);
+    EXPECT_DOUBLE_EQ(config.center_z, config_copy.center_z);
+    EXPECT_DOUBLE_EQ(config.size_x, config_copy.size_x);
+    EXPECT_DOUBLE_EQ(config.size_y, config_copy.size_y);
+    EXPECT_DOUBLE_EQ(config.size_z, config_copy.size_z);
+    EXPECT_STREQ(config.out.c_str(), config_copy.out.c_str());
+    EXPECT_STREQ(config.dir.c_str(), config_copy.dir.c_str());
+    EXPECT_STREQ(config.write_maps.c_str(), config_copy.write_maps.c_str());
+    EXPECT_EQ(config.no_refine, config_copy.no_refine);
+    EXPECT_EQ(config.force_even_voxels, config_copy.force_even_voxels);
+    EXPECT_DOUBLE_EQ(config.weight_gauss1, config_copy.weight_gauss1);
+    EXPECT_DOUBLE_EQ(config.weight_gauss2, config_copy.weight_gauss2);
+    EXPECT_DOUBLE_EQ(config.weight_repulsion, config_copy.weight_repulsion);
+    EXPECT_DOUBLE_EQ(config.weight_hydrophobic, config_copy.weight_hydrophobic);
+    EXPECT_DOUBLE_EQ(config.weight_hydrogen, config_copy.weight_hydrogen);
+    EXPECT_DOUBLE_EQ(config.weight_rot, config_copy.weight_rot);
+    EXPECT_DOUBLE_EQ(config.weight_vinardo_gauss1, config_copy.weight_vinardo_gauss1);
+    EXPECT_DOUBLE_EQ(config.weight_vinardo_repulsion, config_copy.weight_vinardo_repulsion);
+    EXPECT_DOUBLE_EQ(config.weight_vinardo_hydrophobic, config_copy.weight_vinardo_hydrophobic);
+    EXPECT_DOUBLE_EQ(config.weight_vinardo_hydrogen, config_copy.weight_vinardo_hydrogen);
+    EXPECT_DOUBLE_EQ(config.weight_vinardo_rot, config_copy.weight_vinardo_rot);
+    EXPECT_DOUBLE_EQ(config.weight_ad4_vdw, config_copy.weight_ad4_vdw);
+    EXPECT_DOUBLE_EQ(config.weight_ad4_hb, config_copy.weight_ad4_hb);
+    EXPECT_DOUBLE_EQ(config.weight_ad4_elec, config_copy.weight_ad4_elec);
+    EXPECT_DOUBLE_EQ(config.weight_ad4_dsolv, config_copy.weight_ad4_dsolv);
+    EXPECT_DOUBLE_EQ(config.weight_ad4_rot, config_copy.weight_ad4_rot);
+    EXPECT_DOUBLE_EQ(config.weight_glue, config_copy.weight_glue);
+    EXPECT_EQ(config.seed, config_copy.seed);
+    EXPECT_EQ(config.exhaustiveness, config_copy.exhaustiveness);
+    EXPECT_EQ(config.max_evals, config_copy.max_evals);
+    EXPECT_EQ(config.num_modes, config_copy.num_modes);
+    EXPECT_DOUBLE_EQ(config.min_rmsd, config_copy.min_rmsd);
+    EXPECT_DOUBLE_EQ(config.energy_range, config_copy.energy_range);
+    EXPECT_DOUBLE_EQ(config.spacing, config_copy.spacing);
 
     std::filesystem::remove(dummy_copy_json_file_path);
 }
 
 TEST_F(Config_UnitTests, Validate_GetGPF_Filename) {
     config config;
-    config.search_area.maps = (std::filesystem::current_path() / "dummy").string();
+    config.maps = (std::filesystem::current_path() / "dummy").string();
     EXPECT_STREQ((std::filesystem::current_path() / "dummy.gpf").string().c_str(), config.get_gpf_filename().string().c_str());
 }
 
@@ -869,7 +869,7 @@ TEST_F(Config_UnitTests, CheckReadOfGPF) {
     gpf.close();
 
     config config;
-    config.search_area.maps = (std::filesystem::current_path() / "dummy").string();
+    config.maps = (std::filesystem::current_path() / "dummy").string();
 
     const auto& files = config.get_files_from_gpf();
     const auto& lookup = [&](const auto& file) {

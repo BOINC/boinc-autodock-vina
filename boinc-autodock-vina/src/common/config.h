@@ -22,7 +22,6 @@
 #include <filesystem>
 
 #include <jsoncons/json.hpp>
-#include "jsoncons_helper/jsoncons_helper.h"
 
 enum class scoring {
     ad4,
@@ -30,21 +29,7 @@ enum class scoring {
     vinardo
 };
 
-class json_load {
-public:
-    virtual ~json_load() = default;
-
-    [[nodiscard]] virtual bool load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) = 0;
-};
-
-class json_save {
-public:
-    virtual ~json_save() = default;
-
-    [[nodiscard]] virtual bool save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const = 0;
-};
-
-class input final : public json_load, public json_save {
+class config {
 public:
     std::string receptor;
     std::string flex;
@@ -52,12 +37,6 @@ public:
     std::vector<std::string> batch;
     scoring scoring = scoring::vina;
 
-    [[nodiscard]] bool load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) override;
-    [[nodiscard]] bool save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const override;
-};
-
-class search_area final : public json_load, public json_save {
-public:
     std::string maps;
     double center_x = .0;
     double center_y = .0;
@@ -66,22 +45,10 @@ public:
     double size_y = .0;
     double size_z = .0;
 
-    [[nodiscard]] bool load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) override;
-    [[nodiscard]] bool save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const override;
-};
-
-class output final : public json_load, public json_save {
-public:
     std::string out;
     std::string dir;
     std::string write_maps;
 
-    [[nodiscard]] bool load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) override;
-    [[nodiscard]] bool save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const override;
-};
-
-class advanced final : public json_load, public json_save {
-public:
     bool no_refine = false;
     bool force_even_voxels = false;
     double weight_gauss1 = -0.035579;
@@ -102,12 +69,6 @@ public:
     double weight_ad4_rot = 0.2983;
     double weight_glue = 50.000000;
 
-    [[nodiscard]] bool load(const jsoncons::basic_json<char>& json, [[maybe_unused]] const std::filesystem::path& working_directory) override;
-    [[nodiscard]] bool save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const override;
-};
-
-class misc final : public json_load, public json_save {
-public:
     int64_t seed = 0;
     int64_t exhaustiveness = 8;
     int64_t max_evals = 0;
@@ -115,18 +76,6 @@ public:
     double min_rmsd = 1.0;
     double energy_range = 3.0;
     double spacing = 0.375;
-
-    [[nodiscard]] bool load(const jsoncons::basic_json<char>& json, [[maybe_unused]] const std::filesystem::path& working_directory) override;
-    [[nodiscard]] bool save(const json_encoder_helper& json, const std::filesystem::path& working_directory) const override;
-};
-
-class config {
-public:
-    input input;
-    search_area search_area;
-    output output;
-    advanced advanced;
-    misc misc;
 
     [[nodiscard]] bool validate() const;
     [[nodiscard]] bool check_files_exist() const;
