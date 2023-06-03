@@ -308,6 +308,68 @@ TEST_F(Config_UnitTests, FailOnAbsolutePathInConfig_WriteMaps) {
     EXPECT_FALSE(config.load(dummy_json_file_path));
 }
 
+TEST_F(Config_UnitTests, CheckForDefaultValues_Vina)
+{
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+    config config;
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.value("receptor", "receptor_sample");
+    json_encoder.begin_array("ligands");
+    json_encoder.value("ligand_sample2");
+    json_encoder.end_array();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+    ASSERT_TRUE(config.load(dummy_json_file_path));
+
+    EXPECT_EQ(scoring::vina, config.scoring);
+    EXPECT_DOUBLE_EQ(-0.035579, config.weight_gauss1);
+    EXPECT_DOUBLE_EQ(-0.005156, config.weight_gauss2);
+    EXPECT_DOUBLE_EQ(0.840245, config.weight_repulsion);
+    EXPECT_DOUBLE_EQ(-0.035069, config.weight_hydrophobic);
+    EXPECT_DOUBLE_EQ(-0.587439, config.weight_hydrogen);
+    EXPECT_DOUBLE_EQ(0.05846, config.weight_rot);
+}
+
+TEST_F(Config_UnitTests, CheckForDefaultValues_Vinardo)
+{
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+    config config;
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.value("scoring", std::string(magic_enum::enum_name(scoring::vinardo)));
+    json_encoder.value("receptor", "receptor_sample");
+    json_encoder.begin_array("ligands");
+    json_encoder.value("ligand_sample2");
+    json_encoder.end_array();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+    ASSERT_TRUE(config.load(dummy_json_file_path));
+
+    EXPECT_EQ(scoring::vinardo, config.scoring);
+    EXPECT_DOUBLE_EQ(-0.045, config.weight_gauss1);
+    EXPECT_DOUBLE_EQ(0.8, config.weight_repulsion);
+    EXPECT_DOUBLE_EQ(-0.035, config.weight_hydrophobic);
+    EXPECT_DOUBLE_EQ(0.600, config.weight_hydrogen);
+    EXPECT_DOUBLE_EQ(0.05846, config.weight_rot);
+}
+
 TEST_F(Config_UnitTests, CheckForDeaultValueInConfig_Out) {
     const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
     config config;
@@ -372,11 +434,6 @@ TEST_F(Config_UnitTests, LoadValidator) {
     json_encoder.value("weight_hydrophobic", -0.654321);
     json_encoder.value("weight_hydrogen", 0.135246);
     json_encoder.value("weight_rot", -0.135246);
-    json_encoder.value("weight_vinardo_gauss1", -0.642531);
-    json_encoder.value("weight_vinardo_repulsion", 0.642531);
-    json_encoder.value("weight_vinardo_hydrophobic", -0.010011);
-    json_encoder.value("weight_vinardo_hydrogen", 0.010011);
-    json_encoder.value("weight_vinardo_rot", -1.023456);
     json_encoder.value("weight_ad4_vdw", 1.023456);
     json_encoder.value("weight_ad4_hb", -1.654320);
     json_encoder.value("weight_ad4_elec", 1.065432);
@@ -437,11 +494,6 @@ TEST_F(Config_UnitTests, LoadValidator) {
     EXPECT_DOUBLE_EQ(-0.654321, config.weight_hydrophobic);
     EXPECT_DOUBLE_EQ(0.135246, config.weight_hydrogen);
     EXPECT_DOUBLE_EQ(-0.135246, config.weight_rot);
-    EXPECT_DOUBLE_EQ(-0.642531, config.weight_vinardo_gauss1);
-    EXPECT_DOUBLE_EQ(0.642531, config.weight_vinardo_repulsion);
-    EXPECT_DOUBLE_EQ(-0.010011, config.weight_vinardo_hydrophobic);
-    EXPECT_DOUBLE_EQ(0.010011, config.weight_vinardo_hydrogen);
-    EXPECT_DOUBLE_EQ(-1.023456, config.weight_vinardo_rot);
     EXPECT_DOUBLE_EQ(1.023456, config.weight_ad4_vdw);
     EXPECT_DOUBLE_EQ(-1.654320, config.weight_ad4_hb);
     EXPECT_DOUBLE_EQ(1.065432, config.weight_ad4_elec);
@@ -753,11 +805,6 @@ TEST_F(Config_UnitTests, TestConfigsEqualAfterReadWrite) {
     json_encoder.value("weight_hydrophobic", -0.654321);
     json_encoder.value("weight_hydrogen", 0.135246);
     json_encoder.value("weight_rot", -0.135246);
-    json_encoder.value("weight_vinardo_gauss1", -0.642531);
-    json_encoder.value("weight_vinardo_repulsion", 0.642531);
-    json_encoder.value("weight_vinardo_hydrophobic", -0.010011);
-    json_encoder.value("weight_vinardo_hydrogen", 0.010011);
-    json_encoder.value("weight_vinardo_rot", -1.023456);
     json_encoder.value("weight_ad4_vdw", 1.023456);
     json_encoder.value("weight_ad4_hb", -1.654320);
     json_encoder.value("weight_ad4_elec", 1.065432);
@@ -813,11 +860,6 @@ TEST_F(Config_UnitTests, TestConfigsEqualAfterReadWrite) {
     EXPECT_DOUBLE_EQ(config.weight_hydrophobic, config_copy.weight_hydrophobic);
     EXPECT_DOUBLE_EQ(config.weight_hydrogen, config_copy.weight_hydrogen);
     EXPECT_DOUBLE_EQ(config.weight_rot, config_copy.weight_rot);
-    EXPECT_DOUBLE_EQ(config.weight_vinardo_gauss1, config_copy.weight_vinardo_gauss1);
-    EXPECT_DOUBLE_EQ(config.weight_vinardo_repulsion, config_copy.weight_vinardo_repulsion);
-    EXPECT_DOUBLE_EQ(config.weight_vinardo_hydrophobic, config_copy.weight_vinardo_hydrophobic);
-    EXPECT_DOUBLE_EQ(config.weight_vinardo_hydrogen, config_copy.weight_vinardo_hydrogen);
-    EXPECT_DOUBLE_EQ(config.weight_vinardo_rot, config_copy.weight_vinardo_rot);
     EXPECT_DOUBLE_EQ(config.weight_ad4_vdw, config_copy.weight_ad4_vdw);
     EXPECT_DOUBLE_EQ(config.weight_ad4_hb, config_copy.weight_ad4_hb);
     EXPECT_DOUBLE_EQ(config.weight_ad4_elec, config_copy.weight_ad4_elec);

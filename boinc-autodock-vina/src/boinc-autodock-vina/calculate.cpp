@@ -37,9 +37,9 @@ bool calculator::calculate(const config& config, const int& ncpus, const std::fu
             config.weight_glue, config.weight_rot);
     }
     else if (config.scoring == scoring::vinardo) {
-        vina.set_vinardo_weights(config.weight_vinardo_gauss1, config.weight_vinardo_repulsion,
-            config.weight_vinardo_hydrophobic, config.weight_vinardo_hydrogen,
-            config.weight_glue, config.weight_vinardo_rot);
+        vina.set_vinardo_weights(config.weight_gauss1, config.weight_repulsion,
+            config.weight_hydrophobic, config.weight_hydrogen,
+            config.weight_glue, config.weight_rot);
     }
     else if (config.scoring == scoring::ad4) {
         vina.set_ad4_weights(config.weight_ad4_vdw, config.weight_ad4_hb,

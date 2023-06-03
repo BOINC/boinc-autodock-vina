@@ -254,35 +254,64 @@ bool config::load(const jsoncons::basic_json<char>& json, const std::filesystem:
     if (json.contains("weight_gauss1")) {
         weight_gauss1 = json["weight_gauss1"].as<double>();
     }
+    else
+    {
+        if (scoring == scoring::vina)
+        {
+            weight_gauss1 = -0.035579;
+        }
+        else if (scoring == scoring::vinardo)
+        {
+            weight_gauss1 = -0.045;
+        }
+    }
     if (json.contains("weight_gauss2")) {
         weight_gauss2 = json["weight_gauss2"].as<double>();
     }
     if (json.contains("weight_repulsion")) {
         weight_repulsion = json["weight_repulsion"].as<double>();
     }
+    else
+    {
+        if (scoring == scoring::vina)
+        {
+            weight_repulsion = 0.840245;
+        }
+        else if (scoring == scoring::vinardo)
+        {
+            weight_repulsion = 0.8;
+        }
+    }
     if (json.contains("weight_hydrophobic")) {
         weight_hydrophobic = json["weight_hydrophobic"].as<double>();
+    }
+    else
+    {
+        if (scoring == scoring::vina)
+        {
+            weight_hydrophobic = -0.035069;
+        }
+        else if (scoring == scoring::vinardo)
+        {
+            weight_hydrophobic = -0.035;
+        }
     }
     if (json.contains("weight_hydrogen")) {
         weight_hydrogen = json["weight_hydrogen"].as<double>();
     }
+    else
+    {
+        if (scoring == scoring::vina)
+        {
+            weight_hydrogen = -0.587439;
+        }
+        else if (scoring == scoring::vinardo)
+        {
+            weight_hydrogen = 0.600;
+        }
+    }
     if (json.contains("weight_rot")) {
         weight_rot = json["weight_rot"].as<double>();
-    }
-    if (json.contains("weight_vinardo_gauss1")) {
-        weight_vinardo_gauss1 = json["weight_vinardo_gauss1"].as<double>();
-    }
-    if (json.contains("weight_vinardo_repulsion")) {
-        weight_vinardo_repulsion = json["weight_vinardo_repulsion"].as<double>();
-    }
-    if (json.contains("weight_vinardo_hydrophobic")) {
-        weight_vinardo_hydrophobic = json["weight_vinardo_hydrophobic"].as<double>();
-    }
-    if (json.contains("weight_vinardo_hydrogen")) {
-        weight_vinardo_hydrogen = json["weight_vinardo_hydrogen"].as<double>();
-    }
-    if (json.contains("weight_vinardo_rot")) {
-        weight_vinardo_rot = json["weight_vinardo_rot"].as<double>();
     }
     if (json.contains("weight_ad4_vdw")) {
         weight_ad4_vdw = json["weight_ad4_vdw"].as<double>();
@@ -509,31 +538,6 @@ bool config::save(const std::filesystem::path& config_file_path) const {
 
     if (!json.value("weight_rot", weight_rot)) {
         error_message("weight_rot");
-        return false;
-    }
-
-    if (!json.value("weight_vinardo_gauss1", weight_vinardo_gauss1)) {
-        error_message("weight_vinardo_gauss1");
-        return false;
-    }
-
-    if (!json.value("weight_vinardo_repulsion", weight_vinardo_repulsion)) {
-        error_message("weight_vinardo_repulsion");
-        return false;
-    }
-
-    if (!json.value("weight_vinardo_hydrophobic", weight_vinardo_hydrophobic)) {
-        error_message("weight_vinardo_hydrophobic");
-        return false;
-    }
-
-    if (!json.value("weight_vinardo_hydrogen", weight_vinardo_hydrogen)) {
-        error_message("weight_vinardo_hydrogen");
-        return false;
-    }
-
-    if (!json.value("weight_vinardo_rot", weight_vinardo_rot)) {
-        error_message("weight_vinardo_rot");
         return false;
     }
 
