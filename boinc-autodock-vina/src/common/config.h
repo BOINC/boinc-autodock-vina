@@ -57,11 +57,6 @@ public:
     double weight_hydrophobic = -0.035069;
     double weight_hydrogen = -0.587439;
     double weight_rot = 0.05846;
-    double weight_vinardo_gauss1 = -0.045;
-    double weight_vinardo_repulsion = 0.8;
-    double weight_vinardo_hydrophobic = -0.035;
-    double weight_vinardo_hydrogen = 0.600;
-    double weight_vinardo_rot = 0.05846;
     double weight_ad4_vdw = 0.1662;
     double weight_ad4_hb = 0.1209;
     double weight_ad4_elec = 0.1406;

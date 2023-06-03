@@ -43,11 +43,11 @@ This file supports next parameters:
 
 `vinardo` scoring function specific parameters.
 
-- `weight_vinardo_gauss1` - gauss_1 weight. This is an **optional** `double` parameter. Default value is `-0.045`.
-- `weight_vinardo_repulsion` - repulsion weight. This is an **optional** `double` parameter. Default value is `0.8`.
-- `weight_vinardo_hydrophobic` - hydrophobic weight. This is an **optional** `double` parameter. Default value is `-0.035`.
-- `weight_vinardo_hydrogen` - Hydrogen bond weight. This is an **optional** `double` parameter. Default value is `0.600`.
-- `weight_vinardo_rot` - N_rot weight. This is an **optional** `double` parameter. Default value is `0.05846`.
+- `weight_gauss1` - gauss_1 weight. This is an **optional** `double` parameter. Default value is `-0.045`.
+- `weight_repulsion` - repulsion weight. This is an **optional** `double` parameter. Default value is `0.8`.
+- `weight_hydrophobic` - hydrophobic weight. This is an **optional** `double` parameter. Default value is `-0.035`.
+- `weight_hydrogen` - Hydrogen bond weight. This is an **optional** `double` parameter. Default value is `0.600`.
+- `weight_rot` - N_rot weight. This is an **optional** `double` parameter. Default value is `0.05846`.
 
 `ad4` scoring function specific parameters.
 
