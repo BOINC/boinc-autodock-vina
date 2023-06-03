@@ -370,6 +370,76 @@ TEST_F(Config_UnitTests, CheckForDefaultValues_Vinardo)
     EXPECT_DOUBLE_EQ(0.05846, config.weight_rot);
 }
 
+TEST_F(Config_UnitTests, CheckForReceptorField)
+{
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+    config config;
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.value("receptor", "receptor_sample");
+    json_encoder.begin_array("ligands");
+    json_encoder.value("ligand_sample2");
+    json_encoder.end_array();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+    ASSERT_TRUE(config.load(dummy_json_file_path));
+}
+
+TEST_F(Config_UnitTests, CheckForReceptorsField)
+{
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+    config config;
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.value("receptors", "receptor_sample");
+    json_encoder.begin_array("ligands");
+    json_encoder.value("ligand_sample2");
+    json_encoder.end_array();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+    ASSERT_TRUE(config.load(dummy_json_file_path));
+}
+
+TEST_F(Config_UnitTests, CheckThatDefaultScoringFunctionIsVina)
+{
+    const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
+    config config;
+
+    dummy_ofstream json;
+    json.open(dummy_json_file_path);
+
+    jsoncons::json_stream_encoder jsoncons_encoder(json());
+    const json_encoder_helper json_encoder(jsoncons_encoder);
+
+    json_encoder.begin_object();
+    json_encoder.value("receptor", "receptor_sample");
+    json_encoder.begin_array("ligands");
+    json_encoder.value("ligand_sample2");
+    json_encoder.end_array();
+    json_encoder.end_object();
+
+    jsoncons_encoder.flush();
+    json.close();
+    ASSERT_TRUE(config.load(dummy_json_file_path));
+    EXPECT_EQ(scoring::vina, config.scoring);
+}
+
 TEST_F(Config_UnitTests, CheckForDeaultValueInConfig_Out) {
     const auto& dummy_json_file_path = std::filesystem::current_path() / "dummy.json";
     config config;
