@@ -128,8 +128,9 @@ bool config::load(const std::istream& config_stream, const std::filesystem::path
 }
 
 bool config::load(const jsoncons::basic_json<char>& json, const std::filesystem::path& working_directory) {
-    if (json.contains("receptor")) {
-        const auto& value = std::filesystem::path(json["receptor"].as<std::string>());
+    const std::string receptor_field_name = json.contains("receptors") ? "receptors" : json.contains("receptor") ? "receptor" : "";
+    if (!receptor_field_name.empty()) {
+        const auto& value = std::filesystem::path(json[receptor_field_name].as<std::string>());
         if (value.is_absolute()) {
             std::cerr << "Config should not contain absolute paths" << std::endl;
             return false;
