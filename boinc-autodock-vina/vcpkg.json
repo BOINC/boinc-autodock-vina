@@ -1,6 +1,5 @@
 {
     "name": "boinc-autodock-vina",
-    "version-string": "0.1.0",
     "dependencies":
     [
         "autodock-vina",
