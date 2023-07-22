@@ -102,7 +102,7 @@ def build_specific_init_params(CC, CXX, LD, CFLAGS, CXXFLAGS, LDFLAGS):
 
     return specific_init_params
 
-def build_linux_specific_init_params(arch):
+def build_linux_specific_init_params(arch, code_analysis=False):
     CC = None
     CXX = None
     LD = None
@@ -111,11 +111,17 @@ def build_linux_specific_init_params(arch):
     LDFLAGS = None
 
     if (arch == '64' or arch == '32'):
-        CC = ('gcc -m{arch}').format(arch=arch)
-        CXX = ('g++ -m{arch}').format(arch=arch)
+        if (code_analysis == True):
+            CC = ('gcc -m{arch}').format(arch=arch)
+            CXX = ('g++ -m{arch}').format(arch=arch)
+        else:
+            CC = ('clang-11 -m{arch}').format(arch=arch)
+            CXX = ('clang++-11 -m{arch}').format(arch=arch)
+            LD = ('lld-11 -m{arch}').format(arch=arch)
         CFLAGS = ('-m{arch}').format(arch=arch)
         CXXFLAGS = ('-m{arch}').format(arch=arch)
         LDFLAGS =('-m{arch} -static-libstdc++ -static').format(arch=arch)
+
     elif (arch == 'arm'):
         CC = 'arm-linux-gnueabihf-gcc'
         CXX = 'arm-linux-gnueabihf-g++'
@@ -275,6 +281,7 @@ run_build = True
 run_tests = True
 
 coverage_report = False
+code_ql = False
 
 for a in sys.argv[1:]:
     if a in apps:
@@ -286,6 +293,8 @@ for a in sys.argv[1:]:
             run_tests = False
         elif (a == '-cr'):
             coverage_report = True
+        elif (a == '-ql'):
+            code_ql = True
         else:
             p = a.split('=')
             if (len(p) < 2):
@@ -366,7 +375,7 @@ build_work_generator_param = ''
 coverage_report_param = ''
 
 if (get_target_os_from_triplet(vcpkg_overlay_triplet) == 'linux'):
-    specific_init_params = build_linux_specific_init_params(arch)
+    specific_init_params = build_linux_specific_init_params(arch, coverage_report or code_ql)
     if (get_arch_from_triplet(vcpkg_overlay_triplet) == '64'):
         build_work_generator_param = '-DBUILD_WORK_GENERATOR=ON'
 
