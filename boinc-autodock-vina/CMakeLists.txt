@@ -169,30 +169,36 @@ target_include_directories(jsoncons_helper
 )
 
 if (NOT COVERAGE_REPORT)
+    set (BOINC_AUTODOCK_VINA_LINK_LIBRARIES
+        config
+        calculate
+        unofficial::boinc::boinc
+        unofficial::boinc::boincapi
+        autodock-vina::autodock-vina::vina
+        autodock-vina::autodock-vina::vina_split
+        OpenSSL::SSL
+        OpenSSL::Crypto
+        Boost::boost
+        Boost::filesystem
+        Boost::log
+        Boost::math_tr1
+        Boost::program_options
+        Boost::random
+        Boost::serialization
+        Boost::thread
+        Boost::timer
+        magic_enum::magic_enum
+        jsoncons
+        jsoncons_helper
+        zip_helper
+        libzip::zip
+    )
+    if (UNIX AND NOT APPLE AND NOT VCPKG_TARGET_TRIPLET MATCHES "android" AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        set(BOINC_AUTODOCK_VINA_LINK_LIBRARIES ${BOINC_AUTODOCK_VINA_LINK_LIBRARIES} stdc++fs)
+    endif()
     target_link_libraries(boinc-autodock-vina
         PRIVATE
-            config
-            calculate
-            unofficial::boinc::boinc
-            unofficial::boinc::boincapi
-            autodock-vina::autodock-vina::vina
-            autodock-vina::autodock-vina::vina_split
-            OpenSSL::SSL
-            OpenSSL::Crypto
-            Boost::boost
-            Boost::filesystem
-            Boost::log
-            Boost::math_tr1
-            Boost::program_options
-            Boost::random
-            Boost::serialization
-            Boost::thread
-            Boost::timer
-            magic_enum::magic_enum
-            jsoncons
-            jsoncons_helper
-            zip_helper
-            libzip::zip
+            ${BOINC_AUTODOCK_VINA_LINK_LIBRARIES}
     )
 endif()
 
@@ -218,6 +224,10 @@ set (UNIT_TEST_LINK_LIBRARIES
     zip_helper
     libzip::zip
 )
+
+if (UNIX AND NOT APPLE AND NOT VCPKG_TARGET_TRIPLET MATCHES "android" AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set(UNIT_TEST_LINK_LIBRARIES ${UNIT_TEST_LINK_LIBRARIES} stdc++fs)
+endif()
 
 target_link_libraries(unit-tests
     PRIVATE

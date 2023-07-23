@@ -65,9 +65,9 @@ jobs:
         echo "VCPKG_BINARY_SOURCES=clear;x-aws-config,no-sign-request;x-aws,s3://vcpkg.cache.boinc-apps/,read" >> $GITHUB_ENV
 
     - name: Build
-      if: ${{ success() && matrix.configuration != 'coverage-report' }}
+      if: ${{ success() }}
       run: |
-        python3 build.py -nt -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
+        python3 build.py -nt -ql -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2

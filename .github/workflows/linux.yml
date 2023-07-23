@@ -30,24 +30,93 @@ env:
   AWS_DEFAULT_REGION: us-west-2
 
 jobs:
-  build:
+  build-clang:
+    name: ${{ matrix.app }}-${{ matrix.configuration }}-build
+    runs-on: ubuntu-latest
+    container:
+      image: debian:buster
+    strategy:
+      matrix:
+        app: [boinc-autodock-vina]
+        configuration: [x64-linux-static, x86-linux-static]
+      fail-fast: false
+    steps:
+      - name: Install dependencies
+        run: |
+          apt-get -qq update
+          apt-get install -y clang-11 make build-essential m4 pkg-config autoconf libtool git python3 python3-distutils curl zip unzip tar bison p7zip-full
+
+      - name: Install aws cli tool
+        run: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          ./aws/install
+
+      - name: Install cmake
+        run: |
+          curl -L https://github.com/Kitware/CMake/releases/download/v3.27.0/cmake-3.27.0-linux-x86_64.sh -o cmake.sh
+          chmod +x cmake.sh
+          ./cmake.sh --skip-license --prefix=/usr/local
+
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - name: Fix git configuration
+        if: success()
+        run: |
+          CWD=$(pwd)
+          echo "Current working directory: $CWD"
+          git config --global --add safe.directory "$CWD"
+
+      - name: Install x86 dependencies
+        if: ${{ success() && matrix.configuration == 'x86-linux-static' }}
+        run: |
+          apt-get -qq update
+          apt-get install -y gcc-multilib g++-multilib
+
+      - name: Check if build is running from origin repo
+        if: ${{ success() && env.AWS_ACCESS_KEY_ID != 0 && env.AWS_SECRET_ACCESS_KEY != 0 }}
+        run: |
+          echo "VCPKG_BINARY_SOURCES=clear;x-aws,s3://vcpkg.cache.boinc-apps/,readwrite" >> $GITHUB_ENV
+
+      - name: Check if build is running from fork
+        if: ${{ success() && (env.AWS_ACCESS_KEY_ID == 0 || env.AWS_SECRET_ACCESS_KEY == 0) }}
+        run: |
+          echo "VCPKG_BINARY_SOURCES=clear;x-aws-config,no-sign-request;x-aws,s3://vcpkg.cache.boinc-apps/,read" >> $GITHUB_ENV
+
+      - name: Build
+        if: ${{ success() }}
+        run: |
+          python3 build.py -nt -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
+
+      - name: Test x86 and x64
+        if: ${{ success() && (matrix.configuration == 'x86-linux-static' || matrix.configuration == 'x64-linux-static') }}
+        run: |
+          python3 build.py -nb -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
+
+      - name: Upload boinc-autodock-vina artifacts
+        if: ${{ success() && matrix.app == 'boinc-autodock-vina' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.app }}-${{ matrix.configuration }}-${{ github.event.pull_request.head.sha }}
+          path: |
+            build/${{ matrix.app }}/${{ matrix.configuration }}/boinc-autodock-vina
+            build/${{ matrix.app }}/${{ matrix.configuration }}/config-validator
+            build/${{ matrix.app }}/${{ matrix.configuration }}/work-generator
+
+  build-gcc:
     name: ${{ matrix.app }}-${{ matrix.configuration }}-build
     runs-on: ubuntu-latest
     strategy:
       matrix:
         app: [boinc-autodock-vina]
-        configuration: [x64-linux-static, x86-linux-static, arm-linux-static, armneon-linux-static, arm64-linux-static, coverage-report]
+        configuration: [arm-linux-static, armneon-linux-static, arm64-linux-static, coverage-report]
       fail-fast: false
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 2
-
-      - name: Install x86 dependencies
-        if: ${{ success() && matrix.configuration == 'x86-linux-static' }}
-        run: |
-          sudo apt-get -qq update
-          sudo apt-get install -y gcc-multilib g++-multilib
 
       - name: Install arm dependencies
         if: ${{ success() && (matrix.configuration == 'arm-linux-static' || matrix.configuration == 'armneon-linux-static') }}
@@ -62,7 +131,6 @@ jobs:
           sudo update-alternatives --set arm-linux-gnueabihf-gcc /usr/bin/arm-linux-gnueabihf-gcc-9
           sudo update-alternatives --install /usr/bin/arm-linux-gnueabihf-g++ arm-linux-gnueabihf-g++ /usr/bin/arm-linux-gnueabihf-g++-9 99
           sudo update-alternatives --set arm-linux-gnueabihf-g++ /usr/bin/arm-linux-gnueabihf-g++-9
-
 
       - name: Install arm64 dependencies
         if: ${{ success() && matrix.configuration == 'arm64-linux-static' }}
@@ -89,11 +157,6 @@ jobs:
         if: ${{ success() && matrix.configuration == 'coverage-report' }}
         run: |
           python3 build.py -nt -cr -ts=ci -t=x64-linux-static ${{ matrix.app }}
-
-      - name: Test x86 and x64
-        if: ${{ success() && (matrix.configuration == 'x86-linux-static' || matrix.configuration == 'x64-linux-static') }}
-        run: |
-          python3 build.py -nb -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
 
       - name: Test arm and armneon
         if: ${{ success() && (matrix.configuration == 'arm-linux-static' || matrix.configuration == 'armneon-linux-static') }}
