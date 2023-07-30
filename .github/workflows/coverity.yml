@@ -37,4 +37,4 @@ jobs:
           project: 'BOINC/boinc-apps'
           token: ${{ secrets.COVERITY_SCAN_TOKEN }}
           email: 'lestat.de.lionkur@gmail.com'
-          command: python3 build.py -nt -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
+          command: python3 build.py -nt -ql -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
