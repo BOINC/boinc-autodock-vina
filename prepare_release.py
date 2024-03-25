@@ -36,7 +36,7 @@ def unzip(archive, destination, filename):
 
 def zip(source, destination):
     with zipfile.ZipFile(destination, 'w', compression=zipfile.ZIP_DEFLATED) as zip_ref:
-        for root, dirs, files in os.walk(source):
+        for root, _, files in os.walk(source):
             for file in files:
                 zip_ref.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), os.path.join(source, '..')))
 

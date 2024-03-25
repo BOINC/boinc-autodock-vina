@@ -34,7 +34,7 @@ jobs:
       - name: Coverity Scan
         uses: vapier/coverity-scan-action@v1
         with:
-          project: 'BOINC/boinc-apps'
+          project: 'BOINC/boinc-autodock-vina'
           token: ${{ secrets.COVERITY_SCAN_TOKEN }}
           email: 'lestat.de.lionkur@gmail.com'
           command: python3 build.py -nt -ql -ts=ci -t=${{ matrix.configuration }} ${{ matrix.app }}
