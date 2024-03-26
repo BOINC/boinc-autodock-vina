@@ -1,38 +1,38 @@
-# BOINC Applications
+# BOINC Applications: Autodock Vina
 
 ## Status
 
 | Build Status | Code Quality |
 | --- | --- |
-| [![Android](https://github.com/BOINC/boinc-apps/actions/workflows/android.yml/badge.svg?branch=master)](https://github.com/BOINC/boinc-apps/actions/workflows/android.yml) | [![codecov](https://codecov.io/gh/BOINC/boinc-apps/branch/master/graph/badge.svg?token=RZ5J0e24Ye)](https://codecov.io/gh/BOINC/boinc-apps) |
-| [![Linux](https://github.com/BOINC/boinc-apps/actions/workflows/linux.yml/badge.svg?branch=master)](https://github.com/BOINC/boinc-apps/actions/workflows/linux.yml) | [![CodeQL](https://github.com/BOINC/boinc-apps/actions/workflows/codeql.yml/badge.svg)](https://github.com/BOINC/boinc-apps/actions/workflows/codeql.yml) |
-| [![OSX](https://github.com/BOINC/boinc-apps/actions/workflows/osx.yml/badge.svg?branch=master)](https://github.com/BOINC/boinc-apps/actions/workflows/osx.yml) | [![Coverity Scan Build Status](https://scan.coverity.com/projects/24043/badge.svg)](https://scan.coverity.com/projects/boinc-boinc-apps) |
-| [![Windows](https://github.com/BOINC/boinc-apps/actions/workflows/windows.yml/badge.svg?branch=master)](https://github.com/BOINC/boinc-apps/actions/workflows/windows.yml) | |
+| [![Android](https://github.com/BOINC/boinc-autodock-vina/actions/workflows/android.yml/badge.svg?branch=master)](https://github.com/BOINC/boinc-autodock-vina/actions/workflows/android.yml) | [![codecov](https://codecov.io/gh/BOINC/boinc-autodock-vina/branch/master/graph/badge.svg?token=RZ5J0e24Ye)](https://codecov.io/gh/BOINC/boinc-autodock-vina) |
+| [![Linux](https://github.com/BOINC/boinc-autodock-vina/actions/workflows/linux.yml/badge.svg?branch=master)](https://github.com/BOINC/boinc-autodock-vina/actions/workflows/linux.yml) | [![CodeQL](https://github.com/BOINC/boinc-autodock-vina/actions/workflows/codeql.yml/badge.svg)](https://github.com/BOINC/boinc-autodock-vina/actions/workflows/codeql.yml) |
+| [![OSX](https://github.com/BOINC/boinc-autodock-vina/actions/workflows/osx.yml/badge.svg?branch=master)](https://github.com/BOINC/boinc-autodock-vina/actions/workflows/osx.yml) | [![Coverity Scan Build Status](https://scan.coverity.com/projects/24043/badge.svg)](https://scan.coverity.com/projects/boinc-boinc-autodock-vina) |
+| [![Windows](https://github.com/BOINC/boinc-autodock-vina/actions/workflows/windows.yml/badge.svg?branch=master)](https://github.com/BOINC/boinc-autodock-vina/actions/workflows/windows.yml) | |
 
 ## OS support
 
 ### Android
 
-| Application | arm64-android-static | arm-neon-android-static | arm-android-static | x64-android-static | x86-android-static |
-| --- | --- | --- | --- | --- | --- |
-| boinc-autodock-vina | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| arm64-android-static | arm-neon-android-static | arm-android-static | x64-android-static | x86-android-static |
+| --- | --- | --- | --- | --- |
+| :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 ### Linux
 
-| Application | arm64-linux-static | armneon-linux-static | arm-linux-static | x64-linux-static | x86-linux-static |
-| --- | --- | --- | --- | --- | --- |
-| boinc-autodock-vina | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
+| arm64-linux-static | armneon-linux-static | arm-linux-static | x64-linux-static | x86-linux-static |
+| --- | --- | --- | --- | --- |
+| :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: |
 
 ### OSX
 
-| Application | arm64-osx-static | x64-osx-static |
-| --- | --- | --- |
-| boinc-autodock-vina | :heavy_check_mark: | :heavy_check_mark: |
+| arm64-osx-static | x64-osx-static |
+| --- | --- |
+| :heavy_check_mark: | :heavy_check_mark: |
 
 ### Windows
 
-| Application | x64-windows-static | x86-windows-static |
-| --- | --- | --- |
-| boinc-autodock-vina | :heavy_check_mark: | :heavy_check_mark: |
+| x64-windows-static | x86-windows-static |
+| --- | --- |
+| :heavy_check_mark: | :heavy_check_mark: |
 
 ## Building
 
