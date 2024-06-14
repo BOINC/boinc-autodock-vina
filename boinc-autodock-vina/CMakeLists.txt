@@ -22,7 +22,7 @@ project (boinc-autodock-vina CXX)
 find_package(autodock-vina REQUIRED)
 find_package(boinc REQUIRED)
 find_package(OpenSSL REQUIRED)
-find_package(Boost REQUIRED COMPONENTS filesystem log math_tr1 program_options random serialization thread timer)
+find_package(Boost REQUIRED COMPONENTS filesystem log program_options random serialization thread timer)
 find_package(magic_enum CONFIG REQUIRED)
 find_package(jsoncons CONFIG REQUIRED)
 find_package(GTest CONFIG REQUIRED)
@@ -181,7 +181,6 @@ if (NOT COVERAGE_REPORT)
         Boost::boost
         Boost::filesystem
         Boost::log
-        Boost::math_tr1
         Boost::program_options
         Boost::random
         Boost::serialization
@@ -213,7 +212,6 @@ set (UNIT_TEST_LINK_LIBRARIES
     Boost::boost
     Boost::filesystem
     Boost::log
-    Boost::math_tr1
     Boost::program_options
     Boost::random
     Boost::serialization
